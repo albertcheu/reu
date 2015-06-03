@@ -1,3 +1,4 @@
+//Made by Albert Cheu, 5/3/15
 #include <string>
 #include "Board.h"
 

@@ -1,3 +1,4 @@
+//Made by Albert Cheu, 5/3/15
 #include "Board.h"
 
 Board::Board(){

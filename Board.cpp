@@ -115,24 +115,19 @@ scoreAndLoc Board::alphabeta(bool maximize, int alpha, int beta){
 		       : alphabeta(true,alpha,min));
       grid[row][col] = old;
 
-      if (maximize){
-	if (p.first > max){
-	  max = p.first;
-	  loc = i+1;
-	}
-
+      if (maximize && p.first > max){
+	max = p.first;
+	loc = i+1;
 	alpha = (alpha>max?alpha:max);
-	if (alpha >= beta) { break; }
       }
 
-      else{
-	if(p.first < min){
-	  min = p.first;
-	  loc = i+1;
-	}
+      else if(!maximize && p.first < min){
+	min = p.first;
+	loc = i+1;
 	beta = (beta<min?beta:min);
-	if (beta <= alpha) { break; }	
       }
+
+      if (alpha >= beta) { break; }
     }
   }
 

@@ -32,8 +32,17 @@ int main(){
     if (s == "y") { computer1 = false; }
   }
 
+  int boardSize = 8;
+  while(true){
+    cout << "How big do you want the board to be? ";
+    cin >> s;
+    boardSize = toNumber(s, 10000);
+    if (boardSize != -1) { break; }
+    else { cout << "Please enter a positive integer" << endl; }
+  }
+
   bool player1 = true;
-  Board b;
+  Board b(boardSize);
   b.print();
 
   //While there is no winner (and we can still play)
@@ -51,7 +60,6 @@ int main(){
     
     else{
       //Get user input
-      string s;
       cin >> s;
 
       //Fail if not number in range

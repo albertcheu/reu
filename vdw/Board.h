@@ -19,10 +19,13 @@ class Board{
   //The actual board on which we play
   std::vector<char> grid;
 
+  //the size of the arithmetic progression
+  size_t k;
+
   int findOpen();
 
  public:
-  Board(size_t boardSize = 8);
+  Board(size_t boardSize, size_t k);
   size_t size();
   void print();
 

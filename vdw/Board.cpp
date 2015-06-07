@@ -1,7 +1,9 @@
 //Made by Albert Cheu, 5/3/15
 #include "Board.h"
 
-Board::Board(size_t boardSize){
+Board::Board(size_t boardSize, size_t k)
+  :k(k)
+{
   for(size_t i = 0; i < boardSize; i++){
     grid.push_back((char)(48 + i + 1));//48 is the ascii val of '0'
   }
@@ -10,11 +12,28 @@ Board::Board(size_t boardSize){
 size_t Board::size(){return grid.size();}
 
 bool Board::won(char c){
-  for(int d = 1; d <= 3; d++){
-    for(int i = 0; i <= (grid.size()-d*2)-1; i++){
-      if (grid[i] == c && grid[i+d] == c && grid[i+d*2] == c) { return true; }
+  for(int i = 0; i < grid.size(); i++){
+    int d = 1;
+    while (true){
+      int rightmost = i + (k-1)*d;
+      if (rightmost > grid.size()) { break; }
+
+      bool homogenous = true;
+      for(int j = 0; j < k; j++){
+	if (grid[i+j*d] != c) {
+	  homogenous = false;
+	  break;
+	}
+      }
+      if (homogenous) { return true; }
+
+      d++;
     }
+
+    if (d == 1) { break; }
+
   }
+
   return false;
 }
 

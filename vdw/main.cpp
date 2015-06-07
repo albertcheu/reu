@@ -32,17 +32,29 @@ int main(){
     if (s == "y") { computer1 = false; }
   }
 
+  int k = 3;
+  while(true){
+    cout << "How long should the arthmetic sequence be? k = ";
+    cin >> s;
+    k = toNumber(s, 10000);
+    if (k == -1) { cout << "Please enter 0 < k < 10000" << endl; }
+    else { break; }
+  }
+
+
   int boardSize = 8;
   while(true){
     cout << "How big do you want the board to be? ";
     cin >> s;
     boardSize = toNumber(s, 10000);
-    if (boardSize != -1) { break; }
-    else { cout << "Please enter a positive integer" << endl; }
+    if (boardSize == -1)
+      { cout << "Please enter 0 < boardSize < 10000" << endl; }
+    else if (boardSize < k) { cout << "Your board is smaller than k!" << endl; }
+    else { break; }
   }
 
   bool player1 = true;
-  Board b(boardSize);
+  Board b(boardSize, k);
   b.print();
 
   //While there is no winner (and we can still play)

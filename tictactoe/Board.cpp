@@ -1,36 +1,50 @@
 //Made by Albert Cheu, 5/3/15
 #include "Board.h"
 
-Board::Board(){
-  for(int i = 0; i < 3; i++){
-    for(int j = 0; j < 3; j++){
-      int numberDisplayed = i*3 + j + 1;
-      grid[i][j] = (char)(48 + numberDisplayed);//48 is the ascii val of '0'
+Board::Board(size_t size)
+  :size(size)
+{
+  for(int i = 0; i < size; i++){
+    grid.push_back(std::vector<char>());
+    for(int j = 0; j < size; j++){
+      int numberDisplayed = i*size + j + 1;
+      char c = (char)(48 + numberDisplayed);//48 is the ascii val of '0'
+      grid[i].push_back(c);
     }
   }
 }
 
 bool Board::won(char c){
-  for(int i = 0; i < 3; i++){
-    //Rows
-    if (grid[i][0] == c && grid[i][1] == c && grid[i][2] == c ) { return true; }
-    //Cols
-    if (grid[0][i] == c && grid[1][i] == c && grid[2][i] == c ) { return true; }
+  bool diag1, diag2, rows, cols;
+  diag1 = diag2 = rows = cols = true;
+  for(int i = 0; i < size; i++){
+    //Diagonals
+    if (grid[i][i] != c) { diag1 = false; }
+    if (grid[i][size-i-1] != c) { diag2 = false; }
+
+    bool currentRow = true;
+    bool currentCol = true;
+    for(int j = 0; j < size; j++){
+      //Row i
+      if (grid[i][j] != c) {currentRow = false;}
+      //Column i
+      if (grid[j][i] != c) {currentCol = false;}
+      //Shortcircuit
+      if (!currentRow && !currentCol) { break; }
+    }
+    rows = ((i==0)?currentRow:(rows || currentRow));
+    cols = ((i==0)?currentCol:(cols || currentCol));
   }
 
-  //Diagonals
-  if (grid[0][0] == c && grid[1][1] == c && grid[2][2] == c ) { return true; }
-  if (grid[0][2] == c && grid[1][1] == c && grid[2][0] == c ) { return true; }
-
-  return false;
+  return diag1 || diag2 || rows || cols;
 }
 
 bool Board::noWinner(){ return !(won('X') || won('O')); }
 
 int Board::findOpen(){
-  for(int i = 0; i < 3; i++){
-    for(int j = 0; j < 3; j++){
-      if (grid[i][j] != 'X' && grid[i][j] != 'O') { return i*3 + j + 1; }
+  for(int i = 0; i < size; i++){
+    for(int j = 0; j < size; j++){
+      if (grid[i][j] != 'X' && grid[i][j] != 'O') { return i*size + j; }
     }
   }
   return -1;
@@ -41,15 +55,15 @@ bool Board::noSpace(){
 }
 
 void Board::print(){
-  for(int i = 0; i < 3; i++){
-    for(int j = 0; j < 3; j++){ std::cout << grid[i][j]; }
+  for(int i = 0; i < size; i++){
+    for(int j = 0; j < size; j++){ std::cout << grid[i][j]; }
     std::cout << std::endl;
   }
 }
 
 bool Board::play(char c, int loc){
-  int row = (loc-1)/3;
-  int col = (loc-1)%3;
+  int row = loc/size;
+  int col = loc%size;
   if (grid[row][col] != 'X' && grid[row][col] != 'O'){
     grid[row][col] = c;
     return true;
@@ -68,9 +82,9 @@ scoreAndLoc Board::minimax(bool maximize){
   int min = 10;
   int loc = -1;
 
-  for(int i = 0; i < 9; i++){
-    int row = i/3;
-    int col = i%3;
+  for(int i = 0; i < size*size; i++){
+    int row = i/size;
+    int col = i%size;
     if (grid[row][col] != 'X' && grid[row][col] != 'O') {
       char old = grid[row][col];
       grid[row][col] = (maximize?'X':'O');
@@ -79,12 +93,12 @@ scoreAndLoc Board::minimax(bool maximize){
 
       if (maximize && p.first > max) {
 	max = p.first;
-	loc = i+1;
+	loc = i;
       }
 
       else if (!maximize && p.first < min){
 	min = p.first;
-	loc = i+1;
+	loc = i;
       }
 
     }
@@ -104,9 +118,9 @@ scoreAndLoc Board::alphabeta(bool maximize, int alpha, int beta){
   int min = 10;
   int loc = -1;
 
-  for(int i = 0; i < 9; i++){
-    int row = i/3;
-    int col = i%3;
+  for(int i = 0; i < size*size; i++){
+    int row = i/size;
+    int col = i%size;
     if (grid[row][col] != 'X' && grid[row][col] != 'O') {
 
       char old = grid[row][col];
@@ -117,13 +131,13 @@ scoreAndLoc Board::alphabeta(bool maximize, int alpha, int beta){
 
       if (maximize && p.first > max){
 	max = p.first;
-	loc = i+1;
+	loc = i;
 	alpha = (alpha>max?alpha:max);
       }
 
       else if(!maximize && p.first < min){
 	min = p.first;
-	loc = i+1;
+	loc = i;
 	beta = (beta<min?beta:min);
       }
 

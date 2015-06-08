@@ -8,8 +8,11 @@ Board::Board(size_t size)
     grid.push_back(std::vector<char>());
     for(int j = 0; j < size; j++){
       int numberDisplayed = i*size + j + 1;
-      char c = (char)(48 + numberDisplayed);//48 is the ascii val of '0'
-      grid[i].push_back(c);
+      if (numberDisplayed > 9) { grid[i].push_back('.'); }
+      else {
+	char c = (char)(48 + numberDisplayed);//48 is the ascii val of '0'
+	grid[i].push_back(c);
+      }
     }
   }
 }

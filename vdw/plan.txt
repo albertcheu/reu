@@ -1,0 +1,21 @@
+Suppose we have some VDW(k,c=2) number W.
+By definition, any 2-coloring of the first W integers has a k-AP.
+Look at the first W+1 numbers.
+It has 1...W as a subset, so it too must have a k-AP.
+Inductively, this means *THM-1*: any 2-coloring of n >= W has a k-AP.
+
+Suppose we have some GW(k) number G.
+By definition, perfect plays yield a k-AP on a board size of G.
+
+Let w = VDW(k-1,c=2)
+*Question: is G >= w?
+If it were, G = w + d for some nonzero d
+By THM-1, the first w numbers of G are guaranteed to have a (k-1)AP
+...
+
+*Question: Does playing perfectly on any n > G yield a k-AP as well?
+
+Well, it is known G <= W.
+If G = W, then any n > G has a k-AP by THM-1 (don't even have to be perfect!)
+Otherwise, assume some smallest n without a k-AP where G < n < W.
+...

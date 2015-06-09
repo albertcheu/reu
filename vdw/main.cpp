@@ -17,7 +17,7 @@ int toNumber(string s, size_t maxNum){
   return ans;
 }
 
-int main(){
+int foobar(){
   cout << "\tRBRBRBRBRBR" << endl;
   cout << "Welcome to VDW. You are 'B' and I am 'R'" << endl;
   cout << "\tRBRBRBRBRBR" << endl << endl;
@@ -98,4 +98,43 @@ int main(){
   if (b.won('R')) { cout << "R won!" << endl; }
   else if (b.won('B')) { cout << "B won!" << endl; }
   else { cout << "Nobody won!" << endl; }
+}
+
+int main(){
+  //Ask for k
+  string s;
+  int k = 3;
+  while(true){
+    cout << "How long should the arthmetic sequence be? k = ";
+    cin >> s;
+    k = toNumber(s, 10000);
+    if (k == -1) { cout << "Please enter 0 < k < 10000" << endl; }
+    else { break; }
+  }
+
+  //Iterate thru board sizes
+  size_t boardSize = 3;
+  while(true){
+    Board b(boardSize,k);
+    b.print();
+
+    //Play alphabeta against itself (red player = player 1)
+    bool redPlayer = true;
+    while(b.noWinner() && ! b.noSpace()){
+      int loc;
+      scoreAndLoc sal = b.alphabeta(redPlayer,-10,10);
+      loc = sal.second;
+      cout << loc+1 << endl;
+      b.play(redPlayer?'R':'B', loc);
+      redPlayer = (!redPlayer);
+    }
+    b.print();
+
+    //Stop when player 1 wins
+    if (b.won('R')) { break; }
+
+    //Continue with bigger board size
+    else { boardSize++; }
+  }
+  cout << "GW(k=" << k << ") = " << boardSize << endl;
 }

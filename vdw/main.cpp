@@ -17,7 +17,7 @@ int toNumber(string s, size_t maxNum){
   return ans;
 }
 
-int foobar(){
+void play_game(){
   cout << "\tRBRBRBRBRBR" << endl;
   cout << "Welcome to VDW. You are 'B' and I am 'R'" << endl;
   cout << "\tRBRBRBRBRBR" << endl << endl;
@@ -56,15 +56,16 @@ int foobar(){
   bool player1 = true;
   Board b(boardSize, k);
   b.print();
+  size_t depth = (computer1?0:1);
 
   //While there is no winner (and we can still play)
-  while(b.noWinner() && ! b.noSpace()){
+  while(b.noWinner() && ! b.filled()){
     cout << endl << "Player " << (player1?1:2) << " plays on: ";
     int loc;
 
     if (player1 == computer1){
       //scoreAndLoc sal = b.minimax(true);
-      scoreAndLoc sal = b.alphabeta(true,-10,10);
+      scoreAndLoc sal = b.alphabeta(true,-10,10,depth++);
       loc = sal.second;
       cout << loc+1 << endl;
       b.play('R', loc);
@@ -100,7 +101,7 @@ int foobar(){
   else { cout << "Nobody won!" << endl; }
 }
 
-int main(){
+void search_for_G(){
   //Ask for k
   string s;
   int k = 3;
@@ -112,17 +113,26 @@ int main(){
     else { break; }
   }
 
-  //Iterate thru board sizes
-  size_t boardSize = 3;
+  size_t n = 3;
   while(true){
-    Board b(boardSize,k);
+    cout << "How big should the board be? n = ";
+    cin >> s;
+    n = toNumber(s, 10000);
+    if (n == -1) { cout << "Please enter 0 < n < 10000" << endl; }
+    else { break; }
+  }
+
+  //Iterate thru board sizes
+  while(true){
+    Board b(n,k);
     b.print();
 
     //Play alphabeta against itself (red player = player 1)
     bool redPlayer = true;
-    while(b.noWinner() && ! b.noSpace()){
+    size_t depth = 0;
+    while(b.noWinner() && ! b.filled()){
       int loc;
-      scoreAndLoc sal = b.alphabeta(redPlayer,-10,10);
+      scoreAndLoc sal = b.alphabeta(redPlayer,-10,10, depth++);
       loc = sal.second;
       cout << loc+1 << endl;
       b.play(redPlayer?'R':'B', loc);
@@ -134,7 +144,12 @@ int main(){
     if (b.won('R')) { break; }
 
     //Continue with bigger board size
-    else { boardSize++; }
+    else { n++; }
   }
-  cout << "GW(k=" << k << ") = " << boardSize << endl;
+  cout << "GW(k=" << k << ") = " << n << endl;
+}
+
+int main(){
+  //play_game();
+  search_for_G();
 }

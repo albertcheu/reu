@@ -19,13 +19,24 @@ class Board{
   //The actual board on which we play
   std::vector<char> grid;
 
-  //the size of the arithmetic progression
-  size_t k;
+  //the size of the arithmetic progression and of the board
+  size_t k, n;
 
-  int findOpen();
+  //first element is whether the board is empty, second is true iff symmetric
+  std::pair<bool,bool> speedyCheck();
+
+  //for killer heuristic
+  std::vector<std::pair<size_t,size_t> > killers;
+
+  //Given a candidate spot i at some game depth, test the move
+  //If it is better than what we have seen, update max/min
+  //Return whether or not we can stop searching (alpha >= beta)
+  bool alphabeta_helper(size_t i, bool maximize, size_t depth,
+			int& max, int& min, int& loc,
+			int& alpha, int& beta);
 
  public:
-  Board(size_t boardSize, size_t k);
+  Board(size_t n, size_t k);
   size_t size();
   void print();
 
@@ -39,10 +50,10 @@ class Board{
   bool noWinner();
   
   //Check if there's no more plays left
-  bool noSpace();
+  bool filled();
 
   //The meat of the program
   scoreAndLoc minimax(bool maximize);
-  scoreAndLoc alphabeta(bool maximize, int alpha, int beta);
+  scoreAndLoc alphabeta(bool maximize, int alpha, int beta, size_t depth=0);
 
 };

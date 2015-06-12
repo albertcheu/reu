@@ -40,6 +40,14 @@ bool Board::won(char c){
 
 bool Board::noWinner(){ return !(won('R') || won('B')); }
 
+size_t Board::numTurns(){
+  size_t ans = 0;
+  for(int i = 0; i < n; i++){
+    if (grid[i] == 'R' || grid[i] == 'B') { ans++; }
+  }
+  return ans;
+}
+
 bool Board::filled(){
   for(int i = 0; i < n; i++){
     if (grid[i] != 'R' && grid[i] != 'B') { return false; }
@@ -64,7 +72,7 @@ scoreAndLoc Board::minimax(bool maximize){
   //Leaf
   if (won('R')) { return r_win; }
   if (won('B')) { return b_win; }
-  if (filled()) { return draw; }
+  if (numTurns() == n) { return draw; }
 
   //Internal node
   int max = -10;
@@ -115,12 +123,10 @@ std::pair<bool,bool> Board::speedyCheck(){
 }
 
 scoreAndLoc Board::alphabeta(bool maximize, int alpha, int beta, size_t depth){
-  //Leaf
   if (won('R')) { return r_win; }
   if (won('B')) { return b_win; }
-  if (filled()) { return draw; }
+  if (numTurns() == n) { return draw; }
 
-  //Internal node
   int max = -10;
   int min = 10;
   int loc = -1;
@@ -151,6 +157,7 @@ scoreAndLoc Board::alphabeta(bool maximize, int alpha, int beta, size_t depth){
   
   //Otherwise, look at all possible moves
   for(size_t i = first; i <= last; i++){
+    if (i == killers[depth].first || i == killers[depth].second) {continue;}
     if (alphabeta_helper(i, maximize, depth, max, min, loc, alpha, beta))
       //Store as a killer move
       {

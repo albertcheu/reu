@@ -52,6 +52,9 @@ class Board{
   //Check if there's no more plays left
   bool filled();
 
+  //how many turns passed
+  size_t numTurns();
+
   //The meat of the program
   scoreAndLoc minimax(bool maximize);
   scoreAndLoc alphabeta(bool maximize, int alpha, int beta, size_t depth=0);

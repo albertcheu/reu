@@ -130,7 +130,7 @@ void search_for_G(){
     //Play alphabeta against itself (red player = player 1)
     bool redPlayer = true;
     size_t depth = 0;
-    while(b.noWinner() && ! b.filled()){
+    while(b.noWinner() && b.numTurns() != n){
       int loc;
       scoreAndLoc sal = b.alphabeta(redPlayer,-10,10, depth++);
       loc = sal.second;
@@ -150,6 +150,16 @@ void search_for_G(){
 }
 
 int main(){
-  //play_game();
-  search_for_G();
+  bool search = true;
+  string s = "";
+  while(s != "y" && s != "n"){
+    cout << "Do you want to play (y) or search (n)? [y/n]: ";
+    cin >> s;
+    if (s == "y") { search = false; }
+  }
+
+  if (search) { search_for_G(); }
+
+  else { play_game(); }
+
 }

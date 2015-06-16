@@ -1,40 +1,8 @@
-Suppose we have some VDW(k,c=2) number W.
-By definition, any 2-coloring of the first W integers has a k-AP.
-Look at the first W+1 numbers.
-It has 1...W as a subset, so it too must have a k-AP.
-Inductively, this means *THM-1*: any 2-coloring of n >= W has a k-AP.
+Monte Carlo
 
-Suppose we have some GW(k) number G.
-By definition, perfect plays yield a k-AP on a board size of G.
-
-Let w = VDW(k-1,c=2)
-*Question: is G >= w?
-If true, then by THM-1, the first w numbers of G must have a (k-1)AP
-
-...
-
-PRUNING GAMES
-*Question: Does playing perfectly on any n > G yield a k-AP as well?
-If true, then player 1 will win all games on board(n) for n from G to W
-
-Well, it is known G <= W.
-If G = W, then any n > G has a k-AP by THM-1 (don't even have to be perfect!)
-Otherwise, assume some smallest n without a k-AP where G < n < W.
-...
-
-PRUNING A GAME
-*Question: Is there n for which player 1 will win board(n) by choosing 1 first?
-(Due to symmetry, the question is the same for starting at n)
-If false, the computer can stop the running of alphabeta when player1 chooses 1 first (we know, by contrapositive, player1 will draw)
-
-Assume there is
-(Also assume player 1 is R, player 2 is B)
-The k-AP cant be in [2,n] because it would belong to B (player 1 in board(n-1))
-So the k-AP must include the Red 1.
-For a given separation d, the rightmost member of that k-AP is at (k-1)*d.
-There are a certain number of possible d's, determined by n and k
-d ranges from 1 (RRR...) to n/(k-1) (floor or ciel, I can't tell)
-When k > 2 (always for our programs) this set of integers is a fraction of n
-We know GW(k=3), so k > 3. The fraction is smaller than n/2.
-So B, who has floor(n / 2) moves, is able to block all k-APs R can make.
-Contradiction!
+For each available move:
+    Put char on spot
+    Until the number of games has reached a max
+        Fill board randomly (alternate between R and B)
+	Reset board
+	Send up the value (win/lose/draw)

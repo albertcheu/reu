@@ -13,15 +13,15 @@ Board::Board(size_t n, size_t k)
 size_t Board::size(){return n;}
 
 bool Board::won(char c){
-  for(int i = 0; i < n; i++){
+  for(int i = 0; i <= n-k; i++){
     int d = 1;
     while (true){
       int rightmost = i + (k-1)*d;
-      if (rightmost > n) { break; }
+      if (rightmost >= n) { break; }
 
       bool homogenous = true;
       for(int j = 0; j < k; j++){
-	if (grid[i+j*d] != c) {
+	if (grid[i+(j*d)] != c) {
 	  homogenous = false;
 	  break;
 	}
@@ -102,44 +102,20 @@ scoreAndLoc Board::minimax(bool maximize){
   return scoreAndLoc((maximize?max:min), loc);
 }
 
-std::pair<bool,bool> Board::speedyCheck(){
-  std::pair<bool,bool> ans;
-  ans.first = ans.second = true;
-
+bool Board::symmetric(){
   size_t middle = (n-1)/2;
   for (size_t i = 0; i < n; i++){
-    //Empty
-    if (grid[i] == 'R' || grid[i] == 'B')
-      { ans.first = false; }
-
-    //Symmetry
-    if (i <= middle && grid[i] != grid[n-1-i])
-      { ans.second = false; }
-
-    if (!ans.first && !ans.second) { break; }
+    if (i <= middle && grid[i] != grid[n-1-i]) { return false; }
   }
-
-  return ans;
+  return true;
 }
 
 scoreAndLoc Board::alphabeta(bool maximize, int alpha, int beta, size_t depth){
   if (won('R')) { return r_win; }
   if (won('B')) { return b_win; }
-  if (numTurns() == n) { return draw; }
+  if (depth == n) { return draw; }
 
-  int max = -10;
-  int min = 10;
-  int loc = -1;
-
-  //First & Last elements to check
-  size_t first = 0;
-  size_t last = n-1;
-
-  std::pair<bool,bool> es = speedyCheck();
-  //empty = first move -> don't play on 1 (index 0)
-  if (es.first) { first = 1; }
-  //if symmetric, explore only the left side
-  if (es.second){ last = (n-1) / 2; }
+  int max = -10;  int min = 10;  int loc = -1;
 
   //Add placeholder that will be changed later on
   if (depth == killers.size())
@@ -156,16 +132,42 @@ scoreAndLoc Board::alphabeta(bool maximize, int alpha, int beta, size_t depth){
     {  return scoreAndLoc((maximize?max:min), loc); }
   
   //Otherwise, look at all possible moves
-  for(size_t i = first; i <= last; i++){
-    if (i == killers[depth].first || i == killers[depth].second) {continue;}
-    if (alphabeta_helper(i, maximize, depth, max, min, loc, alpha, beta))
-      //Store as a killer move
+  //symmetry -> don't bother checking rhs
+  bool s = symmetric();
+
+  //Loop
+  int i = (n-1)/2;
+  int lowerbound = 0;
+  //empty = first move -> don't play on 1 (index 0)
+  if (depth == 0) { lowerbound = 1; }
+
+  while(i >= lowerbound){
+
+    //Check i
+    if (i != killers[depth].first && i != killers[depth].second &&
+	alphabeta_helper(i, maximize, depth, max, min, loc, alpha, beta))
+	//Store as a killer move
       {
 	if (killers[depth].second != n)
 	  { killers[depth].first = killers[depth].second; }
 	killers[depth].second = i;
 	break;
       }
+
+    int j = n-i-1;
+    i--;
+    if (s) {continue;}
+    //if not symmetrical, check "reflection" of i
+    if (j != killers[depth].first && j != killers[depth].second &&
+	alphabeta_helper(j, maximize, depth, max, min, loc, alpha, beta))
+      //Store as a killer move
+      {
+	if (killers[depth].second != n)
+	  { killers[depth].first = killers[depth].second; }
+	killers[depth].second = j;
+	break;
+      }
+
   }
 
   return scoreAndLoc((maximize?max:min), loc);

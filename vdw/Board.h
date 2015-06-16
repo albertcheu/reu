@@ -22,8 +22,8 @@ class Board{
   //the size of the arithmetic progression and of the board
   size_t k, n;
 
-  //first element is whether the board is empty, second is true iff symmetric
-  std::pair<bool,bool> speedyCheck();
+  //std::pair<bool,bool> speedyCheck();
+  bool symmetric();
 
   //for killer heuristic
   std::vector<std::pair<size_t,size_t> > killers;
@@ -34,6 +34,9 @@ class Board{
   bool alphabeta_helper(size_t i, bool maximize, size_t depth,
 			int& max, int& min, int& loc,
 			int& alpha, int& beta);
+
+  //how many turns passed
+  size_t numTurns();
 
  public:
   Board(size_t n, size_t k);
@@ -51,9 +54,6 @@ class Board{
   
   //Check if there's no more plays left
   bool filled();
-
-  //how many turns passed
-  size_t numTurns();
 
   //The meat of the program
   scoreAndLoc minimax(bool maximize);

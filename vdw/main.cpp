@@ -1,6 +1,7 @@
 //Made by Albert Cheu, 5/3/15
 #include <string>
 #include "Board.h"
+#include <time.h>
 
 using namespace std;
 
@@ -123,14 +124,17 @@ void search_for_G(){
   }
 
   //Iterate thru board sizes
+
   while(true){
+    clock_t t = clock();
+
     Board b(n,k);
     b.print();
 
     //Play alphabeta against itself (red player = player 1)
     bool redPlayer = true;
     size_t depth = 0;
-    while(b.noWinner() && b.numTurns() != n){
+    while(b.noWinner() && depth != n){
       int loc;
       scoreAndLoc sal = b.alphabeta(redPlayer,-10,10, depth++);
       loc = sal.second;
@@ -140,12 +144,18 @@ void search_for_G(){
     }
     b.print();
 
+    t = clock() - t;
+    cout << "It took me " << t << " clicks (";
+    cout << ((float)t)/CLOCKS_PER_SEC << " seconds)" << endl;
+
     //Stop when player 1 wins
     if (b.won('R')) { break; }
 
     //Continue with bigger board size
     else { n++; }
+
   }
+
   cout << "GW(k=" << k << ") = " << n << endl;
 }
 

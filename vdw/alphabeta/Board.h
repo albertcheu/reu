@@ -18,7 +18,7 @@ class Board{
  private:
   //The actual board on which we play
   std::vector<char> grid;
-
+  std::vector<int> empties;
   //the size of the arithmetic progression and of the board
   size_t k, n;
 

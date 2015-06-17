@@ -4,7 +4,10 @@
 Board::Board(size_t n, size_t k)
   :n(n), k(k)
 {
-  for(size_t i = 0; i < n; i++){ grid.push_back('.'); }
+  for(size_t i = 0; i < n; i++){
+    grid.push_back('.');
+    empties.push_back(i);
+  }
   //Depth 0 is the first move, no other branches
   //so we put a dummy here
   killers.push_back(std::pair<size_t,size_t>(n,n));
@@ -40,20 +43,9 @@ bool Board::won(char c){
 
 bool Board::noWinner(){ return !(won('R') || won('B')); }
 
-size_t Board::numTurns(){
-  size_t ans = 0;
-  for(int i = 0; i < n; i++){
-    if (grid[i] == 'R' || grid[i] == 'B') { ans++; }
-  }
-  return ans;
-}
+size_t Board::numTurns(){ return n - empties.size(); }
 
-bool Board::filled(){
-  for(int i = 0; i < n; i++){
-    if (grid[i] != 'R' && grid[i] != 'B') { return false; }
-  }
-  return true;
-}
+bool Board::filled(){ return empties.size() == 0; }
 
 void Board::print(){
   for(int i = 0; i < n; i++){ std::cout << grid[i]; }
@@ -63,8 +55,14 @@ void Board::print(){
 bool Board::play(char c, int loc){
   if (grid[loc] != 'R' && grid[loc] != 'B'){
     grid[loc] = c;
+    //Delete loc in empties, if it is in that vector
+    std::vector<int>::iterator itr= std::lower_bound(empties.begin(),
+						     empties.end(),
+						     loc);
+    if (*itr == loc) { empties.erase(itr); }
     return true;
   }
+
   return false;
 }
 
@@ -136,15 +134,14 @@ scoreAndLoc Board::alphabeta(bool maximize, int alpha, int beta, size_t depth){
   bool s = symmetric();
 
   //Loop
-  int i = (n-1)/2;
-  int lowerbound = 0;
-  //empty = first move -> don't play on 1 (index 0)
-  if (depth == 0) { lowerbound = 1; }
+  int emptiesIndex = (empties.size()-1)/2;
 
-  while(i >= lowerbound){
+  while(emptiesIndex > -1){
+    int i = empties[emptiesIndex];
 
     //Check i
-    if (i != killers[depth].first && i != killers[depth].second &&
+    if (!(depth == 0 && i==0) &&
+	i != killers[depth].first && i != killers[depth].second &&
 	alphabeta_helper(i, maximize, depth, max, min, loc, alpha, beta))
 	//Store as a killer move
       {
@@ -154,8 +151,9 @@ scoreAndLoc Board::alphabeta(bool maximize, int alpha, int beta, size_t depth){
 	break;
       }
 
-    int j = n-i-1;
-    i--;
+    int se = empties.size()-emptiesIndex-1;
+    int j = empties[se];
+    emptiesIndex--;
     if (s) {continue;}
     //if not symmetrical, check "reflection" of i
     if (j != killers[depth].first && j != killers[depth].second &&

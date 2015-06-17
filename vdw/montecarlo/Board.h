@@ -17,10 +17,13 @@ class Board{
   //The actual board on which we play
   std::vector<char> grid;
 
+  std::vector<int> empties;
+
   //the size of the arithmetic progression and of the board
   size_t k, n;
 
-  bool symmetric();
+  //bool symmetric();
+  //bool symmetric;
 
   //how many turns passed
   size_t numTurns();

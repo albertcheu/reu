@@ -3,8 +3,12 @@
 
 Board::Board(size_t n, size_t k)
   :n(n), k(k)
+   //,symmetric(true)
 {
-  for(size_t i = 0; i < n; i++){ grid.push_back('.'); }
+  for(size_t i = 0; i < n; i++){
+    grid.push_back('.');
+    empties.push_back(i);
+  }
 }
 
 size_t Board::size(){return n;}
@@ -16,18 +20,19 @@ bool Board::won(char c){
       int rightmost = i + (k-1)*d;
       if (rightmost >= n) { break; }
 
-      bool homogenous = true;
+      bool monochromatic = true;
       for(int j = 0; j < k; j++){
 	if (grid[i+(j*d)] != c) {
-	  homogenous = false;
+	  monochromatic = false;
 	  break;
 	}
       }
-      if (homogenous) { return true; }
+      if (monochromatic) { return true; }
 
       d++;
     }
 
+    //If a k-AP doesnt fit with d=1, it can't work for any other d
     if (d == 1) { break; }
 
   }
@@ -37,20 +42,9 @@ bool Board::won(char c){
 
 bool Board::noWinner(){ return !(won('R') || won('B')); }
 
-size_t Board::numTurns(){
-  size_t ans = 0;
-  for(int i = 0; i < n; i++){
-    if (grid[i] == 'R' || grid[i] == 'B') { ans++; }
-  }
-  return ans;
-}
+size_t Board::numTurns(){ return n - empties.size(); }
 
-bool Board::filled(){
-  for(int i = 0; i < n; i++){
-    if (grid[i] != 'R' && grid[i] != 'B') { return false; }
-  }
-  return true;
-}
+bool Board::filled(){ return empties.size() == 0; }
 
 void Board::print(){
   for(int i = 0; i < n; i++){ std::cout << grid[i]; }
@@ -60,11 +54,18 @@ void Board::print(){
 bool Board::play(char c, int loc){
   if (grid[loc] != 'R' && grid[loc] != 'B'){
     grid[loc] = c;
+    //Delete loc in empties, if it is in that vector
+    std::vector<int>::iterator itr= std::lower_bound(empties.begin(),
+						     empties.end(),
+						     loc);
+    if (*itr == loc) { empties.erase(itr); }
     return true;
   }
+
   return false;
 }
 
+/*
 bool Board::symmetric(){
   size_t middle = (n-1)/2;
   for (size_t i = 0; i < n; i++){
@@ -72,19 +73,16 @@ bool Board::symmetric(){
   }
   return true;
 }
+*/
 
 int Board::montecarlo(bool redPlayer, int numTrials){  
-  int ans = -1;
+  int ans = empties[0];
   int mostWins = -1;
   int lastDraws = -1;
 
-  std::vector<int> empties, indices;
-  for(int i = 0; i < n; i++){
-    if (grid[i] == '.') {
-      empties.push_back(i);
-      indices.push_back(indices.size());
-      ans = i;
-    }
+  std::vector<int> indices;
+  for(int e = 0; e < empties.size(); e++){
+    indices.push_back(e);
   }
 
   for(int e = 0; e < empties.size(); e++){
@@ -103,7 +101,9 @@ int Board::montecarlo(bool redPlayer, int numTrials){
     int numWins = (redPlayer?r.redWins:r.blueWins);
     if (numWins > mostWins || 
 	(numWins == mostWins && r.numDraws > lastDraws)){
+
       ans = i;
+
       mostWins = numWins;
       lastDraws = r.numDraws;
     }
@@ -144,7 +144,6 @@ Record Board::runTrials(bool redPlayer, int numTrials,
     if (empties[j] == i) { continue; }
     grid[empties[j]] = '.';
   }
-
 
   return r;
 }

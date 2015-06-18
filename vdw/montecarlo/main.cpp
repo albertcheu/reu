@@ -98,7 +98,41 @@ void play_game(){
   else { cout << "Nobody won!" << endl; }
 }
 
-void test_n(){
+Record test_n(int k, int n){
+  cout << "Testing k = " << k << ", n = " << n << endl;
+
+  clock_t t = clock();
+  Record r = {0,0,0};
+
+  for(int i = 0; i < 100; i++){
+    Board b(n,k);
+
+    //Play montecarlo against itself
+    bool redPlayer = true;
+    size_t depth = 0;
+    while(b.noWinner() && depth != n){
+      int loc = b.montecarlo(redPlayer, MC_TRIALS);
+      b.play(redPlayer?'R':'B', loc);
+      redPlayer = (!redPlayer);
+      depth++;
+    }
+
+    if (b.won('R')) { r.redWins++; }
+    else if (b.won('B')) { r.blueWins++; }
+    else { r.numDraws++; }
+  }
+
+  t = clock() - t;
+  cout << "It took me " << ((float)t)/CLOCKS_PER_SEC << " seconds" << endl;
+
+  cout << "Number of R wins: " << r.redWins << endl;
+  cout << "Number of B wins: " << r.blueWins << endl;
+  cout << "Number of draws: " << r.numDraws << endl;
+
+  return r;
+}
+
+void search_for_G(){
   string s;
 
   //Ask for k
@@ -113,55 +147,50 @@ void test_n(){
 
   size_t n = 3;
   while(true){
-    cout << "How big should the board be? n = ";
+    cout << "What's the starting size of the board? n = ";
     cin >> s;
     n = toNumber(s, 10000);
     if (n == -1) { cout << "Please enter 0 < n < 10000" << endl; }
     else { break; }
   }
+  
+  int upperBound = 100000;
+  int lowerBound = 0;
+  Record r1,r2;
+  bool binSearch = false;
 
-  clock_t t = clock();
-  Record r = {0,0,0};
-  for(int i = 0; i < 100; i++){
-    Board b(n,k);
+  while(lowerBound < upperBound) {
+    r1 = test_n(k,n);
+    r2 = test_n(k,n-1);
+    if (r1.redWins >= 50 && r2.redWins < 50) { break; }
+    else if (r2.redWins >= 50) { binSearch = true; }
 
-    //Play montecarlo against itself
-    bool redPlayer = true;
-    size_t depth = 0;
-    while(b.noWinner() && depth != n){
-      int loc = b.montecarlo(redPlayer, MC_TRIALS);
-      //cout << loc+1 << endl;
-      b.play(redPlayer?'R':'B', loc);
-      redPlayer = (!redPlayer);
-      depth++;
+    if (binSearch) {
+      if (r2.redWins < 50) { lowerBound = n; }
+      else { upperBound = n; }
+      n = (upperBound + lowerBound) / 2;
     }
-    //b.print();
-
-    if (b.won('R')) { r.redWins++; }
-    else if (b.won('B')) { r.blueWins++; }
-    else { r.numDraws++; }
+    else {
+      lowerBound = n;
+      if (r1.redWins < 20) { n *= 2; }
+      else if (r1.redWins < 40) { n += 10; }
+      else if (r1.redWins < 50) { n++; }
+    }
   }
-
-  t = clock() - t;
-  cout << "It took me " << t << " clicks (";
-  cout << ((float)t)/CLOCKS_PER_SEC << " seconds)" << endl;
-
-  cout << "Number of R wins: " << r.redWins << endl;
-  cout << "Number of B wins: " << r.blueWins << endl;
-  cout << "Number of draws: " << r.numDraws << endl;
+  cout << "I think GW(" << k << ") = " << n << endl;
 }
 
 int main(){
   srand(unsigned(time(0)));
-  bool test = true;
+  bool search = true;
   string s = "";
   while(s != "y" && s != "n"){
-    cout << "Do you want to play (y) or test (n)? [y/n]: ";
+    cout << "Do you want to play (y) or search (n)? [y/n]: ";
     cin >> s;
-    if (s == "y") { test = false; }
+    if (s == "y") { search = false; }
   }
 
-  if (test) { test_n(); }
+  if (search) { search_for_G(); }
 
   else { play_game(); }
 

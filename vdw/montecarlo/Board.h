@@ -6,7 +6,7 @@
 #include <ctime>
 #include <cstdlib>
 
-#define MC_TRIALS 2000
+#define MC_TRIALS 3000
 
 struct Record{
   int redWins,blueWins,numDraws;

@@ -124,7 +124,6 @@ void test_n(){
   Record r = {0,0,0};
   for(int i = 0; i < 100; i++){
     Board b(n,k);
-    //b.print();
 
     //Play montecarlo against itself
     bool redPlayer = true;

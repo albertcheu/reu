@@ -78,7 +78,7 @@ bool Board::symmetric(){
 int Board::montecarlo(bool redPlayer, int numTrials){  
   int ans = empties[0];
   int mostWins = -1;
-  int lastDraws = -1;
+  int fewestLosses = numTrials;
 
   std::vector<int> indices;
   for(int e = 0; e < empties.size(); e++){
@@ -99,13 +99,14 @@ int Board::montecarlo(bool redPlayer, int numTrials){
 
     //Update
     int numWins = (redPlayer?r.redWins:r.blueWins);
-    if (numWins > mostWins || 
-	(numWins == mostWins && r.numDraws > lastDraws)){
-
+    int numLosses = (redPlayer?r.blueWins:r.redWins);
+    if (numWins > mostWins) {
       ans = i;
-
       mostWins = numWins;
-      lastDraws = r.numDraws;
+    }    
+    else if (numWins == mostWins && numLosses < fewestLosses) {
+      ans = i;
+      fewestLosses = numLosses;
     }
 
   }

@@ -100,15 +100,17 @@ int Board::montecarlo(bool redPlayer, int numTrials){
     //Update
     int numWins = (redPlayer?r.redWins:r.blueWins);
     int numLosses = (redPlayer?r.blueWins:r.redWins);
+    
     if (numWins > mostWins) {
       ans = i;
       mostWins = numWins;
-    }    
-    else if (numWins == mostWins && numLosses < fewestLosses) {
+    }
+    
+    else if (numLosses < fewestLosses) {
       ans = i;
       fewestLosses = numLosses;
     }
-
+    
   }
 
   return ans;

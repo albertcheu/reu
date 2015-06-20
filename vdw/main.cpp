@@ -1,5 +1,4 @@
-//Made by Albert Cheu, 5/3/15
-#include "Board.h"
+#include "Board_AB.h"
 
 using namespace std;
 
@@ -53,7 +52,7 @@ void play_game(){
   }
 
   bool player1 = true;
-  Board b(boardSize, k);
+  Board_AB b(boardSize, k);
   b.print();
   size_t depth = (computer1?0:1);
 
@@ -63,7 +62,8 @@ void play_game(){
     int loc;
 
     if (player1 == computer1){
-      loc = b.montecarlo(true,MC_TRIALS);
+      scoreAndLoc sal = b.alphabeta(true,-10,10,depth);
+      loc = sal.second;
       cout << loc+1 << endl;
       b.play('R', loc);
     }
@@ -91,6 +91,8 @@ void play_game(){
 
     //Switch turns
     player1 = !player1;
+
+    depth++;
   }
 
   if (b.won('R')) { cout << "R won!" << endl; }
@@ -98,44 +100,9 @@ void play_game(){
   else { cout << "Nobody won!" << endl; }
 }
 
-Record test_n(int k, int n){
-  cout << "Testing k = " << k << ", n = " << n << endl;
-
-  clock_t t = clock();
-  Record r = {0,0,0};
-
-  for(int i = 0; i < 100; i++){
-    Board b(n,k);
-
-    //Play montecarlo against itself
-    bool redPlayer = true;
-    size_t depth = 0;
-    while(b.noWinner() && depth != n){
-      int loc = b.montecarlo(redPlayer, MC_TRIALS);
-      b.play(redPlayer?'R':'B', loc);
-      redPlayer = (!redPlayer);
-      depth++;
-    }
-
-    if (b.won('R')) { r.redWins++; }
-    else if (b.won('B')) { r.blueWins++; }
-    else { r.numDraws++; }
-  }
-
-  t = clock() - t;
-  cout << "It took me " << ((float)t)/CLOCKS_PER_SEC << " seconds" << endl;
-
-  cout << "Number of R wins: " << r.redWins << endl;
-  cout << "Number of B wins: " << r.blueWins << endl;
-  cout << "Number of draws: " << r.numDraws << endl;
-
-  return r;
-}
-
 void search_for_G(){
-  string s;
-
   //Ask for k
+  string s;
   int k = 3;
   while(true){
     cout << "How long should the arthmetic sequence be? k = ";
@@ -147,51 +114,65 @@ void search_for_G(){
 
   size_t n = 3;
   while(true){
-    cout << "What's the starting size of the board? n = ";
+    cout << "How big should the board be? n = ";
     cin >> s;
     n = toNumber(s, 10000);
     if (n == -1) { cout << "Please enter 0 < n < 10000" << endl; }
     else { break; }
   }
-  
-  int upperBound = 100000;
-  int lowerBound = 0;
-  Record r1,r2;
-  bool binSearch = false;
 
-  while(lowerBound < upperBound) {
-    r1 = test_n(k,n);
-    r2 = test_n(k,n-1);
-    if (r1.redWins >= 50 && r2.redWins < 50) { break; }
-    else if (r2.redWins >= 50) { binSearch = true; }
+  //Iterate thru board sizes
 
-    if (binSearch) {
-      if (r2.redWins < 50) { lowerBound = n; }
-      else { upperBound = n; }
-      n = (upperBound + lowerBound) / 2;
+  while(true){
+    clock_t t = clock();
+
+    Board_AB b(n,k);
+    b.print();
+
+    //Play alphabeta against itself (red player = player 1)
+    bool redPlayer = true;
+    size_t depth = 0;
+    while(b.noWinner() && depth != n){
+      int loc;
+      scoreAndLoc sal = b.alphabeta(redPlayer,-10,10, depth++);
+      loc = sal.second;
+      cout << loc+1 << endl;
+      b.play(redPlayer?'R':'B', loc);
+      redPlayer = (!redPlayer);
     }
-    else {
-      lowerBound = n;
-      if (r1.redWins < 20) { n *= 2; }
-      else if (r1.redWins < 40) { n += 10; }
-      else if (r1.redWins < 50) { n += 2; }
-    }
+    b.print();
+
+    t = clock() - t;
+    cout << "It took me " << t << " clicks (";
+    cout << ((float)t)/CLOCKS_PER_SEC << " seconds)" << endl;
+
+    //Stop when player 1 wins
+    if (b.winner() == 'R') { break; }
+
+    //Continue with bigger board size
+    else { n++; }
+
   }
-  cout << "I think GW(" << k << ") = " << n << endl;
+
+  cout << "GW(k=" << k << ") = " << n << endl;
 }
 
-int main(){
-  srand(unsigned(time(0)));
+int main(int argc, char** argv){
+
   bool search = true;
   string s = "";
-  while(s != "y" && s != "n"){
-    cout << "Do you want to play (y) or search (n)? [y/n]: ";
-    cin >> s;
-    if (s == "y") { search = false; }
+
+  if (argc == 2) {
+    s = argv[1];
+
+    if (s == "mc") {
+      cout << "Run monte-carlo" << endl;
+    }
+
+    else if (s == "ab") {
+      cout << "Run alpha-beta" << endl;
+      search_for_G();
+    }
   }
-
-  if (search) { search_for_G(); }
-
-  else { play_game(); }
 
 }

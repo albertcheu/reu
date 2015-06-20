@@ -3,7 +3,6 @@
 
 Board::Board(size_t n, size_t k)
   :n(n), k(k)
-   //,symmetric(true)
 {
   for(size_t i = 0; i < n; i++){
     grid.push_back('.');
@@ -13,6 +12,13 @@ Board::Board(size_t n, size_t k)
 
 size_t Board::size(){return n;}
 
+bool Board::won_helper(char c, int start, int d){
+  for(int j = 0; j < k; j++){
+    if (grid[start+(j*d)] != c) { return false; }
+  }
+  return true;
+}
+
 bool Board::won(char c){
   for(int i = 0; i <= n-k; i++){
     int d = 1;
@@ -20,14 +26,7 @@ bool Board::won(char c){
       int rightmost = i + (k-1)*d;
       if (rightmost >= n) { break; }
 
-      bool monochromatic = true;
-      for(int j = 0; j < k; j++){
-	if (grid[i+(j*d)] != c) {
-	  monochromatic = false;
-	  break;
-	}
-      }
-      if (monochromatic) { return true; }
+      if (won_helper(c, i, d)) { return true; }
 
       d++;
     }
@@ -65,16 +64,6 @@ bool Board::play(char c, int loc){
   return false;
 }
 
-/*
-bool Board::symmetric(){
-  size_t middle = (n-1)/2;
-  for (size_t i = 0; i < n; i++){
-    if (i <= middle && grid[i] != grid[n-1-i]) { return false; }
-  }
-  return true;
-}
-*/
-
 int Board::montecarlo(bool redPlayer, int numTrials){  
   int ans = empties[0];
   int mostWins = -1;
@@ -91,8 +80,14 @@ int Board::montecarlo(bool redPlayer, int numTrials){
     //Put character in
     grid[i] = (redPlayer?'R':'B');
 
-    //Run <numTrials> trials, keeping count of wins/losses/draws
-    Record r = runTrials(!redPlayer, numTrials, indices, empties, i);
+    //Run trials, keeping count of wins/losses/draws
+    float frac = sqrt((float)n*n - (n-empties.size())*(n-empties.size())) / n;
+    //int nt = numTrials * empties.size() / n;
+    int nt = (int)(numTrials * frac);
+    Record r = runTrials(!redPlayer,
+			 //numTrials,
+			 (nt>4?nt:4),
+			 indices, i);
 
     //Make empty again
     grid[i] = '.';
@@ -100,13 +95,14 @@ int Board::montecarlo(bool redPlayer, int numTrials){
     //Update
     int numWins = (redPlayer?r.redWins:r.blueWins);
     int numLosses = (redPlayer?r.blueWins:r.redWins);
-    
+    /*
     if (numWins > mostWins) {
       ans = i;
       mostWins = numWins;
+      //fewestLosses = (fewestLosses>numLosses?numLosses:fewestLosses);
     }
-    
-    else if (numLosses < fewestLosses) {
+    */
+    if (numLosses < fewestLosses) {
       ans = i;
       fewestLosses = numLosses;
     }
@@ -117,8 +113,7 @@ int Board::montecarlo(bool redPlayer, int numTrials){
 }
 
 Record Board::runTrials(bool redPlayer, int numTrials,
-			std::vector<int>& indices,
-			const std::vector<int>& empties, int i){
+			std::vector<int>& indices, int i){
   Record r = {0,0,0};
 
   for(int t = 0; t < numTrials; t++){
@@ -129,23 +124,27 @@ Record Board::runTrials(bool redPlayer, int numTrials,
 
     //Traverse empties by indices
     //Skip i == empties[index]
+    bool rw, bw;
+    rw = bw = false;
     for(int index = 0; index < indices.size(); index++){
       int j = indices[index];
       if (empties[j] == i) { continue; }
       grid[empties[j]] = (red?'R':'B');
+
+      if (won('R')) { r.redWins++; rw = true; break;}
+      else if (won('B')) { r.blueWins++; bw = true; break; }
+
       red = !red;
     }
 
-    //Update counts of won/lost/draw
-    if (won('R')) { r.redWins++; }
-    else if (won('B')) { r.blueWins++; }
-    else { r.numDraws++; }
-  }
+    if (!rw && ! bw) { r.numDraws++; }
 
-  //Make empty spots empty again
-  for (int j = 0; j < empties.size(); j++){
-    if (empties[j] == i) { continue; }
-    grid[empties[j]] = '.';
+    //Make empty spots empty again
+    for (int j = 0; j < empties.size(); j++){
+      if (empties[j] == i) { continue; }
+      grid[empties[j]] = '.';
+    }
+
   }
 
   return r;

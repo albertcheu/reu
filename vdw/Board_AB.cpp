@@ -17,13 +17,13 @@ bool Board_AB::symmetric(){
 }
 
 scoreAndLoc Board_AB::alphabeta(bool maximize, int alpha, int beta,
-				size_t depth){
-  //if (won('R')) { return r_win; }
-  //if (won('B')) { return b_win; }
-  char w = winner();
-  if (w == 'R') { return r_win; }
-  if (w == 'B') { return b_win; }
-  if (depth == n) { return draw; }
+				size_t depth, size_t rdepth){
+  if (rdepth > 0){
+    char w = winner();
+    if (w == 'R') { return r_win; }
+    if (w == 'B') { return b_win; }
+    if (depth == n) { return draw; }
+  }
 
   int max = -10;  int min = 10;  int loc = -1;
 
@@ -34,11 +34,13 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, int alpha, int beta,
   //Do our (valid) killer moves for this depth result in a cutoff?
   size_t killer = killers[depth].first;
   if (killer != n &&
-      alphabeta_helper(killer, maximize, depth, max, min, loc, alpha, beta))
+      alphabeta_helper(killer, maximize, depth, max, min,
+		       loc, alpha, beta, rdepth))
     {  return scoreAndLoc((maximize?max:min), loc); }
   killer = killers[depth].second;
   if (killer != n &&
-      alphabeta_helper(killer, maximize, depth, max, min, loc, alpha, beta))
+      alphabeta_helper(killer, maximize, depth, max, min,
+		       loc, alpha, beta, rdepth))
     {  return scoreAndLoc((maximize?max:min), loc); }
   
   //Otherwise, look at all possible moves
@@ -54,9 +56,15 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, int alpha, int beta,
     //Check i
     if (!(depth == 0 && i==0) &&
 	i != killers[depth].first && i != killers[depth].second &&
-	alphabeta_helper(i, maximize, depth, max, min, loc, alpha, beta))
-	//Store as a killer move
+	alphabeta_helper(i, maximize, depth, max, min,
+			 loc, alpha, beta, rdepth))
+	
       {
+	if (rdepth == 0){
+	  if (maximize && max==R_WIN){ return scoreAndLoc(R_WIN, loc); }
+	  if (!maximize && min==B_WIN){ return scoreAndLoc(B_WIN, loc); }
+	}
+	//Store as a killer move
 	if (killers[depth].second != n)
 	  { killers[depth].first = killers[depth].second; }
 	killers[depth].second = i;
@@ -69,9 +77,13 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, int alpha, int beta,
     if (s) {continue;}
     //if not symmetrical, check "reflection" of i
     if (j != killers[depth].first && j != killers[depth].second &&
-	alphabeta_helper(j, maximize, depth, max, min, loc, alpha, beta))
-      //Store as a killer move
+	alphabeta_helper(j, maximize, depth, max, min,
+			 loc, alpha, beta, rdepth))
       {
+	if (rdepth == 0){
+	  if (maximize && max==R_WIN){ return scoreAndLoc(R_WIN, loc); }
+	  if (!maximize && min==B_WIN){ return scoreAndLoc(B_WIN, loc); }
+	}
 	if (killers[depth].second != n)
 	  { killers[depth].first = killers[depth].second; }
 	killers[depth].second = j;
@@ -84,14 +96,14 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, int alpha, int beta,
 }
 
 bool Board_AB::alphabeta_helper(size_t i, bool maximize, size_t depth,
-			     int& max, int& min, int& loc,
-			     int& alpha, int& beta){
+				int& max, int& min, int& loc,
+				int& alpha, int& beta, size_t rdepth){
   char old = grid[i];
   if (old == 'R' || old == 'B') { return false; }
   grid[i] = (maximize?'R':'B');
   scoreAndLoc p = (maximize
-		   ? alphabeta(false, max, beta, depth+1)
-		   : alphabeta(true, alpha, min, depth+1));
+		   ? alphabeta(false, max, beta, depth+1, rdepth+1)
+		   : alphabeta(true, alpha, min, depth+1, rdepth+1));
   grid[i] = old;
 
   if (maximize && p.first > max) {

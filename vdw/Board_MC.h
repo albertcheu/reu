@@ -1,8 +1,9 @@
+#pragma once
 #include <cmath>
 #include <algorithm>
 #include "Board.h"
 
-#define MC_TRIALS 6000
+#define MC_TRIALS 3000
 
 struct Record{
   int redWins,blueWins,numDraws;

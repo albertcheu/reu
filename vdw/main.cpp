@@ -126,7 +126,7 @@ Record test_n(int n, int k){
 
     //Play montecarlo against itself
     bool redPlayer = true;
-    size_t depth = 0;
+    int depth = 0;
     while(b.noWinner() && depth != n){
       int loc = b.montecarlo(redPlayer, MC_TRIALS);
       b.play(redPlayer?'R':'B', loc);
@@ -134,8 +134,9 @@ Record test_n(int n, int k){
       depth++;
     }
 
-    if (b.won('R')) { r.redWins++; }
-    else if (b.won('B')) { r.blueWins++; }
+    char w = b.winner();
+    if (w == 'R') { r.redWins++; }
+    else if (w == 'B') { r.blueWins++; }
     else { r.numDraws++; }
   }
 
@@ -150,15 +151,16 @@ Record test_n(int n, int k){
 }
 
 void search_for_G_MC(int n, int k){
-  
+  srand(time(NULL));
+
   int upperBound = 100000;
   int lowerBound = 0;
   Record r1,r2;
   bool binSearch = false;
 
   while(lowerBound < upperBound) {
-    r1 = test_n(k,n);
-    r2 = test_n(k,n-1);
+    r1 = test_n(n,k);
+    r2 = test_n(n-1,k);
     if (r1.redWins >= 50 && r2.redWins < 50) { break; }
     else if (r2.redWins >= 50) { binSearch = true; }
 
@@ -169,7 +171,7 @@ void search_for_G_MC(int n, int k){
     }
     else {
       lowerBound = n;
-      if (r1.redWins < 20) { n *= 2; }
+      if (r1.redWins < 25) { n *= 2; }
       else if (r1.redWins < 40) { n += 10; }
       else if (r1.redWins < 50) { n += 2; }
     }

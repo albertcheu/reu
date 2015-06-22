@@ -35,6 +35,7 @@ int Board_MC::montecarlo(bool redPlayer, int numTrials){
   int ans = empties[0];
   int mostWins = -1;
   int fewestLosses = numTrials;
+  //int biggestDiff = -1;
 
   std::vector<int> indices;
   for(int e = 0; e < empties.size(); e++){
@@ -53,7 +54,7 @@ int Board_MC::montecarlo(bool redPlayer, int numTrials){
     int nt = (int)(numTrials * frac);
     Record r = runTrials(!redPlayer,
 			 //numTrials,
-			 (nt>4?nt:4),
+			 (nt>1?nt:1),
 			 indices, i);
 
     //Make empty again
@@ -62,18 +63,28 @@ int Board_MC::montecarlo(bool redPlayer, int numTrials){
     //Update
     int numWins = (redPlayer?r.redWins:r.blueWins);
     int numLosses = (redPlayer?r.blueWins:r.redWins);
+
     /*
-    if (numWins > mostWins) {
+    int diff = numWins - numLosses;
+    if (diff > biggestDiff) {
       ans = i;
-      mostWins = numWins;
-      //fewestLosses = (fewestLosses>numLosses?numLosses:fewestLosses);
+      biggestDiff = diff;
     }
     */
+    
+    if (numWins >= mostWins && numLosses < fewestLosses) {
+      ans = i;
+      mostWins = numWins;
+      fewestLosses = numLosses;
+      //fewestLosses = (fewestLosses>numLosses?numLosses:fewestLosses);
+    }
+    
+      /*
     if (numLosses < fewestLosses) {
       ans = i;
       fewestLosses = numLosses;
     }
-    
+      */
   }
 
   return ans;
@@ -82,6 +93,8 @@ int Board_MC::montecarlo(bool redPlayer, int numTrials){
 Record Board_MC::runTrials(bool redPlayer, int numTrials,
 			std::vector<int>& indices, int i){
   Record r = {0,0,0};
+
+  //std::cout << empties.size() << ' ' << indices.size() << std::endl;
 
   for(int t = 0; t < numTrials; t++){
     bool red = redPlayer;
@@ -98,8 +111,10 @@ Record Board_MC::runTrials(bool redPlayer, int numTrials,
       if (empties[j] == i) { continue; }
       grid[empties[j]] = (red?'R':'B');
 
-      if (won('R')) { r.redWins++; rw = true; break;}
-      else if (won('B')) { r.blueWins++; bw = true; break; }
+      char w = winner();
+
+      if (w == 'R') { r.redWins++; rw = true; break;}
+      else if (w == 'B') { r.blueWins++; bw = true; break; }
 
       red = !red;
     }
@@ -114,5 +129,6 @@ Record Board_MC::runTrials(bool redPlayer, int numTrials,
 
   }
 
+  //std::cout << r.redWins << ' ' << r.blueWins << std::endl;
   return r;
 }

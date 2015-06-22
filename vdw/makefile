@@ -1,5 +1,5 @@
-all: Board_MC.o Board_AB.o Board.o main.cpp
-	g++ main.cpp Board.o Board_AB.o Board_MC.o -o runMe
+all: main.cpp Board.o Board_MC.o Board_AB.o
+	g++ main.cpp Board.o Board_MC.o Board_AB.o -o runMe
 
 Board.o: Board.h Board.cpp
 	g++ -O3 -c Board.cpp Board.h

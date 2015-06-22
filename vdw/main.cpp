@@ -40,7 +40,7 @@ void play_game(int n, int k){
     int loc;
 
     if (player1 == computer1){
-      scoreAndLoc sal = b.alphabeta(true,-10,10,depth,0);
+      scoreAndLoc sal = b.alphabeta(true,-10,10,depth);
       loc = sal.second;
       cout << loc+1 << endl;
       b.play('R', loc);
@@ -93,7 +93,7 @@ void search_for_G_AB(int n, int k){
     size_t depth = 0;
     while(b.noWinner() && depth != n){
       int loc;
-      scoreAndLoc sal = b.alphabeta(redPlayer,-10,10, depth++, 0);
+      scoreAndLoc sal = b.alphabeta(redPlayer,-10,10, depth++);
       loc = sal.second;
       cout << loc+1 << endl;
       b.play(redPlayer?'R':'B', loc);
@@ -116,7 +116,7 @@ void search_for_G_AB(int n, int k){
 }
 
 Record test_n(int n, int k){
-  cout << "Testing k = " << k << ", n = " << n << endl;
+  cout << "Testing game(" << n << "," << k << ")..." << endl;
 
   clock_t t = clock();
   Record r = {0,0,0};

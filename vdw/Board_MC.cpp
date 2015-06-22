@@ -33,14 +33,17 @@ bool Board::won(char c){
 
 int Board_MC::montecarlo(bool redPlayer, int numTrials){  
   int ans = empties[0];
-  int mostWins = -1;
-  int fewestLosses = numTrials;
+  //int mostWins = -1;
+  //int fewestLosses = numTrials;
   //int biggestDiff = -1;
+  float bestScore = -1.0f;
 
   std::vector<int> indices;
-  for(int e = 0; e < empties.size(); e++){
-    indices.push_back(e);
-  }
+  for(int e = 0; e < empties.size(); e++){ indices.push_back(e); }
+
+  float frac = sqrt((float)n*n - (n-empties.size())*(n-empties.size())) / n;
+  int nt = (int)(numTrials * frac);
+  nt = (nt>1?nt:1);
 
   for(int e = 0; e < empties.size(); e++){
     int i = empties[e];
@@ -48,13 +51,10 @@ int Board_MC::montecarlo(bool redPlayer, int numTrials){
     //Put character in
     grid[i] = (redPlayer?'R':'B');
 
-    //Run trials, keeping count of wins/losses/draws
-    float frac = sqrt((float)n*n - (n-empties.size())*(n-empties.size())) / n;
-    //int nt = numTrials * empties.size() / n;
-    int nt = (int)(numTrials * frac);
+    //Run trials
     Record r = runTrials(!redPlayer,
 			 //numTrials,
-			 (nt>1?nt:1),
+			 nt,
 			 indices, i);
 
     //Make empty again
@@ -63,6 +63,12 @@ int Board_MC::montecarlo(bool redPlayer, int numTrials){
     //Update
     int numWins = (redPlayer?r.redWins:r.blueWins);
     int numLosses = (redPlayer?r.blueWins:r.redWins);
+    float score = numWins + (r.numDraws / 2.0f) - (numLosses / 4.0f);
+
+    if (score > bestScore) {
+      bestScore = score;
+      ans = i;
+    }
 
     /*
     int diff = numWins - numLosses;
@@ -71,20 +77,21 @@ int Board_MC::montecarlo(bool redPlayer, int numTrials){
       biggestDiff = diff;
     }
     */
-    
+
+    /*    
     if (numWins >= mostWins && numLosses < fewestLosses) {
       ans = i;
       mostWins = numWins;
       fewestLosses = numLosses;
-      //fewestLosses = (fewestLosses>numLosses?numLosses:fewestLosses);
     }
-    
-      /*
+    */    
+
+    /*
     if (numLosses < fewestLosses) {
       ans = i;
       fewestLosses = numLosses;
     }
-      */
+    */
   }
 
   return ans;

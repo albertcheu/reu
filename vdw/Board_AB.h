@@ -26,13 +26,13 @@ class Board_AB: public Board {
   //Return whether or not we can stop searching (alpha >= beta)
   bool alphabeta_helper(size_t i, bool maximize, size_t depth,
 			int& max, int& min, int& loc,
-			int& alpha, int& beta, size_t rdepth);
+			int& alpha, int& beta);
 
  public:
   Board_AB(size_t n, size_t k);
 
   //The meat of the program
   scoreAndLoc alphabeta(bool maximize, int alpha, int beta,
-			size_t depth, size_t rdepth);
+			size_t depth);
 
 };

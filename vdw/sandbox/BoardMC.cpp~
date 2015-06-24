@@ -1,9 +1,0 @@
-#include "BoardMC.h"
-
-using namespace std;
-
-int main(){
-  State s;
-  cout << sizeof(s.children) << endl;
-  return 0;
-}

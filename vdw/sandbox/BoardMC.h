@@ -4,9 +4,12 @@
 #include <unordered_set>
 #include "Board.h"
 
-#define STORE_DEPTH
+#define STORE_DEPTH 4
 
 struct State{
+  State(int depth, int loc, int numTrials, int successful,
+	bool redPlayer, State* parent);
+
   int depth, loc, numTrials, successful;
   bool redPlayer;
   State* parent;
@@ -15,19 +18,24 @@ struct State{
 
 float score(State s);
 
-class Board_MC: public Board{
+class BoardMC: public Board{
  private:
-  //Unlike alpha-beta, we don't care if our list of available moves is ordeed
+  int c;
+
+  //Unlike alpha-beta, we don't care if our list of available moves is ordered
   std::unordered_set<int> moves;
+
+  std::vector<State> startStates;
 
   void runTrial();
   //char memberOfAP(int loc, bool redPlayer);
   bool memberOfAP_played(int loc);
+
+  void buildTree(State* s);
   
  public:
-  Board_MC(size_t n, size_t k);
-
-  std::vector<State> firstMoves;
-
+  BoardMC(size_t n, size_t k);
+  ~BoardMC();
+  void freeRecursive(State* s);
   void montecarlo();
 };

@@ -1,4 +1,3 @@
-
 #include <cmath>
 #include <algorithm>
 #include <unordered_set>
@@ -31,11 +30,11 @@ class BoardMC: public Board{
   //char memberOfAP(int loc, bool redPlayer);
   bool memberOfAP_played(int loc);
 
-  void buildTree(State* s);
+  int buildTree(State* s);
   
  public:
   BoardMC(size_t n, size_t k);
   ~BoardMC();
-  void freeRecursive(State* s);
+  int freeRecursive(State* s);
   void montecarlo();
 };

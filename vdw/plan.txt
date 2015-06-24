@@ -1,8 +1,26 @@
-Monte Carlo
+struct State{
+depth
+bool redPlayer (is R going to make a move based on this state?)
+location (integer in [1,n])
+pointer to parent
+array of pointers to children
+numTrials = counter of trials this state has been in
+successful = counter of successful trials this state has been in
+}
 
-For each available move:
-    Put char on spot
-    Until the number of games has reached a max
-        Fill board randomly (alternate between R and B)
-	Reset board
-	Send up the value (win/lose/draw)
+Win for R is +1, Loss or Draw is -1
+R wants to maximize, B wants to minimize
+
+avg_success = successful / numTrials (negative if B)
+
+Create c, counter of trials so far (init @ 0)
+Create vector of first-move states (R plays on 1 first, plays on 2 first...)
+For every such State, run a random trial
+    create a State if it wont be too deep 
+    otherwise, fill randomly (always check who won)
+    When you hit a leaf (or cutoff), percolate information back up to root
+Until I stop the program,
+    Until the cutoff
+        Play State s that maximizes avg_success + sqrt(2*log(c) / s.numTrials)
+    	(For B, we want to minimize avg_success - sqrt(...))
+    	When you hit a leaf (or cutoff), percolate information back up to root

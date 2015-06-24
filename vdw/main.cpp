@@ -171,8 +171,8 @@ void search_for_G_MC(int n, int k){
     }
     else {
       lowerBound = n;
-      if (r1.redWins < 25) { n *= 2; }
-      else if (r1.redWins < 40) { n += 10; }
+      if (r1.redWins < 25) { n += 7; }
+      else if (r1.redWins < 40) { n += 5; }
       else if (r1.redWins < 50) { n += 2; }
     }
   }

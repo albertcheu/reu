@@ -1,4 +1,4 @@
-#pragma once
+//#pragma once
 #include "Board.h"
 
 #define R_WIN 1

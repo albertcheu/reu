@@ -2,51 +2,43 @@
 
 using namespace std;
 
-State::State(int depth, int loc, int numTrials, int successful,
-	     bool redPlayer, State* parent)
-  :depth(depth), loc(loc), numTrials(numTrials), successful(successful),
-   redPlayer(redPlayer), parent(parent)
+State::State(int depth, int loc, bool redPlayer, State* parent)
+  :depth(depth), loc(loc), redPlayer(redPlayer), parent(parent),
+   redWins(0), blueWins(0)
 {}
 
-float score(State s){
-  float ans = s.successful / (float) s.numTrials;
-  return (s.redPlayer?ans:-ans);
-}
-
 BoardMC::BoardMC(size_t n, size_t k)
-  :Board(n,k), c(0)
+  :Board(n,k)
 {
 
+  start = new State(0,-1,false,NULL);
+
   for(int i = 0; i < n; i++){
+    //The board is empty, so all of [1,n] are available moves  
     moves.emplace(i);
-    startStates.push_back(State(1,i,0,0,false,NULL));
+    //
+    indices.push_back(i);
   }
   
   //Build tree up to STORE_DEPTH
-  int ans = 0;
-  for(int i = 0; i < n; i++){
-    std::unordered_set<int>::iterator itr = moves.find(i);
-    moves.erase(itr);
-    ans += buildTree(&(startStates[i]));
-    moves.emplace(i);
-  }
-  std::cout << ans << endl; 
+  int ans = buildTree(start);
+  cout << ans << endl;
 }
 
 int BoardMC::buildTree(State* s){
-  int ans = 1;//include s in the count
+  int ans = 1;
 
-  int depth = s->depth;
   //fill children
   for(int i = 0; i < n; i++){
-    std::unordered_set<int>::iterator itr = moves.find(i);
+    unordered_set<int>::iterator itr = moves.find(i);
+    //Cannot use moves we've already used
     if (itr == moves.end()) { continue; }
 
-    State* child = new State(depth+1,i,0,0,!(s->redPlayer),s);
+    State* child = new State(s->depth+1,i,!(s->redPlayer),s);
     s->children.push_back(child);
 
-    //recurse if depth hasn't been reached yet
-    if (depth+1 < STORE_DEPTH) {
+    //recurse if child isn't too deep
+    if (child->depth < STORE_DEPTH) {
       moves.erase(itr);
       ans += buildTree(child);
       moves.emplace(i);
@@ -59,35 +51,211 @@ int BoardMC::buildTree(State* s){
 }
 
 BoardMC::~BoardMC(){
-
-  int ans = 0;
-  for(int i = 0; i < n; i++){
-    for(int j = 0; j < n-1; j++){
-      ans += freeRecursive(startStates[i].children[j]);
-    }  
-  }
-
-  std::cout << ans << endl;
-  startStates.clear();
+  int ans = freeRecursive(start);
+  cout << ans << endl;
+  moves.clear();
 }
 
 int BoardMC::freeRecursive(State* s){
   int ans = 1;
+
   if (s->depth < STORE_DEPTH){
     for(int i = 0; i < s->children.size(); i++){
       ans += freeRecursive(s->children[i]);
     }
   }
+  else { ans = 1; }
+
   free(s);
   return ans;
 }
 
 void BoardMC::montecarlo(){
-  
+  while(true){
+
+    if (!(start->numTrials % 10000) && start->numTrials > 0) {
+      cout << "Trial count: " << start->numTrials << endl;
+
+      float avgSuccess, numWins, numTrials;
+      //for(int i = 0; i < n; i++){	
+	numWins = start->children[n/2]->redWins;
+	numTrials = start->children[n/2]->numTrials;
+	avgSuccess = numWins / numTrials;
+	cout << avgSuccess << ",";
+	//}
+      cout << endl << endl;
+    }
+
+    //Conduct experiment
+    runTrial(start);
+  }
+
 }
 
-int main(){
-  BoardMC bmc(14,4);
-  
-  return 0;
+bool BoardMC::memberOfAP_played(int loc){
+ int d = 1;
+  while (true){
+
+    if (loc+d >= n && loc-d < 0) { return false; }
+
+    int numLeft, numRight;
+    numLeft = numRight = 0;
+
+    for(int i = loc+d; i < n; i += d){
+      if (grid[i] == grid[loc]) { numRight++; }
+      else { break; }
+    }
+    if (1+numRight >= k) { return true; }
+
+    for(int i = loc-d; i > -1; i -= d){
+      if (grid[i] == grid[loc]) { numLeft++; }
+      else { break; }
+    }
+    if (numLeft + numRight + 1 >= k) { return true; }
+
+    d++;
+  }
+
+  return false; 
+}
+
+float BoardMC::score(State* s){
+  bool parentIsRed = !(s->redPlayer);
+  float avgSuccess = (parentIsRed?s->redWins:s->blueWins)/(float)s->numTrials;
+  float regret = sqrt(2*log(start->numTrials)/s->numTrials);
+  return avgSuccess + regret;
+}
+
+bool BoardMC::runTrial(State* s){
+  if (s->depth) {
+    //Change grid to show reflect the state
+    grid[s->loc] = (s->redPlayer?'R':'B');
+    moves.erase(moves.find(s->loc));
+
+    //If there is a winner, return who won    
+    if (memberOfAP_played(s->loc)) {
+      moves.emplace(s->loc);
+      grid[s->loc] = '.';
+      s->numTrials++;
+      (s->redPlayer? s->redWins++ : s->blueWins++);
+      return s->redPlayer;
+    }
+
+  }
+
+  bool redWon = true;
+
+  //If we're not at the STORE_DEPTH...
+  if (s->depth < STORE_DEPTH) {
+    float optimalScore = 0.0f;
+    State* bestChild = NULL;
+    for (int i = 0; i < s->children.size(); i++){
+
+      //Find a "bandit arm" that hasn't been played...
+      if (s->children[i]->numTrials == 0) { bestChild = s->children[i]; break; }
+
+      //or best satisfies our objective function
+      float childScore = score(s->children[i]);
+      if (childScore > optimalScore) {
+	optimalScore = childScore;
+	bestChild = s->children[i];
+      }
+    }
+
+    //Recursion
+    redWon = runTrial(bestChild);
+
+    //Revert to previous state
+    if (s->depth > 0) {
+      grid[s->loc] = '.';
+      moves.emplace(s->loc);
+    }
+
+    //Increment numTrials
+    (s->numTrials)++;
+    (redWon?(s->redWins)++:(s->blueWins)++);
+
+    return redWon;
+  }
+
+  //else color available moves in random order
+  bool redPlayer = !(s->redPlayer);
+  bool draw = true;
+  random_shuffle(indices.begin(),indices.end());
+
+  for(int i = 0; i < n; i++){
+    unordered_set<int>::iterator itr = moves.find(indices[i]);      
+    if (itr == moves.end()){ continue; }
+    grid[indices[i]] = (redPlayer?'R':'B');
+
+    //Check who won every time a number is colored  
+    if (memberOfAP_played(indices[i])) {
+      draw = false;
+      redWon = redPlayer;
+      break;
+    }
+
+    //Alternate!
+    redPlayer = !(redPlayer);
+  }
+
+  //Clear out what we randomly put in
+  for(int i = 0; i < n; i++){
+    unordered_set<int>::iterator itr = moves.find(indices[i]);      
+    if (itr != moves.end()){ grid[indices[i]] = '.'; }
+  }
+
+  moves.emplace(s->loc);
+  grid[s->loc] = '.';
+  s->numTrials++;
+  if (draw || !redWon) { s->blueWins++; return false; }
+
+  s->redWins++;
+  return true;
+
+}
+int toNumber(string s, int maxNum){
+  int ans = 0;
+  int place = 1;
+  for(int i = s.size()-1; i > -1; i--){
+    if (! isdigit(s[i])) { return -1; }
+    int digit = ((int)s[i]) - 48;
+    ans += place*digit;
+    place *= 10;
+  }
+  if (ans < 1 || ans > maxNum) { return -1; }
+  return ans;
+}
+
+int main(int argc, char** argv){
+  if (argc == 3) {
+    srand((unsigned)time(NULL));
+    string s;
+    
+    //n
+    s = argv[1];
+    int n = toNumber(s, 10000);
+    if (n == -1) {
+      cout << "Please enter 0 < n < 10000" << endl;
+      return 0;
+    }
+    
+    //k
+    s = argv[2];
+    int k = toNumber(s, 10000);
+    if (k == -1) {
+      cout << "Please enter 0 < k < 10000" << endl;
+      return 0;
+    }
+    else if (n < k) {
+      cout << "Your board size (n) is smaller than the progression length!";
+      cout << endl;
+      return 0;
+    }
+
+    BoardMC bmc(n,k);
+    bmc.montecarlo();
+    return 0;
+  }
+  return 1;
 }

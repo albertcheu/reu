@@ -11,7 +11,7 @@ BoardMC::BoardMC(size_t n, size_t k)
   :Board(n,k)
 {
 
-  start = new State(0,-1,false,NULL);
+  start = new State(0,-1,true,NULL);
 
   for(int i = 0; i < n; i++){
     //The board is empty, so all of [1,n] are available moves  
@@ -23,6 +23,7 @@ BoardMC::BoardMC(size_t n, size_t k)
   //Build tree up to STORE_DEPTH
   int ans = buildTree(start);
   cout << ans << endl;
+
 }
 
 int BoardMC::buildTree(State* s){
@@ -71,18 +72,25 @@ int BoardMC::freeRecursive(State* s){
 }
 
 void BoardMC::montecarlo(){
-  while(true){
+  string s = "";
+  while(s != "quit"){
+    if (start->numTrials % 1000000 == 0 && start->numTrials > 0){
+      cin >> s;
+    }
 
     if (!(start->numTrials % 10000) && start->numTrials > 0) {
       cout << "Trial count: " << start->numTrials << endl;
 
       float avgSuccess, numWins, numTrials;
-      //for(int i = 0; i < n; i++){	
-	numWins = start->children[n/2]->redWins;
-	numTrials = start->children[n/2]->numTrials;
+      
+      //numWins = start->redWins;
+      //numTrials = start->numTrials;
+      for (int i = 0; i < n; i++){
+	numWins = start->children[i]->redWins;
+	numTrials = start->children[i]->numTrials;
 	avgSuccess = numWins / numTrials;
-	cout << avgSuccess << ",";
-	//}
+	cout << avgSuccess << ',';
+      }
       cout << endl << endl;
     }
 
@@ -120,7 +128,7 @@ bool BoardMC::memberOfAP_played(int loc){
 }
 
 float BoardMC::score(State* s){
-  bool parentIsRed = !(s->redPlayer);
+  bool parentIsRed = s->parent->redPlayer;
   float avgSuccess = (parentIsRed?s->redWins:s->blueWins)/(float)s->numTrials;
   float regret = sqrt(2*log(start->numTrials)/s->numTrials);
   return avgSuccess + regret;
@@ -129,7 +137,8 @@ float BoardMC::score(State* s){
 bool BoardMC::runTrial(State* s){
   if (s->depth) {
     //Change grid to show reflect the state
-    grid[s->loc] = (s->redPlayer?'R':'B');
+    bool parentIsRed = s->parent->redPlayer;
+    grid[s->loc] = (parentIsRed?'R':'B');
     moves.erase(moves.find(s->loc));
 
     //If there is a winner, return who won    
@@ -137,8 +146,8 @@ bool BoardMC::runTrial(State* s){
       moves.emplace(s->loc);
       grid[s->loc] = '.';
       s->numTrials++;
-      (s->redPlayer? s->redWins++ : s->blueWins++);
-      return s->redPlayer;
+      (parentIsRed? s->redWins++ : s->blueWins++);
+      return parentIsRed;
     }
 
   }
@@ -179,24 +188,24 @@ bool BoardMC::runTrial(State* s){
   }
 
   //else color available moves in random order
-  bool redPlayer = !(s->redPlayer);
+  bool parentIsRed = s->redPlayer;
   bool draw = true;
   random_shuffle(indices.begin(),indices.end());
 
   for(int i = 0; i < n; i++){
     unordered_set<int>::iterator itr = moves.find(indices[i]);      
     if (itr == moves.end()){ continue; }
-    grid[indices[i]] = (redPlayer?'R':'B');
+    grid[indices[i]] = (parentIsRed?'R':'B');
 
     //Check who won every time a number is colored  
     if (memberOfAP_played(indices[i])) {
       draw = false;
-      redWon = redPlayer;
+      redWon = parentIsRed;
       break;
     }
 
     //Alternate!
-    redPlayer = !(redPlayer);
+    parentIsRed = !parentIsRed;
   }
 
   //Clear out what we randomly put in

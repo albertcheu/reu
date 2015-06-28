@@ -2,6 +2,8 @@
 #include <cfloat>
 #include <algorithm>
 #include <unordered_set>
+#include <cstdlib>
+#include <cstdio>
 #include "Board.h"
 
 #define STORE_DEPTH 4
@@ -16,8 +18,6 @@ struct State{
   std::vector<State*> children;
 };
 
-
-
 class BoardMC: public Board{
  private:
   //Unlike alpha-beta, our list of available moves doesnt need to be ordered
@@ -27,7 +27,6 @@ class BoardMC: public Board{
 
   State* start;
 
-  //char memberOfAP(int loc, bool redPlayer);
   bool memberOfAP_played(int loc);
 
   int buildTree(State* s);
@@ -35,6 +34,8 @@ class BoardMC: public Board{
   int freeRecursive(State* s);
 
   bool runTrial(State* s);
+  bool runTrialTraverse(State* s);
+  bool runTrialRandom(State* s);
 
   float score(State* s);
   

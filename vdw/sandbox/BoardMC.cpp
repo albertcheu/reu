@@ -4,7 +4,7 @@ using namespace std;
 
 State::State(int depth, int loc, bool redPlayer, State* parent)
   :depth(depth), loc(loc), redPlayer(redPlayer), parent(parent),
-   redWins(0), blueWins(0)
+   redWins(0), blueWins(0), numTrials(0)
 {}
 
 BoardMC::BoardMC(size_t n, size_t k)
@@ -67,31 +67,37 @@ int BoardMC::freeRecursive(State* s){
   }
   else { ans = 1; }
 
-  free(s);
+  delete s;
   return ans;
 }
 
 void BoardMC::montecarlo(){
+  FILE* gp = (FILE*) popen("gnuplot -persist","w");  
+  fprintf(gp, "%s\n", "plot '-' with lines");
+
   string s = "";
   while(s != "quit"){
     if (start->numTrials % 1000000 == 0 && start->numTrials > 0){
+      cout << "Completed " << start->numTrials << " trials.";
+      cout << " Enter anything but 'quit' to continue: ";
       cin >> s;
     }
 
-    if (!(start->numTrials % 10000) && start->numTrials > 0) {
-      cout << "Trial count: " << start->numTrials << endl;
-
+    if (start->numTrials % 1000 == 0 && start->numTrials > 0) {
       float avgSuccess, numWins, numTrials;
-      
-      //numWins = start->redWins;
-      //numTrials = start->numTrials;
       for (int i = 0; i < n; i++){
 	numWins = start->children[i]->redWins;
 	numTrials = start->children[i]->numTrials;
 	avgSuccess = numWins / numTrials;
-	cout << avgSuccess << ',';
+	fprintf(gp, "%f\n", avgSuccess);
       }
-      cout << endl << endl;
+
+      fprintf(gp, "E\nrefresh\n");
+      if (s != "quit") {
+	fprintf(gp, "replot\n");
+	fflush(gp);
+      }
+
     }
 
     //Conduct experiment
@@ -128,15 +134,23 @@ bool BoardMC::memberOfAP_played(int loc){
 }
 
 float BoardMC::score(State* s){
+  //The parent state evaluates its child states
   bool parentIsRed = s->parent->redPlayer;
+
+  //If the parent is red, the scores of its children are based on red
+  //to facilitate maximizing scores
   float avgSuccess = (parentIsRed?s->redWins:s->blueWins)/(float)s->numTrials;
+
+  //Standard formula
   float regret = sqrt(2*log(start->numTrials)/s->numTrials);
+
   return avgSuccess + regret;
 }
 
 bool BoardMC::runTrial(State* s){
   if (s->depth) {
-    //Change grid to show reflect the state
+    //If State s is red's turn, red receives a grid with spot loc colored blue
+    //If s belongs to blue, blue receives a grid with spot loc colored red
     bool parentIsRed = s->parent->redPlayer;
     grid[s->loc] = (parentIsRed?'R':'B');
     moves.erase(moves.find(s->loc));
@@ -152,46 +166,53 @@ bool BoardMC::runTrial(State* s){
 
   }
 
-  bool redWon = true;
-
-  //If we're not at the STORE_DEPTH...
-  if (s->depth < STORE_DEPTH) {
-    float optimalScore = 0.0f;
-    State* bestChild = NULL;
-    for (int i = 0; i < s->children.size(); i++){
-
-      //Find a "bandit arm" that hasn't been played...
-      if (s->children[i]->numTrials == 0) { bestChild = s->children[i]; break; }
-
-      //or best satisfies our objective function
-      float childScore = score(s->children[i]);
-      if (childScore > optimalScore) {
-	optimalScore = childScore;
-	bestChild = s->children[i];
-      }
-    }
-
-    //Recursion
-    redWon = runTrial(bestChild);
-
-    //Revert to previous state
-    if (s->depth > 0) {
-      grid[s->loc] = '.';
-      moves.emplace(s->loc);
-    }
-
-    //Increment numTrials
-    (s->numTrials)++;
-    (redWon?(s->redWins)++:(s->blueWins)++);
-
-    return redWon;
-  }
+  //If we're not at the STORE_DEPTH, go toward it
+  if (s->depth < STORE_DEPTH) { return runTrialTraverse(s); }
 
   //else color available moves in random order
+  return runTrialRandom(s);
+
+}
+
+bool BoardMC::runTrialTraverse(State* s){
+  bool redWon = true;
+  float optimalScore = 0.0f;
+  State* bestChild = NULL;
+  for (int i = 0; i < s->children.size(); i++){
+
+    //Find a "bandit arm" that hasn't been played...
+    if (s->children[i]->numTrials == 0) { bestChild = s->children[i]; break; }
+
+    //or best satisfies our objective function
+    float childScore = score(s->children[i]);
+    if (childScore > optimalScore) {
+      optimalScore = childScore;
+      bestChild = s->children[i];
+    }
+  }
+
+  //Recursion
+  redWon = runTrial(bestChild);
+
+  //Revert to previous state
+  if (s->depth > 0) {
+    grid[s->loc] = '.';
+    moves.emplace(s->loc);
+  }
+
+  //Increment numTrials
+  (s->numTrials)++;
+  (redWon?(s->redWins)++:(s->blueWins)++);
+
+  return redWon;   
+}
+
+bool BoardMC::runTrialRandom(State* s){
+  bool redWon = true;
   bool parentIsRed = s->redPlayer;
   bool draw = true;
-  random_shuffle(indices.begin(),indices.end());
 
+  random_shuffle(indices.begin(),indices.end());
   for(int i = 0; i < n; i++){
     unordered_set<int>::iterator itr = moves.find(indices[i]);      
     if (itr == moves.end()){ continue; }
@@ -220,9 +241,9 @@ bool BoardMC::runTrial(State* s){
   if (draw || !redWon) { s->blueWins++; return false; }
 
   s->redWins++;
-  return true;
-
+  return true;  
 }
+
 int toNumber(string s, int maxNum){
   int ans = 0;
   int place = 1;

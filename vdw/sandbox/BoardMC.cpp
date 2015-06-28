@@ -36,6 +36,7 @@ int BoardMC::buildTree(State* s){
     if (itr == moves.end()) { continue; }
 
     State* child = new State(s->depth+1,i,!(s->redPlayer),s);
+
     s->children.push_back(child);
 
     //recurse if child isn't too deep
@@ -61,13 +62,15 @@ int BoardMC::freeRecursive(State* s){
   int ans = 1;
 
   if (s->depth < STORE_DEPTH){
-    for(int i = 0; i < s->children.size(); i++){
+    int size = s->children.size();
+    for(int i = 0; i < size; i++){
       ans += freeRecursive(s->children[i]);
     }
+    s->children.clear();
   }
   else { ans = 1; }
 
-  delete s;
+  free(s);
   return ans;
 }
 

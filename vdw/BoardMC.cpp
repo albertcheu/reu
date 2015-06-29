@@ -7,9 +7,24 @@ State::State(int depth, int loc, bool redPlayer, State* parent)
    redWins(0), blueWins(0), numTrials(0)
 {}
 
+int bestDepth(int n, int cutoff){
+  int numNodes = 1;
+  int leaves = n;
+  int factor = n-1;
+  int depth = 0;
+  while (numNodes < cutoff) {
+    depth++;
+    numNodes += leaves;
+    leaves *= (factor--);
+  }
+
+  return depth-1;
+}
+
 BoardMC::BoardMC(size_t n, size_t k)
-  :Board(n,k)
+  :Board(n,k), storeDepth(bestDepth(n, 50000))
 {
+  cout << storeDepth << endl ;
 
   start = new State(0,-1,true,NULL);
 
@@ -19,8 +34,8 @@ BoardMC::BoardMC(size_t n, size_t k)
     //
     indices.push_back(i);
   }
-  
-  //Build tree up to STORE_DEPTH
+
+  //Build tree up to storeDepth
   int ans = buildTree(start);
   cout << ans << endl;
 
@@ -40,7 +55,7 @@ int BoardMC::buildTree(State* s){
     s->children.push_back(child);
 
     //recurse if child isn't too deep
-    if (child->depth < STORE_DEPTH) {
+    if (child->depth < storeDepth) {
       moves.erase(itr);
       ans += buildTree(child);
       moves.emplace(i);
@@ -61,14 +76,11 @@ BoardMC::~BoardMC(){
 int BoardMC::freeRecursive(State* s){
   int ans = 1;
 
-  if (s->depth < STORE_DEPTH){
-    int size = s->children.size();
-    for(int i = 0; i < size; i++){
-      ans += freeRecursive(s->children[i]);
-    }
-    s->children.clear();
+  int size = s->children.size();
+  for(int i = 0; i < size; i++){
+    ans += freeRecursive(s->children[i]);
   }
-  else { ans = 1; }
+  s->children.clear();
 
   free(s);
   return ans;
@@ -78,15 +90,19 @@ void BoardMC::montecarlo(){
   FILE* gp = (FILE*) popen("gnuplot -persist","w");  
   fprintf(gp, "%s\n", "plot '-' with lines");
 
-  string s = "";
-  while(s != "quit"){
-    if (start->numTrials % 1000000 == 0 && start->numTrials > 0){
-      cout << "Completed " << start->numTrials << " trials.";
+  string userInput = "";
+  while(true){
+    int total = start->numTrials;
+
+    //Every million trials, ask if we should stop
+    if (total % 1000000 == 0 && total > 0){
+      cout << "Completed " << total << " trials.";
       cout << " Enter anything but 'quit' to continue: ";
-      cin >> s;
+      cin >> userInput;
     }
 
-    if (start->numTrials % 1000 == 0 && start->numTrials > 0) {
+    //Every ten thousand trials, draw
+    if (total % 10000 == 0 && total > 0) {
       float avgSuccess, numWins, numTrials;
       for (int i = 0; i < n; i++){
 	numWins = start->children[i]->redWins;
@@ -96,11 +112,11 @@ void BoardMC::montecarlo(){
       }
 
       fprintf(gp, "E\nrefresh\n");
-      if (s != "quit") {
+      if (userInput != "quit"){
 	fprintf(gp, "replot\n");
 	fflush(gp);
       }
-
+      else { break; }
     }
 
     //Conduct experiment
@@ -169,8 +185,8 @@ bool BoardMC::runTrial(State* s){
 
   }
 
-  //If we're not at the STORE_DEPTH, go toward it
-  if (s->depth < STORE_DEPTH) { return runTrialTraverse(s); }
+  //If we can recurse, do it
+  if (s->children.size()) { return runTrialTraverse(s); }
 
   //else color available moves in random order
   return runTrialRandom(s);
@@ -215,11 +231,18 @@ bool BoardMC::runTrialRandom(State* s){
   bool parentIsRed = s->redPlayer;
   bool draw = true;
 
+  //Randomly color remaining moves
   random_shuffle(indices.begin(),indices.end());
+  int j = 0;
   for(int i = 0; i < n; i++){
-    unordered_set<int>::iterator itr = moves.find(indices[i]);      
+    unordered_set<int>::iterator itr = moves.find(indices[i]);
     if (itr == moves.end()){ continue; }
+
+    //Color
     grid[indices[i]] = (parentIsRed?'R':'B');
+
+    //Keep track of what we color
+    empties[j++] = indices[i];
 
     //Check who won every time a number is colored  
     if (memberOfAP(indices[i])) {
@@ -232,66 +255,18 @@ bool BoardMC::runTrialRandom(State* s){
     parentIsRed = !parentIsRed;
   }
 
-  //Clear out what we randomly put in
-  for(int i = 0; i < n; i++){
-    unordered_set<int>::iterator itr = moves.find(indices[i]);      
-    if (itr != moves.end()){ grid[indices[i]] = '.'; }
+  //Clear out what we colored
+  grid[s->loc] = '.';
+  for(int i = 0; i < j; i++){
+    grid[empties[i]] = '.';
   }
 
+  //Restore moves
   moves.emplace(s->loc);
-  grid[s->loc] = '.';
+
+  //Keep track of results
   s->numTrials++;
   if (draw || !redWon) { s->blueWins++; return false; }
-
   s->redWins++;
   return true;  
 }
-
-/*
-int toNumber(string s, int maxNum){
-  int ans = 0;
-  int place = 1;
-  for(int i = s.size()-1; i > -1; i--){
-    if (! isdigit(s[i])) { return -1; }
-    int digit = ((int)s[i]) - 48;
-    ans += place*digit;
-    place *= 10;
-  }
-  if (ans < 1 || ans > maxNum) { return -1; }
-  return ans;
-}
-*/
-/*
-int main(int argc, char** argv){
-  if (argc == 3) {
-    srand((unsigned)time(NULL));
-    string s;
-    
-    //n
-    s = argv[1];
-    int n = toNumber(s, 10000);
-    if (n == -1) {
-      cout << "Please enter 0 < n < 10000" << endl;
-      return 0;
-    }
-    
-    //k
-    s = argv[2];
-    int k = toNumber(s, 10000);
-    if (k == -1) {
-      cout << "Please enter 0 < k < 10000" << endl;
-      return 0;
-    }
-    else if (n < k) {
-      cout << "Your board size (n) is smaller than the progression length!";
-      cout << endl;
-      return 0;
-    }
-
-    BoardMC bmc(n,k);
-    bmc.montecarlo();
-    return 0;
-  }
-  return 1;
-}
-*/

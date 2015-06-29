@@ -6,8 +6,6 @@
 #include <cstdio>
 #include "Board.h"
 
-#define STORE_DEPTH 4
-
 struct State{
   State(int depth, int loc, bool redPlayer, State* parent);
 
@@ -18,6 +16,8 @@ struct State{
   std::vector<State*> children;
 };
 
+int bestDepth(int n, int cutoff);
+
 class BoardMC: public Board{
  private:
   //Unlike alpha-beta, our list of available moves doesnt need to be ordered
@@ -26,6 +26,8 @@ class BoardMC: public Board{
   std::vector<int> indices;
 
   State* start;
+
+  int storeDepth;
 
   bool memberOfAP(int loc);
 

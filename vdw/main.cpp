@@ -1,5 +1,5 @@
 #include "Board_AB.h"
-#include "Board_MC.h"
+#include "BoardMC.h"
 
 using namespace std;
 
@@ -115,73 +115,7 @@ void search_for_G_AB(int n, int k){
   cout << "I think GW(k=" << k << ") = " << n << endl;
 }
 
-Record test_n(int n, int k){
-  cout << "Testing game(" << n << "," << k << ")..." << endl;
-
-  clock_t t = clock();
-  Record r = {0,0,0};
-
-  for(int i = 0; i < 100; i++){
-    Board_MC b(n,k);
-
-    //Play montecarlo against itself
-    bool redPlayer = true;
-    int depth = 0;
-    while(b.noWinner() && depth != n){
-      int loc = b.montecarlo(redPlayer, MC_TRIALS);
-      b.play(redPlayer?'R':'B', loc);
-      redPlayer = (!redPlayer);
-      depth++;
-    }
-
-    char w = b.winner();
-    if (w == 'R') { r.redWins++; }
-    else if (w == 'B') { r.blueWins++; }
-    else { r.numDraws++; }
-  }
-
-  t = clock() - t;
-  cout << "It took me " << ((float)t)/CLOCKS_PER_SEC << " seconds" << endl;
-
-  cout << "Number of R wins: " << r.redWins << endl;
-  cout << "Number of B wins: " << r.blueWins << endl;
-  cout << "Number of draws: " << r.numDraws << endl;
-
-  return r;
-}
-
-void search_for_G_MC(int n, int k){
-  srand(time(NULL));
-
-  int upperBound = 100000;
-  int lowerBound = 0;
-  Record r1,r2;
-  bool binSearch = false;
-
-  while(lowerBound < upperBound) {
-    r1 = test_n(n,k);
-    r2 = test_n(n-1,k);
-    if (r1.redWins >= 50 && r2.redWins < 50) { break; }
-    else if (r2.redWins >= 50) { binSearch = true; }
-
-    if (binSearch) {
-      if (r2.redWins < 50) { lowerBound = n; }
-      else { upperBound = n; }
-      n = (upperBound + lowerBound) / 2;
-    }
-    else {
-      lowerBound = n;
-      if (r1.redWins < 25) { n += 7; }
-      else if (r1.redWins < 40) { n += 5; }
-      else if (r1.redWins < 50) { n += 2; }
-    }
-  }
-  cout << "I think GW(" << k << ") = " << n << endl;
-}
-
 int main(int argc, char** argv){
-
-  bool search = true;
   string s = "";
 
   if (argc >= 4) {
@@ -211,7 +145,8 @@ int main(int argc, char** argv){
     s = argv[3];
     if (s == "mc") {
       cout << "Running Monte Carlo..." << endl;
-      search_for_G_MC(n, k);
+      BoardMC bmc(n,k);
+      bmc.montecarlo();
     }
     else if (s == "ab") {
       cout << "Running alpha-beta..." << endl;

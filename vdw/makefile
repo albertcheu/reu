@@ -1,5 +1,5 @@
-all: main.cpp Board.o Board_MC.o Board_AB.o
-	g++ main.cpp Board.o Board_MC.o Board_AB.o -o runMe
+all: main.cpp Board.o Board_AB.o BoardMC.o
+	g++ -std=c++11 main.cpp Board.o Board_AB.o BoardMC.o -o runMe
 
 Board.o: Board.h Board.cpp
 	g++ -O3 -c Board.cpp Board.h
@@ -7,8 +7,8 @@ Board.o: Board.h Board.cpp
 Board_AB.o: Board.h Board_AB.h Board_AB.cpp
 	g++ -O3 -c Board.h Board_AB.cpp Board_AB.h
 
-Board_MC.o: Board.h Board_MC.h Board_MC.cpp
-	g++ -O3 -c Board.h Board_MC.cpp Board_MC.h
+BoardMC.o: Board.h BoardMC.h BoardMC.cpp
+	g++ -std=c++11 -O3 -c Board.h BoardMC.cpp BoardMC.h
 
 clean:
 	rm *.gch *.o runMe

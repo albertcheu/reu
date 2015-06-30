@@ -15,6 +15,8 @@ class Board{
   //how many turns passed
   size_t numTurns();
 
+  bool memberOfAP(int loc);
+
  public:
   Board(size_t n, size_t k);
   size_t size();

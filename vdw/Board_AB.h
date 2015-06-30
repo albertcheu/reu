@@ -33,6 +33,6 @@ class Board_AB: public Board {
 
   //The meat of the program
   scoreAndLoc alphabeta(bool maximize, int alpha, int beta,
-			size_t depth);
+			size_t depth, int justPlayed=-1);
 
 };

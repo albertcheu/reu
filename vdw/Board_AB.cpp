@@ -17,11 +17,10 @@ bool Board_AB::symmetric(){
 }
 
 scoreAndLoc Board_AB::alphabeta(bool maximize, int alpha, int beta,
-				size_t depth){
-  char w = winner();
-  if (w == 'R') { return r_win; }
-  if (w == 'B') { return b_win; }
+				size_t depth, int justPlayed){
   if (depth == n) { return draw; }
+  if (justPlayed > -1 && memberOfAP(justPlayed))
+    { return ((grid[justPlayed]=='R')?r_win:b_win); }
 
   int max = -10;  int min = 10;  int loc = -1;
 
@@ -92,8 +91,8 @@ bool Board_AB::alphabeta_helper(size_t i, bool maximize, size_t depth,
   if (old == 'R' || old == 'B') { return false; }
   grid[i] = (maximize?'R':'B');
   scoreAndLoc p = (maximize
-		   ? alphabeta(false, max, beta, depth+1)
-		   : alphabeta(true, alpha, min, depth+1));
+		   ? alphabeta(false, max, beta, depth+1, i)
+		   : alphabeta(true, alpha, min, depth+1, i));
   grid[i] = old;
 
   if (maximize && p.first > max) {

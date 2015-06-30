@@ -29,8 +29,6 @@ class BoardMC: public Board{
 
   int storeDepth;
 
-  bool memberOfAP(int loc);
-
   int buildTree(State* s);
 
   int freeRecursive(State* s);

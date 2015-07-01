@@ -111,7 +111,10 @@ void BoardMC::montecarlo(){
 	fprintf(gp, "%f\n", avgSuccess);
       }
 
-      fprintf(gp, "E\nrefresh\n");
+      fprintf(gp,"E\n");
+      fprintf(gp,"set arrow 1 from 0,0.5 to %lu,0.5 nohead\n",n-1);
+      fprintf(gp,"refresh\n");
+
       if (userInput != "quit"){
 	fprintf(gp, "replot\n");
 	fflush(gp);
@@ -122,7 +125,7 @@ void BoardMC::montecarlo(){
     //Conduct experiment
     runTrial(start);
   }
-
+  pclose(gp);
 }
 
 float BoardMC::score(State* s){

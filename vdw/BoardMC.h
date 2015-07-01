@@ -13,7 +13,7 @@ struct State{
   int redWins, blueWins;
   bool redPlayer;
   State* parent;
-  std::vector<State*> children;
+  vector<State*> children;
 };
 
 int bestDepth(int n, int cutoff);
@@ -21,9 +21,9 @@ int bestDepth(int n, int cutoff);
 class BoardMC: public Board{
  private:
   //Unlike alpha-beta, our list of available moves doesnt need to be ordered
-  std::unordered_set<int> moves;
+  unordered_set<int> moves;
 
-  std::vector<int> indices;
+  vector<int> indices;
 
   State* start;
 

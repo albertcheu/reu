@@ -5,7 +5,7 @@ Board_AB::Board_AB(size_t n, size_t k)
 {
   //Depth 0 is the first move, no other branches
   //so we put a dummy here
-  killers.push_back(std::pair<size_t,size_t>(n,n));
+  killers.push_back(pair<size_t,size_t>(n,n));
 }
 
 bool Board_AB::symmetric(){
@@ -26,7 +26,7 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, int alpha, int beta,
 
   //Add placeholder that will be changed later on
   if (depth == killers.size())
-    { killers.push_back(std::pair<size_t,size_t>(n,n)); }
+    { killers.push_back(pair<size_t,size_t>(n,n)); }
 
   //Do our (valid) killer moves for this depth result in a cutoff?
   size_t killer = killers[depth].first;

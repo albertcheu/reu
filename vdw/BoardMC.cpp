@@ -1,7 +1,5 @@
 #include "BoardMC.h"
 
-using namespace std;
-
 State::State(int depth, int loc, bool redPlayer, State* parent)
   :depth(depth), loc(loc), redPlayer(redPlayer), parent(parent),
    redWins(0), blueWins(0), numTrials(0)

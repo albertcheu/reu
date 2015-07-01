@@ -6,7 +6,7 @@
 #define B_WIN -1
 
 // the score (win, draw, lose) and the location of play that yields it
-typedef std::pair<int,int> scoreAndLoc;
+typedef pair<int,int> scoreAndLoc;
 
 //"Useful" (dummy) constants
 const scoreAndLoc r_win(R_WIN,R_WIN);
@@ -19,7 +19,7 @@ class Board_AB: public Board {
   bool symmetric();
 
   //for killer heuristic
-  std::vector<std::pair<size_t,size_t> > killers;
+  vector<pair<size_t,size_t> > killers;
 
   //Given a candidate spot i at some game depth, test the move
   //If it is better than what we have seen, update max/min

@@ -74,15 +74,15 @@ size_t Board::numTurns(){ return n - empties.size(); }
 bool Board::filled(){ return empties.size() == 0; }
 
 void Board::print(){
-  for(int i = 0; i < n; i++){ std::cout << grid[i]; }
-  std::cout << std::endl;
+  for(int i = 0; i < n; i++){ cout << grid[i]; }
+  cout << endl;
 }
 
 bool Board::play(char c, int loc){
   if (grid[loc] != 'R' && grid[loc] != 'B'){
     grid[loc] = c;
     //Delete loc in empties, if it is in that vector
-    std::vector<int>::iterator itr= std::lower_bound(empties.begin(),
+    vector<int>::iterator itr = lower_bound(empties.begin(),
 						     empties.end(),
 						     loc);
     if (*itr == loc) { empties.erase(itr); }

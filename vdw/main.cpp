@@ -1,8 +1,6 @@
 #include "Board_AB.h"
 #include "BoardMC.h"
 
-using namespace std;
-
 int toNumber(string s, size_t maxNum){
   int ans = 0;
   int place = 1;

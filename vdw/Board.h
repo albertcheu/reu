@@ -4,11 +4,13 @@
 #include <vector>
 #include <string>
 
+using namespace std;
+
 class Board{
  protected:
   //The actual board on which we play
-  std::vector<char> grid;
-  std::vector<int> empties;
+  vector<char> grid;
+  vector<int> empties;
   //the size of the arithmetic progression and of the board
   size_t k, n;
 

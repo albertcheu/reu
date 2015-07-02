@@ -53,7 +53,7 @@ for(int i = 0; i <= n-k; i++){
 	  break;
 	}
       }
-      if (homogenous && grid[i]!='.') { return grid[i]; }
+      if (homogenous && grid[i] != '.') { return grid[i]; }
 
       d++;
     }

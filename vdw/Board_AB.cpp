@@ -18,9 +18,10 @@ bool Board_AB::symmetric(){
 
 scoreAndLoc Board_AB::alphabeta(bool maximize, int alpha, int beta,
 				size_t depth, int justPlayed){
-  if (depth == n) { return draw; }
+
   if (justPlayed > -1 && memberOfAP(justPlayed))
     { return ((grid[justPlayed]=='R')?r_win:b_win); }
+  if (depth == n) { return draw; }
 
   int max = -10;  int min = 10;  int loc = -1;
 

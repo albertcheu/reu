@@ -1,11 +1,17 @@
 #include "Board_AB.h"
 
 Board_AB::Board_AB(size_t n, size_t k)
-  :Board(n,k)
+  :Board(n,k), gamestate(0)
 {
   //Depth 0 is the first move, no other branches
   //so we put a dummy here
   killers.push_back(pair<size_t,size_t>(n,n));
+
+  mt19937 generator((unsigned)time(NULL));
+  for(size_t i = 0; i < n; i++){
+    pair<Bitstring,Bitstring> p = {generator(),generator()};
+    assignments.push_back(p);
+  }
 }
 
 bool Board_AB::symmetric(){
@@ -14,6 +20,14 @@ bool Board_AB::symmetric(){
     if (i <= middle && grid[i] != grid[n-1-i]) { return false; }
   }
   return true;
+}
+
+bool Board_AB::play(char c, int loc){
+  Board::play(c,loc);
+  //update gamestate;
+  pair<Bitstring,Bitstring> p = assignments[loc];
+  Bitstring which = (c=='R'?p.first:p.second);
+  gamestate ^= which;
 }
 
 scoreAndLoc Board_AB::alphabeta(bool maximize, int alpha, int beta,
@@ -89,20 +103,39 @@ bool Board_AB::alphabeta_helper(size_t i, bool maximize, size_t depth,
 				int& alpha, int& beta){
   char old = grid[i];
   if (old == 'R' || old == 'B') { return false; }
-  grid[i] = (maximize?'R':'B');
-  scoreAndLoc p = (maximize
-		   ? alphabeta(false, max, beta, depth+1, i)
-		   : alphabeta(true, alpha, min, depth+1, i));
-  grid[i] = old;
 
-  if (maximize && p.first > max) {
-    max = p.first;
+  //Play
+  grid[i] = (maximize?'R':'B');
+  pair<Bitstring,Bitstring> p = assignments[i];
+  Bitstring which = (maximize?p.first:p.second);
+  gamestate ^= which;
+
+  //See if done before
+  BitstringKey key = gamestate % MAXKEY;
+  int score = 0;
+  //If so, retrieve
+  if (table.find(key) != table.end()) { score = table[key]; }
+  //If not, cache
+  else {
+    scoreAndLoc p = (maximize
+		     ? alphabeta(false, max, beta, depth+1, i)
+		     : alphabeta(true, alpha, min, depth+1, i));
+    score = p.first;
+    table[key] = score;
+  }
+
+  //Undo
+  grid[i] = '.';
+  gamestate ^= which;
+
+  if (maximize && score > max) {
+    max = score;
     loc = i;
     alpha = (alpha>max?alpha:max);
   }
 
-  else if (!maximize && p.first < min){
-    min = p.first;
+  else if (!maximize && score < min){
+    min = score;
     loc = i;
     beta = (beta<min?beta:min);
   }  

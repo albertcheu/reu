@@ -1,4 +1,4 @@
-#include "BoardGreedy.h"
+#include "Board_AB.h"
 
 int toNumber(string s, size_t maxNum){
   int ans = 0;
@@ -13,17 +13,14 @@ int toNumber(string s, size_t maxNum){
   return ans;
 }
 
-void search_for_G(int n, int k, bool greedyFirst){
-  int match = 1;
-  if (greedyFirst) { match = 0; }
-
+void search_for_G(int n, int k){
   //Iterate thru board sizes
 
   while(true){
     cout << "Testing game(" << n << "," << k << ")..." << endl;
     clock_t t = clock();
 
-    BoardGreedy b(n,k);
+    Board_AB b(n,k);
 
     bool redPlayer = true;
     size_t depth = 0;
@@ -31,14 +28,8 @@ void search_for_G(int n, int k, bool greedyFirst){
     while(b.noWinner() && depth != n){
       int loc;
 
-      if (depth % 2 == match) {
-	loc = b.decide(redPlayer,depth++);
-      }
-
-      else {
-	scoreAndLoc sal = b.alphabeta(redPlayer,-10,10, depth++, justPlayed);
-	loc = sal.second;
-      }
+      scoreAndLoc sal = b.alphabeta(redPlayer,-10,10, depth++, justPlayed);
+      loc = sal.second;
 
       cout << loc << endl;
       b.play(redPlayer?'R':'B', loc);
@@ -66,7 +57,7 @@ void search_for_G(int n, int k, bool greedyFirst){
 int main(int argc, char** argv){
   string s = "";
 
-  if (argc >= 4) {
+  if (argc >= 3) {
 
     //n
     s = argv[1];
@@ -89,10 +80,7 @@ int main(int argc, char** argv){
       return 0;
     }
 
-    s = argv[3];
-    bool greedyFirst = (s == "first");
-
-    search_for_G(n, k, greedyFirst);
+    search_for_G(n, k);
     
   }
 

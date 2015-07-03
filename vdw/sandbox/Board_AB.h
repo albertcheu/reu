@@ -40,7 +40,8 @@ class Board_AB: public Board {
   Bitstring gamestate;
   //Map location to pair of random bitstrings, one for each player
   vector<pair<Bitstring,Bitstring> > assignments;
-  //Map game state (key-ified) to who won (Red/Blue/Draw)
+
+  //unordered_map<BitstringKey,Bitstring> table;
   unordered_map<BitstringKey,int> table;
 
  public:

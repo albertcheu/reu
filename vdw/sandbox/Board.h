@@ -10,12 +10,12 @@ class Board{
  protected:
   //The actual board on which we play
   vector<char> grid;
-  vector<int> empties;
+
   //the size of the arithmetic progression and of the board
   size_t k, n;
 
   //how many turns passed
-  size_t numTurns();
+  //size_t numTurns();
 
   bool memberOfAP(int loc);
 
@@ -37,6 +37,6 @@ class Board{
   bool noWinner();
   
   //Check if there's no more plays left
-  bool filled();
+  //bool filled();
 
 };

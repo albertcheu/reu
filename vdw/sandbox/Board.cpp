@@ -4,10 +4,7 @@
 Board::Board(size_t n, size_t k)
   :n(n), k(k)
 {
-  for(size_t i = 0; i < n; i++){
-    grid.push_back('.');
-    empties.push_back(i);
-  }
+  for(size_t i = 0; i < n; i++){ grid.push_back('.'); }
 }
 
 size_t Board::size(){return n;}
@@ -40,7 +37,11 @@ bool Board::memberOfAP(int loc){
 }
 
 char Board::winner(){
-for(int i = 0; i <= n-k; i++){
+  for(int i = 0; i <= n-k; i++){
+    //There can't be a winner using this spot if it is empty
+    if (grid[i] == '.') { continue; }
+
+    //Otherwise, iterate thru d's
     int d = 1;
     while (true){
       int rightmost = i + (k-1)*d;
@@ -53,7 +54,7 @@ for(int i = 0; i <= n-k; i++){
 	  break;
 	}
       }
-      if (homogenous && grid[i] != '.') { return grid[i]; }
+      if (homogenous) { return grid[i]; }
 
       d++;
     }
@@ -62,16 +63,16 @@ for(int i = 0; i <= n-k; i++){
 
   }
 
-  return '.';  
+ return '.';  
 }
 
 bool Board::won(char c){ return winner() == c; }
 
 bool Board::noWinner(){ return winner() == '.'; }
 
-size_t Board::numTurns(){ return n - empties.size(); }
+//size_t Board::numTurns(){ return n - empties.size(); }
 
-bool Board::filled(){ return empties.size() == 0; }
+//bool Board::filled(){ return empties.size() == 0; }
 
 void Board::print(){
   for(int i = 0; i < n; i++){ cout << grid[i]; }
@@ -79,13 +80,8 @@ void Board::print(){
 }
 
 bool Board::play(char c, int loc){
-  if (grid[loc] != 'R' && grid[loc] != 'B'){
+  if (grid[loc] == '.'){
     grid[loc] = c;
-    //Delete loc in empties, if it is in that vector
-    vector<int>::iterator itr = lower_bound(empties.begin(),
-						     empties.end(),
-						     loc);
-    if (*itr == loc) { empties.erase(itr); }
     return true;
   }
 

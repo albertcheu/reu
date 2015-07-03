@@ -7,8 +7,10 @@ Board_AB::Board_AB(size_t n, size_t k)
   //so we put a dummy here
   killers.push_back(pair<size_t,size_t>(n,n));
 
+  //Generates 64 random bits, which is what we need
   mt19937 generator((unsigned)time(NULL));
   for(size_t i = 0; i < n; i++){
+
     pair<Bitstring,Bitstring> p = {generator(),generator()};
     assignments.push_back(p);
   }
@@ -59,17 +61,13 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, int alpha, int beta,
   bool s = symmetric();
 
   //Loop
-  int emptiesIndex = (empties.size()-1)/2;
-
-  while(emptiesIndex > -1){
-    int i = empties[emptiesIndex];
+  for(int i = ((n%2)?(n/2):((n/2) - 1)); i > -1; i--){
 
     //Check i
-    if (!(depth == 0 && i==0) &&
+    if (grid[i] =='.' && !(depth == 0 && i==0) &&
 	i != killers[depth].first && i != killers[depth].second &&
 	alphabeta_helper(i, maximize, depth, max, min,
-			 loc, alpha, beta))
-	
+			 loc, alpha, beta))	
       {
 	//Store as a killer move
 	if (killers[depth].second != n)
@@ -78,11 +76,10 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, int alpha, int beta,
 	break;
       }
 
-    int se = empties.size()-emptiesIndex-1;
-    int j = empties[se];
-    emptiesIndex--;
     if (s) {continue;}
-    //if not symmetrical, check "reflection" of i
+    int j = n-i-1;
+    if (grid[j] != '.') { continue; }
+
     if (j != killers[depth].first && j != killers[depth].second &&
 	alphabeta_helper(j, maximize, depth, max, min,
 			 loc, alpha, beta))
@@ -101,33 +98,30 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, int alpha, int beta,
 bool Board_AB::alphabeta_helper(size_t i, bool maximize, size_t depth,
 				int& max, int& min, int& loc,
 				int& alpha, int& beta){
-  char old = grid[i];
-  if (old == 'R' || old == 'B') { return false; }
+  //if (grid[i] != '.') { return false; }
 
   //Play
   grid[i] = (maximize?'R':'B');
-  pair<Bitstring,Bitstring> p = assignments[i];
-  Bitstring which = (maximize?p.first:p.second);
+  int score = 0;
+  pair<Bitstring,Bitstring> bp = assignments[i];
+  Bitstring which = (maximize?bp.first:bp.second);
   gamestate ^= which;
 
   //See if done before
   BitstringKey key = gamestate % MAXKEY;
-  int score = 0;
-  //If so, retrieve
   if (table.find(key) != table.end()) { score = table[key]; }
-  //If not, cache
   else {
     scoreAndLoc p = (maximize
 		     ? alphabeta(false, max, beta, depth+1, i)
 		     : alphabeta(true, alpha, min, depth+1, i));
     score = p.first;
-    table[key] = score;
   }
 
-  //Undo
+  //Undo play
   grid[i] = '.';
   gamestate ^= which;
 
+  //Alpha beta pruning
   if (maximize && score > max) {
     max = score;
     loc = i;
@@ -139,6 +133,9 @@ bool Board_AB::alphabeta_helper(size_t i, bool maximize, size_t depth,
     loc = i;
     beta = (beta<min?beta:min);
   }  
+
+  //If this is a great move, cache it
+  if (alpha >= beta) { table[key] = score; }
 
   return alpha >= beta;
 

@@ -1,7 +1,7 @@
 #include "Board_AB.h"
 
 Board_AB::Board_AB(size_t n, size_t k)
-  :Board(n,k), gamestate(0)
+  :Board(n,k), gamestate(0), recursionCount(0)
 {
   //Depth 0 is the first move, no other branches
   //so we put a dummy here
@@ -25,6 +25,8 @@ bool Board_AB::symmetric(){
 }
 
 bool Board_AB::play(char c, int loc){
+  cout << "Went thru " << recursionCount << " nodes" << endl;
+  recursionCount = 0;
   Board::play(c,loc);
   //update gamestate;
   pair<Bitstring,Bitstring> p = assignments[loc];
@@ -34,6 +36,7 @@ bool Board_AB::play(char c, int loc){
 
 scoreAndLoc Board_AB::alphabeta(bool maximize, int alpha, int beta,
 				size_t depth, int justPlayed){
+  recursionCount++;
   if (justPlayed > -1 && memberOfAP(justPlayed))
     { return ((grid[justPlayed]=='R')?r_win:b_win); }
   if (depth == n) { return draw; }
@@ -98,7 +101,7 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, int alpha, int beta,
 bool Board_AB::alphabeta_helper(size_t i, bool maximize, size_t depth,
 				int& max, int& min, int& loc,
 				int& alpha, int& beta){
-  //if (grid[i] != '.') { return false; }
+  if (grid[i] != '.') { return false; }
 
   //Play
   grid[i] = (maximize?'R':'B');

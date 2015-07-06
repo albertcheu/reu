@@ -31,6 +31,7 @@ BoardMC::BoardMC(size_t n, size_t k)
     moves.emplace(i);
     //
     indices.push_back(i);
+    empties.push_back(i);
   }
 
   //Build tree up to storeDepth

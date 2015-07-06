@@ -24,7 +24,7 @@ const scoreAndLoc draw(DRAW,DRAW);
 
 class Board_AB: public Board {
  private:
-
+  size_t recursionCount;
   bool symmetric();
 
   //for killer heuristic

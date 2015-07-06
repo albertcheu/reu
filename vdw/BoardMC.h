@@ -23,7 +23,7 @@ class BoardMC: public Board{
   //Unlike alpha-beta, our list of available moves doesnt need to be ordered
   unordered_set<int> moves;
 
-  vector<int> indices;
+  vector<int> indices,empties;
 
   State* start;
 

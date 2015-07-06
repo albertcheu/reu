@@ -33,7 +33,7 @@ void play_game(int n, int k){
   size_t depth = (computer1?0:1);
 
   //While there is no winner (and we can still play)
-  while(b.noWinner() && ! b.filled()){
+  while(b.noWinner() && depth != n){
     cout << endl << "Player " << (player1?1:2) << " plays on: ";
     int loc;
 
@@ -106,6 +106,11 @@ void search_for_G_AB(int n, int k){
 
     //Stop when player 1 wins
     if (b.winner() == 'R') { break; }
+
+    if (b.winner() == 'B') {
+      cout << "Oh no, blue won!" <<endl;
+      break;
+    }
 
     //Continue with bigger board size
     else { n++; }

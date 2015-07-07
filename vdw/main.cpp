@@ -93,6 +93,9 @@ void search_for_G_AB(int n, int k){
     while(b.noWinner() && depth != n){
       int loc;
       scoreAndLoc sal = b.alphabeta(redPlayer,-10,10, depth++, justPlayed);
+      cout << "The best " << (redPlayer?'R':'B') << " can do is " << sal.first;
+      cout << endl;
+
       loc = sal.second;
       cout << loc+1 << endl;
       b.play(redPlayer?'R':'B', loc);

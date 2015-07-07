@@ -45,7 +45,7 @@ class Board_AB: public Board {
   vector<pair<Bitstring,Bitstring> > assignments;
 
   //unordered_map<BitstringKey,pair<Bitstring,int> > table;
-  unordered_map<BitstringKey,pair<vector<char>,int> > table;
+  unordered_map<BitstringKey,pair<Bitstring,int> > table;
 
  public:
   Board_AB(size_t n, size_t k);

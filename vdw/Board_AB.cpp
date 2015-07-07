@@ -43,7 +43,7 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, int alpha, int beta,
   if (depth == n) { return draw; }
 
   int max = -10;  int min = 10;  int loc = -1;
-
+  /*
   //Add placeholder that will be changed later on
   if (depth == killers.size())
     { killers.push_back(pair<size_t,size_t>(n,n)); }
@@ -60,7 +60,7 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, int alpha, int beta,
       alphabeta_helper(killer, maximize, depth, max, min,
 		       loc, alpha, beta))
     {  return scoreAndLoc((maximize?max:min), loc); }
-  
+  */  
   //Otherwise, look at all possible moves
   //symmetry -> don't bother checking rhs
   bool s = symmetric();
@@ -70,12 +70,14 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, int alpha, int beta,
 
     //Check i
     if (grid[i] =='.' && !(depth == 0 && i==0) &&
-	i != killers[depth].first && i != killers[depth].second &&
+	//i != killers[depth].first && i != killers[depth].second &&
 	alphabeta_helper(i, maximize, depth, max, min, loc, alpha, beta)){
       //Store as a killer move
+      /*
       if (killers[depth].second != n)
 	{ killers[depth].first = killers[depth].second; }
       killers[depth].second = i;
+      */
       break;
     }
     
@@ -84,11 +86,13 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, int alpha, int beta,
     int j = n-i-1;
     if (grid[j] != '.') { continue; }
 
-    if (j != killers[depth].first && j != killers[depth].second &&
+    if (//j != killers[depth].first && j != killers[depth].second &&
 	alphabeta_helper(j, maximize, depth, max, min, loc, alpha, beta)){
+      /*
       if (killers[depth].second != n)
 	{ killers[depth].first = killers[depth].second; }
       killers[depth].second = j;
+      */      
       break;
       
     }
@@ -110,14 +114,12 @@ bool Board_AB::alphabeta_helper(size_t i, bool maximize, size_t depth,
   BitstringKey key = gamestate % MAXKEY;
   bool gotScore = false;
   if (table.find(key) != table.end()) {
-    pair<vector<char>,int> stateAndScore = table[key];
-    if (stateAndScore.first == grid) {
+    pair<Bitstring,int> stateAndScore = table[key];
+    if (stateAndScore.first == gamestate) {
       score = stateAndScore.second;
       gotScore = true;
     }
-    else {
-      cout << "Collision" << endl;
-    }
+
   }
 
   if (!gotScore){
@@ -125,7 +127,7 @@ bool Board_AB::alphabeta_helper(size_t i, bool maximize, size_t depth,
 		     ? alphabeta(false, max, beta, depth+1, i)
 		     : alphabeta(true, alpha, min, depth+1, i));
     score = p.first;
-    //table[key] = {grid, score};
+    table[key] = {gamestate, score};
   }
 
   //Alpha beta pruning
@@ -140,9 +142,6 @@ bool Board_AB::alphabeta_helper(size_t i, bool maximize, size_t depth,
     loc = i;
     beta = (beta<min?beta:min);
   }  
-
-  //If this is a great move, cache it
-  if (alpha >= beta) { table[key] = {grid,score}; }
 
   //Undo play
   grid[i] = '.';

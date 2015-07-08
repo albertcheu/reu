@@ -87,18 +87,18 @@ int BoardMC::freeRecursive(State* s){
 
 void BoardMC::montecarlo(){
   FILE* gp = (FILE*) popen("gnuplot -persist","w");  
+  //labels
+  fprintf(gp,"set ylabel \"Percent of games won\"\n");
+  fprintf(gp,"set ylabel font \",16\"\n");
+  fprintf(gp,"set xlabel \"First move\"\n");
+  fprintf(gp,"set xlabel font \",16\"\n");
+  fprintf(gp,"unset key\n");
+  //Data
   fprintf(gp, "%s\n", "plot '-' with lines");
 
   string userInput = "";
   while(true){
     int total = start->numTrials;
-
-    //Every million trials, ask if we should stop
-    if (total % 1000000 == 0 && total > 0){
-      cout << "Completed " << total << " trials.";
-      cout << " Enter anything but 'quit' to continue: ";
-      cin >> userInput;
-    }
 
     //Every ten thousand trials, draw
     if (total % 10000 == 0 && total > 0) {
@@ -107,22 +107,37 @@ void BoardMC::montecarlo(){
 	numWins = start->children[i]->redWins;
 	numTrials = start->children[i]->numTrials;
 	avgSuccess = numWins / numTrials;
-	fprintf(gp, "%f\n", avgSuccess);
+	fprintf(gp, "%f\n", avgSuccess*100);
       }
-
+      
       fprintf(gp,"E\n");
-      fprintf(gp,"set arrow 1 from 0,0.5 to %lu,0.5 nohead\n",n-1);
+      fprintf(gp,"set arrow 1 from 0,50 to %lu,50 nohead\n",n-1);
       fprintf(gp,"refresh\n");
+
+      if ((total+10000) % 1000000 == 0) {
+	//Save image
+	fprintf(gp, "set term png\nset output \"montecarlo.png\"\n");
+      }
+      else { fprintf(gp, "set term wxt\n"); }
+
+      //Every million trials, ask if we should stop
+      if (total % 1000000 == 0){
+	cout << "Completed " << total << " trials.";
+	cout << " Enter anything but 'quit' to continue: ";
+	cin >> userInput;
+      }
 
       if (userInput != "quit"){
 	fprintf(gp, "replot\n");
 	fflush(gp);
       }
       else { break; }
+      
     }
 
     //Conduct experiment
     runTrial(start);
+
   }
   pclose(gp);
 }

@@ -1,12 +1,6 @@
 #include "Board_AB.h"
 #include <unordered_set>
 
-/*
-struct Kap{
-  const size_t lmm;
-  const size_t d;
-};
-*/
 struct pair_hash {
     inline std::size_t operator()(const std::pair<size_t,size_t> & v) const {
         return v.first*31+v.second;
@@ -24,7 +18,7 @@ class BoardGreedy:public Board_AB{
   bool play(char c, int loc);
 
  private:
-  vector<unordered_set<Kap,pair_hash> > possibles;
+  vector<unordered_set<Kap,pair_hash> > possibleR, possibleB;
 
   char whodWin(size_t loc, bool redPlayer);
 };

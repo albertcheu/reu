@@ -3,9 +3,10 @@
 Board_AB::Board_AB(size_t n, size_t k)
   :Board(n,k), gamestate(0), recursionCount(0)
 {
+
   //Depth 0 is the first move, no other branches
   //so we put a dummy here
-  killers.push_back(pair<size_t,size_t>(n,n));
+  //killers.push_back(pair<size_t,size_t>(n,n));
 
   //Generates 64 random bits, which is what we need
   mt19937 generator((unsigned)time(NULL));
@@ -14,6 +15,7 @@ Board_AB::Board_AB(size_t n, size_t k)
     pair<Bitstring,Bitstring> p = {generator(),generator()};
     assignments.push_back(p);
   }
+
 }
 
 bool Board_AB::symmetric(){
@@ -25,13 +27,15 @@ bool Board_AB::symmetric(){
 }
 
 bool Board_AB::play(char c, int loc){
-  cout << "Ran thru " << recursionCount << " nodes" << endl;
+  if (gamestate == 0) cout << "Ran thru " << recursionCount << " nodes" << endl;
   recursionCount = 0;
   Board::play(c,loc);
-  //update gamestate;
+
+  //update gamestate
   pair<Bitstring,Bitstring> p = assignments[loc];
   Bitstring which = (c=='R'?p.first:p.second);
   gamestate ^= which;
+
 }
 
 scoreAndLoc Board_AB::alphabeta(bool maximize, int alpha, int beta,
@@ -60,7 +64,7 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, int alpha, int beta,
       alphabeta_helper(killer, maximize, depth, max, min,
 		       loc, alpha, beta))
     {  return scoreAndLoc((maximize?max:min), loc); }
-  */  
+  */
   //Otherwise, look at all possible moves
   //symmetry -> don't bother checking rhs
   bool s = symmetric();
@@ -79,8 +83,8 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, int alpha, int beta,
       killers[depth].second = i;
       */
       break;
-    }
-    
+
+    }    
 
     if (s) {continue;}
     int j = n-i-1;
@@ -92,9 +96,9 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, int alpha, int beta,
       if (killers[depth].second != n)
 	{ killers[depth].first = killers[depth].second; }
       killers[depth].second = j;
-      */      
+      */
       break;
-      
+
     }
   }
 
@@ -107,6 +111,7 @@ bool Board_AB::alphabeta_helper(size_t i, bool maximize, size_t depth,
   //Play
   grid[i] = (maximize?'R':'B');
   int score = 0;
+
   Bitstring which = (maximize?assignments[i].first:assignments[i].second);
   gamestate ^= which;
 

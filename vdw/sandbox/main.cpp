@@ -1,4 +1,4 @@
-#include "Board_AB.h"
+#include "BoardGreedy.h"
 
 int toNumber(string s, size_t maxNum){
   int ans = 0;
@@ -13,25 +13,28 @@ int toNumber(string s, size_t maxNum){
   return ans;
 }
 
-void search_for_G(int n, int k){
+void search_for_G(int n, int k, bool greedyFirst){
   //Iterate thru board sizes
 
   while(true){
     cout << "Testing game(" << n << "," << k << ")..." << endl;
     clock_t t = clock();
 
-    Board_AB b(n,k);
+    BoardGreedy b(n,k);
 
     bool redPlayer = true;
     size_t depth = 0;
     int justPlayed = -1;
     while(b.noWinner() && depth != n){
       int loc;
+      
+      if (greedyFirst == redPlayer) { loc = b.decide(redPlayer, depth++); }
+      else {
+	scoreAndLoc sal = b.alphabeta(redPlayer,-10,10, depth++, justPlayed);
+	loc = sal.second;
+      }
 
-      scoreAndLoc sal = b.alphabeta(redPlayer,-10,10, depth++, justPlayed);
-      loc = sal.second;
-
-      cout << loc << endl;
+      //cout << loc << endl;
       b.play(redPlayer?'R':'B', loc);
       redPlayer = (!redPlayer);
       justPlayed = loc;
@@ -42,11 +45,12 @@ void search_for_G(int n, int k){
     cout << "It took me " << ((float)t)/CLOCKS_PER_SEC << " seconds" << endl;
 
     char winner = b.winner();
-    //Stop when player 1 wins
-    if (winner == 'R') { break; }
-    else if (winner == 'B') { cout << "Oh no, B should never win" << endl; break; }
 
-    //Continue with bigger board size
+    if (winner == 'R') { break; }
+    else if (winner == 'B') {
+      cout << "Oh no, B should never win" << endl;
+      break;
+    }
     else { n++; }
 
   }
@@ -57,7 +61,7 @@ void search_for_G(int n, int k){
 int main(int argc, char** argv){
   string s = "";
 
-  if (argc >= 3) {
+  if (argc >= 4) {
 
     //n
     s = argv[1];
@@ -80,7 +84,13 @@ int main(int argc, char** argv){
       return 0;
     }
 
-    search_for_G(n, k);
+    //greedy first
+    bool greedyFirst = true;
+    s = argv[3];
+    int x = toNumber(s, 10000);
+    if (x == 2) { greedyFirst = false; }
+
+    search_for_G(n, k, greedyFirst);
     
   }
 

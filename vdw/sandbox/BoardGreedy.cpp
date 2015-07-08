@@ -4,7 +4,8 @@ BoardGreedy::BoardGreedy(size_t n, size_t k)
   :Board_AB(n,k)
 {
   for(size_t i = 0; i < n; i++){
-    possibles.push_back(unordered_set<Kap,pair_hash>());
+    possibleR.push_back(unordered_set<Kap,pair_hash>());
+    possibleB.push_back(unordered_set<Kap,pair_hash>());
   }
 
   size_t maxD = (n-1)/(k-1);
@@ -15,7 +16,8 @@ BoardGreedy::BoardGreedy(size_t n, size_t k)
 
       Kap kap; kap.first=i; kap.second=d;
       for (size_t j = 0; j < k; j++){
-	possibles[i+j*d].emplace(kap);
+	possibleR[i+j*d].emplace(kap);
+	possibleB[i+j*d].emplace(kap);
       }
 
     }
@@ -82,14 +84,15 @@ char BoardGreedy::whodWin(size_t loc, bool redPlayer){
 size_t BoardGreedy::decide(bool redPlayer, size_t depth){
   //if (depth == 0) { return n / 2; }
 
-  size_t ans = empties[0];
+  size_t ans = 0;
 
   bool foundWinner = false;
   bool foundBlocker = false;
   if (depth != 0) {
     char playerChar = (redPlayer?'R':'B');
-    for(int e = 0; e < empties.size(); e++){
-      size_t i = empties[e];
+    for(size_t i = 0; i < n; i++){
+      if (grid[i] != '.') { continue; }
+
       char w = whodWin(i, redPlayer);
 
       //If current player can win by coloring i, do it
@@ -109,9 +112,12 @@ size_t BoardGreedy::decide(bool redPlayer, size_t depth){
 
   if (! foundWinner && !foundBlocker) {
     size_t best = 0;
-    for(int e = 0; e < empties.size(); e++){
-      size_t i = empties[e];
-      size_t cur = possibles[i].size();
+    for(size_t i = 0; i < n; i++){
+      if (grid[i] != '.') { continue; }
+
+      size_t cur = (redPlayer?possibleR.size():possibleB.size());
+      //possibles[i].size();
+
       if (cur > best) {
 	best = cur;
 	ans = i;
@@ -125,11 +131,14 @@ size_t BoardGreedy::decide(bool redPlayer, size_t depth){
 }
 
 bool BoardGreedy::play(char c, int loc){
-  //cout << "Playing " << c << " on " << loc << endl;
-  bool ans = Board::play(c,loc);
+  cout << "Playing " << c << " on " << loc << endl;
+  bool ans = Board_AB::play(c,loc);
 
-  //if valid and we just played as Blue, remove possible k-APs
-  if (ans && c == 'B'){
+  //if valid, remove possible k-APs from opponent
+  if (ans){
+    vector<unordered_set<Kap,pair_hash> >& possibles = (c=='R'?
+							possibleB:possibleR);
+
     unordered_set<Kap,pair_hash> copy = possibles[loc];
     possibles[loc].clear();
     //Iterate thru copy

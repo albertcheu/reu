@@ -89,7 +89,7 @@ int BoardMC::freeRecursive(State* s){
 void BoardMC::montecarlo(){
   FILE* gp = (FILE*) popen("gnuplot -persist","w");  
   //Title
-  fprintf(gp,"set title \"game(%d,%d)\"\n",n,k);
+  fprintf(gp,"set title \"game(%lu,%lu)\"\n",n,k);
   //labels
   fprintf(gp,"set ylabel \"Percent of games won\"\n");
   fprintf(gp,"set ylabel font \",16\"\n");

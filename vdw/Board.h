@@ -8,6 +8,8 @@
 #include <string>
 #include <unordered_map>
 
+#include <thread>
+
 #define R_WIN 1
 #define DRAW 0
 #define B_WIN -1
@@ -18,6 +20,9 @@ typedef unsigned long BitstringKey;
 const BitstringKey MAXKEY = ULONG_MAX;
 
 typedef unsigned long long Bitstring;
+
+bool memberHelper(vector<char>  & grid, char& w,
+		  size_t n, size_t k, int d, int loc);
 
 class Board{
  protected:

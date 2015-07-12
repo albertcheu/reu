@@ -20,11 +20,12 @@ int bestDepth(int n, int cutoff);
 
 class BoardMC: public Board{
  private:
-  //Unlike alpha-beta, our list of available moves doesnt need to be ordered
   unordered_set<int> moves;
 
   vector<int> indices,empties;
 
+  unordered_map<BitstringKey,pair<State*,bool> > table;
+  
   State* start;
 
   int storeDepth;

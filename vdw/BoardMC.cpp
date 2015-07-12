@@ -7,7 +7,7 @@ State::State(int depth, int loc, bool redPlayer, State* parent)
 
 int bestDepth(int n, int cutoff){
   int numNodes = 1;
-  int leaves = n;
+  int leaves = n/2;
   int factor = n-1;
   int depth = 0;
   while (numNodes < cutoff) {
@@ -20,7 +20,7 @@ int bestDepth(int n, int cutoff){
 }
 
 BoardMC::BoardMC(size_t n, size_t k)
-  :Board(n,k), storeDepth(bestDepth(n, 50000))
+  :Board(n,k), storeDepth(bestDepth(n, 90000))
 {
   cout << storeDepth << endl ;
 
@@ -61,6 +61,7 @@ int BoardMC::buildTree(State* s){
     }
 
     else { ans += 1; }
+    if (s->depth==0 && i==n/2) { break; }
   }
 
   return ans;
@@ -87,6 +88,8 @@ int BoardMC::freeRecursive(State* s){
 
 void BoardMC::montecarlo(){
   FILE* gp = (FILE*) popen("gnuplot -persist","w");  
+  //Title
+  fprintf(gp,"set title \"game(%d,%d)\"\n",n,k);
   //labels
   fprintf(gp,"set ylabel \"Percent of games won\"\n");
   fprintf(gp,"set ylabel font \",16\"\n");
@@ -103,7 +106,8 @@ void BoardMC::montecarlo(){
     //Every ten thousand trials, draw
     if (total % 10000 == 0 && total > 0) {
       float avgSuccess, numWins, numTrials;
-      for (int i = 0; i < n; i++){
+      size_t size = start->children.size();
+      for (int i = 0; i < size; i++){
 	numWins = start->children[i]->redWins;
 	numTrials = start->children[i]->numTrials;
 	avgSuccess = numWins / numTrials;
@@ -111,7 +115,7 @@ void BoardMC::montecarlo(){
       }
       
       fprintf(gp,"E\n");
-      fprintf(gp,"set arrow 1 from 0,50 to %lu,50 nohead\n",n-1);
+      fprintf(gp,"set arrow 1 from 0,50 to %lu,50 nohead\n",size);
       fprintf(gp,"refresh\n");
 
       if ((total+10000) % 1000000 == 0) {
@@ -136,10 +140,30 @@ void BoardMC::montecarlo(){
     }
 
     //Conduct experiment
-    runTrial(start);
+    runTrialTraverse(start);
 
   }
   pclose(gp);
+}
+
+bool BoardMC::runTrial(State* s){
+
+  //If State s is red's turn, red receives a grid with spot loc colored blue
+  //If s belongs to blue, blue receives a grid with spot loc colored red
+  bool parentIsRed = s->parent->redPlayer;
+  grid[s->loc] = (parentIsRed?'R':'B');
+  moves.erase(moves.find(s->loc));
+
+  //If there is a winner, return who won    
+  if (memberOfAP(s->loc)) {
+    moves.emplace(s->loc);
+    grid[s->loc] = '.';
+    s->numTrials++;
+    (parentIsRed? s->redWins++ : s->blueWins++);
+    return parentIsRed;
+  }
+  
+  return (s->children.size()? runTrialTraverse(s):runTrialRandom(s));
 }
 
 float BoardMC::score(State* s){
@@ -151,39 +175,13 @@ float BoardMC::score(State* s){
   float avgSuccess = (parentIsRed?s->redWins:s->blueWins)/(float)s->numTrials;
 
   //Standard formula
-  float regret = sqrt(2*log(start->numTrials)/s->numTrials);
+  float regret = sqrt(2.0f*log(start->numTrials)/(float)s->numTrials);
 
   return avgSuccess + regret;
 }
 
-bool BoardMC::runTrial(State* s){
-  if (s->depth) {
-    //If State s is red's turn, red receives a grid with spot loc colored blue
-    //If s belongs to blue, blue receives a grid with spot loc colored red
-    bool parentIsRed = s->parent->redPlayer;
-    grid[s->loc] = (parentIsRed?'R':'B');
-    moves.erase(moves.find(s->loc));
-
-    //If there is a winner, return who won    
-    if (memberOfAP(s->loc)) {
-      moves.emplace(s->loc);
-      grid[s->loc] = '.';
-      s->numTrials++;
-      (parentIsRed? s->redWins++ : s->blueWins++);
-      return parentIsRed;
-    }
-
-  }
-
-  //If we can recurse, do it
-  if (s->children.size()) { return runTrialTraverse(s); }
-
-  //else color available moves in random order
-  return runTrialRandom(s);
-
-}
-
 bool BoardMC::runTrialTraverse(State* s){
+
   bool redWon = true;
   float optimalScore = 0.0f;
   State* bestChild = NULL;

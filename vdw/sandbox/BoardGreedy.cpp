@@ -81,9 +81,166 @@ char BoardGreedy::whodWin(size_t loc, bool redPlayer){
   return '.';
 }
 
-size_t BoardGreedy::decide(bool redPlayer, size_t depth){
-  //if (depth == 0) { return n / 2; }
+bool pairCompare(const pair<size_t, size_t>& a, const pair<size_t, size_t>& b)
+{ return a.first < b.first; }
 
+scoreAndLoc BoardGreedy::alphabeta(bool maximize, int alpha, int beta,
+				   size_t depth, int justPlayed){
+  recursionCount++;
+  if (justPlayed > -1 && memberOfAP(justPlayed))
+    { return ((grid[justPlayed]=='R')?r_win:b_win); }
+
+  if (depth == n) { return draw; }
+
+  int max = -10;  int min = 10;  int loc = -1;
+
+  size_t bestOption = 0;
+  vector<pair<size_t,size_t> > preference;
+  for (size_t i = 0; i < n; i++){
+    vector<unordered_set<Kap,pair_hash> >& possibles = maximize?possibleR
+      :possibleB;
+
+    preference.push_back({possibles[i].size(), i});
+    if (possibles[i].size() > bestOption) { bestOption = possibles[i].size(); }
+  }
+
+  if (bestOption > 0) {
+    sort(preference.begin(), preference.end(), pairCompare);
+
+    //Loop
+    for (size_t i = 0; i < n; i++){
+      size_t j = preference[i].second;
+      if (!(depth == 0 && j==0) &&
+	  alphabeta_helper(j, maximize, depth, max, min, loc, alpha, beta)){
+	break;
+      }    
+    }
+  }
+
+  else{
+    bool s = symmetric();
+    for(int i = ((n%2)?(n/2):((n/2) - 1)); i > -1; i--){
+      //Check i
+      if (!(depth == 0 && i==0) &&
+	  alphabeta_helper(i, maximize, depth, max, min, loc, alpha, beta)){
+	break;
+      }
+      if (s) {continue;}
+      int j = n-i-1;
+      if (alphabeta_helper(j, maximize, depth, max, min, loc, alpha, beta)){
+	break;
+      }
+    }
+  }
+
+  return scoreAndLoc((maximize?max:min), loc);
+  
+}
+
+bool BoardGreedy::alphabeta_helper(size_t i, bool maximize, size_t depth,
+				int& max, int& min, int& loc,
+				int& alpha, int& beta){
+  if (i >= n || grid[i] != '.') { return false; }
+
+  //Play
+  grid[i] = (maximize?'R':'B');
+  unordered_set<Kap,pair_hash> copy = removeFromOpponent(maximize,i);
+  int score = 0;
+
+  Bitstring which = (maximize?assignments[i].first:assignments[i].second);
+  gamestate ^= which;
+
+  //See if done before
+  BitstringKey key = gamestate % MAXKEY;
+  bool gotScore = false;
+  if (table.find(key) != table.end()) {
+    pair<Bitstring,int> stateAndScore = table[key];
+    if (stateAndScore.first == gamestate) {
+      score = stateAndScore.second;
+      gotScore = true;
+    }
+    else {cout << "Collision" << endl; }
+  }
+
+  if (!gotScore){
+
+    scoreAndLoc p = (maximize
+		     ? alphabeta(false, max, beta, depth+1, i)
+		     : alphabeta(true, alpha, min, depth+1, i));
+    score = p.first;
+
+    table[key] = {gamestate, score};
+  }
+
+  //Alpha beta pruning
+  if (maximize && score > max) {
+    max = score;
+    loc = i;
+    alpha = (alpha>max?alpha:max);
+  }
+
+  else if (!maximize && score < min){
+    min = score;
+    loc = i;
+    beta = (beta<min?beta:min);
+  }  
+
+  //Undo play
+  grid[i] = '.';
+  gamestate ^= which;
+  restoreToOpponent(maximize, copy);
+
+  return alpha >= beta;
+
+}
+
+bool BoardGreedy::play(char c, int loc){
+  bool ans = Board_AB::play(c,loc);
+
+  //if valid, remove possible k-APs from opponent
+  if (ans){ removeFromOpponent(c=='R', loc); }
+
+  return ans;
+}
+
+unordered_set<Kap,pair_hash> BoardGreedy::removeFromOpponent(bool maximize, int loc){
+  vector<unordered_set<Kap,pair_hash> >& possibles = (maximize?
+						      possibleB:possibleR);
+
+  unordered_set<Kap,pair_hash> copy = possibles[loc];
+  possibles[loc].clear();
+
+  //Iterate thru copy
+  for(unordered_set<Kap,pair_hash>::iterator itr = copy.begin();
+      itr!= copy.end(); itr++){
+
+    //Iterate thru possibles
+    for (size_t i = 0; i < n; i++){
+      if (i == loc) { continue; }
+      //Delete instances
+      if (possibles[i].find(*itr) != possibles[i].end()) 
+	{ possibles[i].erase(*itr); }
+    }
+  }
+
+  return copy;
+}
+
+void BoardGreedy::restoreToOpponent(bool maximize,
+				    unordered_set<Kap,pair_hash>& kaps){
+  vector<unordered_set<Kap,pair_hash> >& possibles = (maximize?
+						      possibleB:possibleR);
+  for(unordered_set<Kap,pair_hash>::iterator itr = kaps.begin();
+      itr != kaps.end(); itr++){
+    Kap kap = *itr;
+    for (int elem = 0; elem < k; elem++){
+      possibles[kap.first + elem*kap.second].emplace(kap);
+    }
+  }
+}
+
+
+size_t BoardGreedy::decide(bool redPlayer, size_t depth){
   size_t ans = 0;
 
   bool foundWinner = false;
@@ -110,50 +267,20 @@ size_t BoardGreedy::decide(bool redPlayer, size_t depth){
     }
   }
 
-  if (! foundWinner && !foundBlocker) {
-    size_t best = 0;
-    for(size_t i = 0; i < n; i++){
-      if (grid[i] != '.') { continue; }
+  if (foundWinner || foundBlocker) { return ans; }
 
-      size_t cur = (redPlayer?possibleR.size():possibleB.size());
-      //possibles[i].size();
+  size_t best = 0;
+  for(size_t i = 0; i < n; i++){
+    if (grid[i] != '.') { continue; }
 
-      if (cur > best) {
-	best = cur;
-	ans = i;
-      }
-      if (cur == best && i <= n/2) { ans = i; }
+    size_t cur = (redPlayer?possibleR[i].size():possibleB[i].size());
+
+    if (cur > best) {
+      best = cur;
+      ans = i;
     }
-
+    //if (cur == best && i <= n/2) { ans = i; }
   }
-
-  return ans;
-}
-
-bool BoardGreedy::play(char c, int loc){
-  cout << "Playing " << c << " on " << loc << endl;
-  bool ans = Board_AB::play(c,loc);
-
-  //if valid, remove possible k-APs from opponent
-  if (ans){
-    vector<unordered_set<Kap,pair_hash> >& possibles = (c=='R'?
-							possibleB:possibleR);
-
-    unordered_set<Kap,pair_hash> copy = possibles[loc];
-    possibles[loc].clear();
-    //Iterate thru copy
-    for(unordered_set<Kap,pair_hash>::iterator itr = copy.begin();
-	itr!= copy.end(); itr++){
-      //Iterate thru possibles
-      for (size_t i = 0; i < n; i++){
-	if (i == loc) { continue; }
-	//Delete instances
-	possibles[i].erase(*itr);
-      }
-    }
-  }
-
-  //if (winner() != '.') { cout << "Somebody won" << endl; }
 
   return ans;
 }

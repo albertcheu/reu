@@ -2,9 +2,18 @@
 #include "Board.h"
 
 Board::Board(size_t n, size_t k)
-  :n(n), k(k)
+  :n(n), k(k), gamestate(0)
 {
   for(size_t i = 0; i < n; i++){ grid.push_back('.'); }
+
+  //Generates 64 random bits, which is what we need
+  mt19937 generator((unsigned)time(NULL));
+  for(size_t i = 0; i < n; i++){
+
+    pair<Bitstring,Bitstring> p = {generator(),generator()};
+    assignments.push_back(p);
+  }
+
 }
 
 size_t Board::size(){return n;}
@@ -77,6 +86,11 @@ void Board::print(){
 
 bool Board::play(char c, int loc){
   if (grid[loc] == '.'){
+    //update gamestate
+    pair<Bitstring,Bitstring> p = assignments[loc];
+    Bitstring which = (c=='R'?p.first:p.second);
+    gamestate ^= which;
+
     grid[loc] = c;
     return true;
   }

@@ -1,10 +1,23 @@
 #pragma once
-#include <time.h>
+#include <random>
+#include <cstdlib>
+#include <climits>
+#include <ctime>
 #include <iostream>
 #include <vector>
 #include <string>
+#include <unordered_map>
+
+#define R_WIN 1
+#define DRAW 0
+#define B_WIN -1
 
 using namespace std;
+
+typedef unsigned long BitstringKey;
+const BitstringKey MAXKEY = ULONG_MAX;
+
+typedef unsigned long long Bitstring;
 
 class Board{
  protected:
@@ -15,6 +28,10 @@ class Board{
   size_t k, n;
 
   bool memberOfAP(int loc);
+
+  Bitstring gamestate;
+  //Map location to pair of random bitstrings, one for each player
+  vector<pair<Bitstring,Bitstring> > assignments;
 
  public:
   Board(size_t n, size_t k);

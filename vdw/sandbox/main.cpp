@@ -13,7 +13,7 @@ int toNumber(string s, size_t maxNum){
   return ans;
 }
 
-void search_for_G(int n, int k, bool greedyFirst){
+void search_for_G(int n, int k){
   //Iterate thru board sizes
 
   while(true){
@@ -27,14 +27,11 @@ void search_for_G(int n, int k, bool greedyFirst){
     int justPlayed = -1;
     while(b.noWinner() && depth != n){
       int loc;
-      
-      if (greedyFirst == redPlayer) { loc = b.decide(redPlayer, depth++); }
-      else {
-	scoreAndLoc sal = b.alphabeta(redPlayer,-10,10, depth++, justPlayed);
-	loc = sal.second;
-      }
+      scoreAndLoc sal = b.alphabeta(redPlayer,-10,10, depth++, justPlayed);
+      //cout << "Winner: " << sal.first << endl;
+      loc = sal.second;
 
-      //cout << loc << endl;
+      cout << loc << endl;
       b.play(redPlayer?'R':'B', loc);
       redPlayer = (!redPlayer);
       justPlayed = loc;
@@ -61,7 +58,7 @@ void search_for_G(int n, int k, bool greedyFirst){
 int main(int argc, char** argv){
   string s = "";
 
-  if (argc >= 4) {
+  if (argc >= 3) {
 
     //n
     s = argv[1];
@@ -84,13 +81,7 @@ int main(int argc, char** argv){
       return 0;
     }
 
-    //greedy first
-    bool greedyFirst = true;
-    s = argv[3];
-    int x = toNumber(s, 10000);
-    if (x == 2) { greedyFirst = false; }
-
-    search_for_G(n, k, greedyFirst);
+    search_for_G(n, k);
     
   }
 

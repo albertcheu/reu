@@ -1,4 +1,4 @@
-#include "BoardGreedy.h"
+#include "BoardThread.h"
 
 int toNumber(string s, size_t maxNum){
   int ans = 0;
@@ -13,6 +13,11 @@ int toNumber(string s, size_t maxNum){
   return ans;
 }
 
+void blarg(BoardThread& b, scoreAndLoc& sal, bool& done){
+  b.fillTable(sal);
+  done = true;
+}
+
 void search_for_G(int n, int k){
   //Iterate thru board sizes
 
@@ -20,7 +25,31 @@ void search_for_G(int n, int k){
     cout << "Testing game(" << n << "," << k << ")..." << endl;
     clock_t t = clock();
 
-    BoardGreedy b(n,k);
+    unordered_map<BitstringKey,pair<Bitstring,int> > table;
+    Board_AB b(n,k,table);
+    /*
+    size_t turn = 0;
+    vector<bool> wantsToEnter;
+    wantsToEnter.push_back(false);wantsToEnter.push_back(false);
+    BoardThread even(n,k,0,ref(turn),ref(wantsToEnter),
+		     ref(b.assignments), ref(table));
+    BoardThread odd(n,k,1,ref(turn),ref(wantsToEnter),
+		    ref(b.assignments), ref(table));
+    */
+    mutex lock;
+    BoardThread even(n,k, ref(lock), 0,
+		     ref(b.assignments), ref(table));
+    BoardThread odd(n,k, ref(lock), 1,
+		    ref(b.assignments), ref(table));
+
+    scoreAndLoc sal1 = draw; scoreAndLoc sal2 = draw;
+    bool doneOdd = false; bool doneEven = false;
+    thread tOdd(blarg, ref(odd), ref(sal1), ref(doneOdd));
+    thread tEven(blarg, ref(even), ref(sal2), ref(doneEven));
+
+    while(!doneOdd && !doneEven){}
+    tOdd.join();
+    tEven.join();
 
     bool redPlayer = true;
     size_t depth = 0;
@@ -86,3 +115,30 @@ int main(int argc, char** argv){
   }
 
 }
+/*
+  if (depth==0 && !child){
+    scoreAndLoc ans = draw;
+
+    //Halve work
+    Board_AB odd(n,k,true,table);
+    odd.assignments = assignments;
+    Board_AB even(n,k,true,table);
+    even.assignments = assignments;
+
+    //Spawn children
+    size_t turn = 0;
+    vector<bool> wantsToEnter;
+    wantsToEnter.push_back(false);wantsToEnter.push_back(false);
+    thread tOdd(childThread, odd, ans, 1, 0, turn, wantsToEnter);
+    thread tEven(childThread, even, ans, 0, 1, turn, wantsToEnter);
+
+    //Finish
+    tOdd.join();
+    tEven.join();
+
+    recursionCount = odd.recursionCount + even.recursionCount;
+    return ans;
+  }
+
+
+ */

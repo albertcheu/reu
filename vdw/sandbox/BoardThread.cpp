@@ -1,31 +1,30 @@
-#include "Board_AB.h"
+#include "BoardThread.h"
 
-Board_AB::Board_AB(size_t n, size_t k,
-		   unordered_map<BitstringKey,pair<Bitstring,int> >& table)
-  :Board(n,k), table(table), recursionCount(0)
-{}
-
-bool Board_AB::symmetric(){
-  size_t middle = (n-1)/2;
-  for (size_t i = 0; i < n; i++){
-    if (i <= middle && grid[i] != grid[n-1-i]) { return false; }
-  }
-  return true;
+BoardThread::BoardThread(size_t n, size_t k,
+			 mutex& lock,size_t id,
+			 //size_t id, size_t& turn, vector<bool>& wantsToEnter,
+			 vector<pair<Bitstring,Bitstring> >& assignmentX,
+			 unordered_map<BitstringKey,pair<Bitstring,int> >&
+			 table)
+  : Board_AB(n,k,table), lock(lock), id(id)
+//id(id), turn(turn), wantsToEnter(wantsToEnter)
+{
+  assignments = assignmentX;
 }
 
-bool Board_AB::play(char c, int loc){
-  if (gamestate == 0) cout << "Ran thru " << recursionCount << " nodes" << endl;
-  recursionCount = 0;
-  Board::play(c,loc);
+void BoardThread::fillTable(scoreAndLoc& sal){
+  sal = alphabeta(true,-10,10,0);
 }
 
-scoreAndLoc Board_AB::alphabeta(bool maximize, int alpha, int beta,
-				size_t depth, int justPlayed){
+scoreAndLoc BoardThread::alphabeta(bool maximize, int alpha, int beta,
+				   size_t depth, int justPlayed){
   recursionCount++;
   if (depth > 0 && memberOfAP(justPlayed))
     { return ((grid[justPlayed]=='R')?r_win:b_win); }
 
   if (depth == n) { return draw; }
+  
+  //cout << depth << endl;
 
   int max = -10;  int min = 10;  int loc = -1;
 
@@ -34,6 +33,7 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, int alpha, int beta,
 
   //Loop
   for(int i = ((n%2)?(n/2):((n/2) - 1)); i > -1; i--){
+    if (depth == 0 && i%2 != (int)id) { continue; }
 
     //Check i
     if (!(depth == 0 && i==0) &&
@@ -49,12 +49,14 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, int alpha, int beta,
   }
 
   return scoreAndLoc((maximize?max:min), loc);
+
 }
 
-bool Board_AB::alphabeta_helper(size_t i, bool maximize, size_t depth,
-				int& max, int& min, int& loc,
-				int& alpha, int& beta){
+bool BoardThread::alphabeta_helper(int i, bool maximize, size_t depth,
+				   int& max, int& min, int& loc,
+				   int& alpha, int& beta){
   if (i >= n || grid[i] != '.') { return false; }
+  //size_t other = ((size_t)1)-id;
 
   //Play
   grid[i] = (maximize?'R':'B');
@@ -66,17 +68,39 @@ bool Board_AB::alphabeta_helper(size_t i, bool maximize, size_t depth,
   //See if done before
   BitstringKey key = gamestate % MAXKEY;
   bool gotScore = false;
-  unordered_map<BitstringKey,pair<Bitstring,int> >::iterator itr = table.find(key);
+  /*
+  wantsToEnter[id] = true;
+  while(wantsToEnter[other]){
+    if (turn == other){
+      wantsToEnter[id] = false;
+      while(turn == other) {}
+      wantsToEnter[id] = true;
+    }
+  }
+  */
 
-  if (itr != table.end()) {
+  while(! lock.try_lock()){}
+  unordered_map<BitstringKey,pair<Bitstring,int> >::iterator itr, end;
+  itr = table.find(key);
+  end = table.end();
+  lock.unlock();
+
+  if (itr != end) {
     pair<Bitstring,int> stateAndScore = itr->second;
-  
+
     if (stateAndScore.first == gamestate) {
       score = stateAndScore.second;
       gotScore = true;
     }
-    else {cout << "Collision" << endl; }
+
+    //else {cout << "Collision" << endl; }
+
   }
+
+  /*
+  turn = other;
+  wantsToEnter[id] = false;
+  */
 
   if (!gotScore){
 
@@ -85,10 +109,9 @@ bool Board_AB::alphabeta_helper(size_t i, bool maximize, size_t depth,
 		     : alphabeta(true, alpha, min, depth+1, i));
     score = p.first;
 
+    while(! lock.try_lock()){}
     table[key] = {gamestate, score};
-    // pair<Bitstring,int> entry = {gamestate, score};
-    // table.emplace(key, entry);
-
+    lock.unlock();
   }
 
   //Alpha beta pruning
@@ -109,5 +132,4 @@ bool Board_AB::alphabeta_helper(size_t i, bool maximize, size_t depth,
   gamestate ^= which;
 
   return alpha >= beta;
-
 }

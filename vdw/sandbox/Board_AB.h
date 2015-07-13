@@ -16,7 +16,7 @@ class Board_AB: public Board {
   bool symmetric();
 
   //for killer heuristic
-  vector<pair<size_t,size_t> > killers;
+  //vector<pair<size_t,size_t> > killers;
 
   //Given a candidate spot i at some game depth, test the move
   //If it is better than what we have seen, update max/min
@@ -26,15 +26,17 @@ class Board_AB: public Board {
 			int& max, int& min, int& loc,
 			int& alpha, int& beta);
   
-  unordered_map<BitstringKey,pair<Bitstring,int> > table;
+  unordered_map<BitstringKey,pair<Bitstring,int> >& table;
 
  public:
-  Board_AB(size_t n, size_t k);
+
+  Board_AB(size_t n, size_t k,
+	   unordered_map<BitstringKey,pair<Bitstring,int> >& table);
 
   bool play(char c, int loc);
 
   //The meat of the program
   scoreAndLoc alphabeta(bool maximize, int alpha, int beta,
 			size_t depth, int justPlayed=-1);
-
+    
 };

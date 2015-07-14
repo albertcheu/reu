@@ -3,7 +3,7 @@
 class BoardThread: public Board_AB
 {
  private:
-  size_t id;
+  size_t id, numThreads;
   /*
   size_t& turn;
   vector<bool>& wantsToEnter;
@@ -16,11 +16,11 @@ class BoardThread: public Board_AB
 
   BoardThread(size_t n, size_t k,
 	      //size_t id, size_t& turn, vector<bool>& wantsToEnter,
-	      mutex& lock, size_t id,
+	      mutex& lock, size_t id, size_t numThreads,
 	      vector<pair<Bitstring,Bitstring> >& assignmentX,
 	      unordered_map<BitstringKey,pair<Bitstring,int> >& table);
 
-  void fillTable(scoreAndLoc& sal);
+  void fillTable();
   
   scoreAndLoc alphabeta(bool maximize, int alpha, int beta,
 			size_t depth, int justPlayed=-1);

@@ -8,8 +8,6 @@
 #include <string>
 #include <unordered_map>
 
-#include <thread>
-
 #define R_WIN 1
 #define DRAW 0
 #define B_WIN -1

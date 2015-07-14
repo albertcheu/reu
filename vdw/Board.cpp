@@ -1,32 +1,5 @@
 #include "Board.h"
 
-bool memberHelper(vector<char> & grid, char& w,
-		  size_t n, size_t k, int d, int loc){
-  if (w != '.') { return true; }
-
-  if (loc+d >= n && loc-d < 0) { return false; }
-
-  int numLeft, numRight;
-  numLeft = numRight = 0;
-    
-  for(int i = loc+d; i < n; i += d){
-    if (grid[i] == grid[loc]) { numRight++; }
-    else { break; }
-  }
-
-  if (1+numRight >= k) { w = grid[loc]; return true; }//true
-    
-  for(int i = loc-d; i > -1; i -= d){
-    if (grid[i] == grid[loc]) { numLeft++; }
-    else { break; }
-  }
-
-  if (numLeft + numRight + 1 >= k) { w = grid[loc]; return true; }
-
-  return true;
-
-}
-
 Board::Board(size_t n, size_t k)
   :n(n), k(k), gamestate(0)
 {
@@ -45,27 +18,30 @@ Board::Board(size_t n, size_t k)
 size_t Board::size(){return n;}
 
 bool Board::memberOfAP(int loc){
-  /*
-  char w = '.';
-  vector<thread> threads;
-  for(int d=1; d<(n-1)/(k-1); d++){
-    threads.push_back(thread(memberHelper, ref(grid), ref(w), n, k, d, loc));
-  }
-  for(size_t i = 0; i < threads.size(); i++){
-    threads[i].join();
-  }
-  return w != '.';
-  */
-
   int d = 1;
   while (true){
-    char w = '.';
-    bool result = memberHelper(grid, w, n, k, d, loc);
-    if (w != '.') return true;
-    if (! result) return false;
-        
+    if (loc+d >= n && loc-d < 0) { return false; }
+
+    int numLeft, numRight;
+    numLeft = numRight = 0;
+    
+    for(int i = loc+d; i < n; i += d){
+      if (grid[i] == grid[loc]) { numRight++; }
+      else { break; }
+    }
+
+    if (1+numRight >= k) { return true; }
+    
+    for(int i = loc-d; i > -1; i -= d){
+      if (grid[i] == grid[loc]) { numLeft++; }
+      else { break; }
+    }
+
+    if (numLeft + numRight + 1 >= k) { return true; }
+
     d++;
   }
+
   return false; 
 
 }

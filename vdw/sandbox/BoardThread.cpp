@@ -1,19 +1,19 @@
 #include "BoardThread.h"
 
 BoardThread::BoardThread(size_t n, size_t k,
-			 mutex& lock,size_t id,
+			 mutex& lock,size_t id, size_t numThreads,
 			 //size_t id, size_t& turn, vector<bool>& wantsToEnter,
 			 vector<pair<Bitstring,Bitstring> >& assignmentX,
 			 unordered_map<BitstringKey,pair<Bitstring,int> >&
 			 table)
-  : Board_AB(n,k,table), lock(lock), id(id)
+  : Board_AB(n,k,table), lock(lock), id(id), numThreads(numThreads)
 //id(id), turn(turn), wantsToEnter(wantsToEnter)
 {
   assignments = assignmentX;
 }
 
-void BoardThread::fillTable(scoreAndLoc& sal){
-  sal = alphabeta(true,-10,10,0);
+void BoardThread::fillTable(){
+  alphabeta(true,-10,10,0);
 }
 
 scoreAndLoc BoardThread::alphabeta(bool maximize, int alpha, int beta,
@@ -33,7 +33,7 @@ scoreAndLoc BoardThread::alphabeta(bool maximize, int alpha, int beta,
 
   //Loop
   for(int i = ((n%2)?(n/2):((n/2) - 1)); i > -1; i--){
-    if (depth == 0 && i%2 != (int)id) { continue; }
+    if (depth == 0 && i%numThreads != id) { continue; }
 
     //Check i
     if (!(depth == 0 && i==0) &&

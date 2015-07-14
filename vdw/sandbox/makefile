@@ -1,5 +1,5 @@
 all: main.cpp Board.o Board_AB.o BoardThread.o
-	g++ -std=c++11 -pthread -Wl,--no-as-needed main.cpp Board.o Board_AB.o  BoardThread.o -o runMe
+	g++ Board.o Board_AB.o  BoardThread.o main.cpp -o runMe -pthread -Wl,--no-as-needed -std=c++11 
 
 Board.o: Board.h Board.cpp
 	g++ -std=c++11 -pthread -Wl,--no-as-needed -O3 -c Board.cpp Board.h

@@ -15,7 +15,6 @@ class BoardThread: public Board_AB
  public:
 
   BoardThread(size_t n, size_t k,
-	      //size_t id, size_t& turn, vector<bool>& wantsToEnter,
 	      mutex& lock, size_t id, size_t numThreads,
 	      vector<pair<Bitstring,Bitstring> >& assignmentX,
 	      unordered_map<BitstringKey,pair<Bitstring,int> >& table);

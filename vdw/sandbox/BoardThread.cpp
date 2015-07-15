@@ -2,12 +2,9 @@
 
 BoardThread::BoardThread(size_t n, size_t k,
 			 mutex& lock,size_t id, size_t numThreads,
-			 //size_t id, size_t& turn, vector<bool>& wantsToEnter,
 			 vector<pair<Bitstring,Bitstring> >& assignmentX,
-			 unordered_map<BitstringKey,pair<Bitstring,int> >&
-			 table)
+			 unordered_map<BitstringKey,pair<Bitstring,int> >& table)
   : Board_AB(n,k,table), lock(lock), id(id), numThreads(numThreads)
-//id(id), turn(turn), wantsToEnter(wantsToEnter)
 {
   assignments = assignmentX;
 }
@@ -24,8 +21,6 @@ scoreAndLoc BoardThread::alphabeta(bool maximize, int alpha, int beta,
 
   if (depth == n) { return draw; }
   
-  //cout << depth << endl;
-
   int max = -10;  int min = 10;  int loc = -1;
 
   //symmetry -> don't bother checking rhs
@@ -62,22 +57,15 @@ bool BoardThread::alphabeta_helper(int i, bool maximize, size_t depth,
   grid[i] = (maximize?'R':'B');
   int score = 0;
 
+  while(! lock.try_lock()){}
   Bitstring which = (maximize?assignments[i].first:assignments[i].second);
+  lock.unlock();
+
   gamestate ^= which;
 
   //See if done before
   BitstringKey key = gamestate % MAXKEY;
   bool gotScore = false;
-  /*
-  wantsToEnter[id] = true;
-  while(wantsToEnter[other]){
-    if (turn == other){
-      wantsToEnter[id] = false;
-      while(turn == other) {}
-      wantsToEnter[id] = true;
-    }
-  }
-  */
 
   while(! lock.try_lock()){}
   unordered_map<BitstringKey,pair<Bitstring,int> >::iterator itr, end;
@@ -96,11 +84,6 @@ bool BoardThread::alphabeta_helper(int i, bool maximize, size_t depth,
     //else {cout << "Collision" << endl; }
 
   }
-
-  /*
-  turn = other;
-  wantsToEnter[id] = false;
-  */
 
   if (!gotScore){
 

@@ -1,9 +1,18 @@
 #include "Board_AB.h"
 
-Board_AB::Board_AB(size_t n, size_t k,
-		   unordered_map<BitstringKey,pair<Bitstring,int> >& table)
-  :Board(n,k), table(table), recursionCount(0)
-{}
+Board_AB::Board_AB(size_t n, size_t k)
+  :Board(n,k), gamestate(0), zobrist(0), recursionCount(0)
+{
+  mt19937 generator((unsigned)time(NULL));
+  for(size_t i = 0; i < n; i++){
+    pair<Bitstring,Bitstring> p = {((Bitstring)1)<<(2*i + 1),
+				   ((Bitstring)1)<<(2*i)};
+    assignmentG.push_back(p);
+
+    p = {generator(),generator()};
+    assignmentZ.push_back(p);
+  }
+}
 
 bool Board_AB::symmetric(){
   size_t middle = (n-1)/2;
@@ -17,6 +26,9 @@ bool Board_AB::play(char c, int loc){
   if (gamestate == 0) cout << "Ran thru " << recursionCount << " nodes" << endl;
   recursionCount = 0;
   Board::play(c,loc);
+  zobrist ^= (c=='R'?assignmentZ[loc].first:assignmentZ[loc].second);
+  gamestate |= (c=='R'?assignmentG[loc].first:assignmentG[loc].second);
+
 }
 
 scoreAndLoc Board_AB::alphabeta(bool maximize, int alpha, int beta,
@@ -34,10 +46,8 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, int alpha, int beta,
 
   //Loop
   for(int i = ((n%2)?(n/2):((n/2) - 1)); i > -1; i--){
-
     //Check i
-    if (!(depth == 0 && i==0) &&
-	alphabeta_helper(i, maximize, depth, max, min, loc, alpha, beta))
+    if (alphabeta_helper(i, maximize, depth, max, min, loc, alpha, beta))
       { break; }
 
     if (s) {continue;}
@@ -51,6 +61,14 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, int alpha, int beta,
   return scoreAndLoc((maximize?max:min), loc);
 }
 
+void showbits(unsigned char x)
+{
+  int i; 
+  for(i=8; i>0; i--)
+    (x&(1<<i))?putchar('1'):putchar('0');
+    
+  printf("\n");
+}
 bool Board_AB::alphabeta_helper(size_t i, bool maximize, size_t depth,
 				int& max, int& min, int& loc,
 				int& alpha, int& beta){
@@ -60,35 +78,60 @@ bool Board_AB::alphabeta_helper(size_t i, bool maximize, size_t depth,
   grid[i] = (maximize?'R':'B');
   int score = 0;
 
-  Bitstring which = (maximize?assignments[i].first:assignments[i].second);
-  gamestate ^= which;
+  //See if done before  
+  Bitstring z = (maximize?assignmentZ[i].first:assignmentZ[i].second);
+  zobrist ^= z;
+  BitstringKey key = zobrist % MAXKEY;
 
-  //See if done before
-  BitstringKey key = gamestate % MAXKEY;
+  Bitstring g = (maximize?assignmentG[i].first:assignmentG[i].second);
+  gamestate |= g;  
+
   bool gotScore = false;
-  unordered_map<BitstringKey,pair<Bitstring,int> >::iterator itr = table.find(key);
+  bool overwrite = true;
+  if (table.find(key) != table.end()){
+    Bitstring stored = table[key];
+    //Bitstring inuse = ((stored << REM) >> REM);
+    Bitstring inuse = (stored << REM);
+    inuse >>= REM;
+    unsigned char rem = (stored >> INUSE);
+    //showbits(rem);
 
-  if (itr != table.end()) {
-    pair<Bitstring,int> stateAndScore = itr->second;
-  
-    if (stateAndScore.first == gamestate) {
-      score = stateAndScore.second;
+    //unsigned char storedScore = ((rem << 6) >> 6);
+    unsigned char storedScore = (rem << 6);
+    storedScore >>= 6;
+    //showbits(storedScore);
+
+    unsigned char storedDepth = (rem >> 2);
+    if (inuse == gamestate) {
       gotScore = true;
+      score = storedScore;
+      score--;//2,1,0 becomes 1,0,-1
     }
-    else {cout << "Collision" << endl; }
+    else if (storedDepth <= depth) { overwrite = false; }
+
   }
 
-  if (!gotScore){
-
+  if (!gotScore) {
     scoreAndLoc p = (maximize
 		     ? alphabeta(false, max, beta, depth+1, i)
 		     : alphabeta(true, alpha, min, depth+1, i));
     score = p.first;
+    if (overwrite) {
+      unsigned char repScore = score+1;
+      //showbits(repScore);
 
-    table[key] = {gamestate, score};
-    // pair<Bitstring,int> entry = {gamestate, score};
-    // table.emplace(key, entry);
+      unsigned char repDepth = depth;
+      repDepth <<= 2;
+      //showbits(repDepth);
 
+      Bitstring storedVal = (repDepth | repScore);
+      //cout << "Depth:" << depth << endl;
+      //cout << "Score:" << score << endl;
+
+      storedVal <<= INUSE;//make room for gamestate
+      storedVal |= gamestate;
+      table[key] = storedVal;
+    }
   }
 
   //Alpha beta pruning
@@ -106,7 +149,8 @@ bool Board_AB::alphabeta_helper(size_t i, bool maximize, size_t depth,
 
   //Undo play
   grid[i] = '.';
-  gamestate ^= which;
+  zobrist ^= z;
+  gamestate ^= g;
 
   return alpha >= beta;
 

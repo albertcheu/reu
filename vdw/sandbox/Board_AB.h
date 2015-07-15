@@ -1,5 +1,15 @@
 //#pragma once
 #include "Board.h"
+#include <unordered_map>
+
+//64 bit number
+typedef unsigned long long Bitstring;
+const unsigned INUSE = 57;
+const unsigned REM = 7;
+
+//32 bit number
+typedef unsigned long BitstringKey;
+const BitstringKey MAXKEY = ULONG_MAX;
 
 // the score (win, draw, lose) and the location of play that yields it
 typedef pair<int,int> scoreAndLoc;
@@ -10,13 +20,26 @@ const scoreAndLoc b_win(B_WIN,B_WIN);
 const scoreAndLoc draw(DRAW,DRAW);
 
 class Board_AB: public Board {
- protected:
+
+protected:
+
+  //two bits dedicated to score
+  //log(n) bits dedicated to depth; n <= 32 means it is 5
+  //remainder: every two bits corresponds to one position; 
+  Bitstring gamestate;
+  vector<pair<Bitstring,Bitstring> > assignmentG;
+
+  vector<pair<Bitstring,Bitstring> > assignmentZ;
+
+  //this will be hashed to get the key
+  Bitstring zobrist;
+
+  //Hashed(zobrist) -> gamestate
+  unordered_map<BitstringKey,Bitstring> table;
+
   size_t recursionCount;
 
   bool symmetric();
-
-  //for killer heuristic
-  //vector<pair<size_t,size_t> > killers;
 
   //Given a candidate spot i at some game depth, test the move
   //If it is better than what we have seen, update max/min
@@ -26,12 +49,8 @@ class Board_AB: public Board {
 			int& max, int& min, int& loc,
 			int& alpha, int& beta);
   
-  unordered_map<BitstringKey,pair<Bitstring,int> >& table;
-
  public:
-
-  Board_AB(size_t n, size_t k,
-	   unordered_map<BitstringKey,pair<Bitstring,int> >& table);
+  Board_AB(size_t n, size_t k);
 
   bool play(char c, int loc);
 

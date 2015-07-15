@@ -12,40 +12,43 @@ int toNumber(string s, size_t maxNum){
   if (ans < 1 || ans > maxNum) { return -1; }
   return ans;
 }
-
-void blarg(BoardThread& b){
-  b.fillTable();
+/*
+void blarg(int n,int k, mutex& lock, int i, int numThreads,
+	   vector<pair<Bitstring,Bitstring> >& assignments,
+	   unordered_map<BitstringKey,pair<Bitstring,int> >& table){
+  BoardThread bt(n,k,lock,i,numThreads,assignments,table);
+  bt.fillTable();
 }
 
 void fillTable(int n, int k, Board_AB& b, int numThreads,
 	       unordered_map<BitstringKey,pair<Bitstring,int> >& table){
 
   mutex lock;
-  vector<BoardThread> workers;
-  for(int i = 0; i < numThreads; i++){
-    workers.push_back(BoardThread(n,k,ref(lock),i, numThreads,
-				  ref(b.assignments), ref(table)));
-  }
-
   vector<thread> threads;
+
   for(int i = 0; i < numThreads; i++){
-    //threads.push_back(thread(blarg, ref(workers[i]) ));
-    threads.push_back(thread(&BoardThread::fillTable, &(workers[i]) ));
+    threads.push_back(thread(blarg, n,k,ref(lock),i, numThreads,
+			     ref(b.assignments), ref(table)));
   }
 
-  for(int i = 0; i < numThreads; i++){ threads[i].join(); }
+  for(int i = 0; i < numThreads; i++){
+    threads[i].join();
+  }
+  
 }
-
+*/
 void search_for_G(int n, int k, int numThreads){
   //Iterate thru board sizes
 
   while(true){
     cout << "Testing game(" << n << "," << k << ")..." << endl;
     clock_t t = clock();
-
+    /*
     unordered_map<BitstringKey,pair<Bitstring,int> > table;
     Board_AB b(n,k,table);
-    fillTable(n,k,b,numThreads,ref(table));
+    if (numThreads > 1) { fillTable(n,k,b,numThreads,ref(table)); }
+    */
+    Board_AB b(n,k);
 
     bool redPlayer = true;
     size_t depth = 0;
@@ -56,7 +59,7 @@ void search_for_G(int n, int k, int numThreads){
       //cout << "Winner: " << sal.first << endl;
       loc = sal.second;
 
-      cout << loc << endl;
+      cout << "Loc: " << loc << endl;
       b.play(redPlayer?'R':'B', loc);
       redPlayer = (!redPlayer);
       justPlayed = loc;
@@ -83,7 +86,7 @@ void search_for_G(int n, int k, int numThreads){
 int main(int argc, char** argv){
   string s = "";
 
-  if (argc >= 4) {
+  if (argc >= 3) {
 
     //n
     s = argv[1];
@@ -106,11 +109,14 @@ int main(int argc, char** argv){
       return 0;
     }
 
-    s = argv[3];
-    int numThreads = toNumber(s, 100);
-    if (numThreads == -1) {
-      cout << "Please enter 0 < numThreads < 100" << endl;
-      return 0;
+    int numThreads = 2;
+    if (argc == 4){
+      s = argv[3];
+      numThreads = toNumber(s, 10);
+      if (numThreads == -1) {
+	cout << "Please enter 0 < numThreads < 10" << endl;
+	return 0;
+      }
     }
 
     search_for_G(n, k, numThreads);

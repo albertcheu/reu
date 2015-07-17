@@ -34,7 +34,7 @@ class Board{
   void print();
 
   //Put the player in this loc, return false if already occupied
-  bool play(char c, int loc);
+  virtual bool play(char c, int loc);
 
   //Return who won ('R' or 'B'); if no winner, return '.'
   char winner();

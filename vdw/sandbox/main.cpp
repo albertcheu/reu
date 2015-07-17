@@ -1,4 +1,4 @@
-#include "BoardThread.h"
+#include "BoardEval.h"
 
 int toNumber(string s, size_t maxNum){
   int ans = 0;
@@ -48,7 +48,7 @@ void search_for_G(int n, int k, int numThreads){
     Board_AB b(n,k,table);
     if (numThreads > 1) { fillTable(n,k,b,numThreads,ref(table)); }
     */
-    Board_AB b(n,k);
+    BoardEval b(n,k);
 
     bool redPlayer = true;
     size_t depth = 0;

@@ -55,7 +55,7 @@ protected:
   bool play(char c, int loc);
 
   //The meat of the program
-  scoreAndLoc alphabeta(bool maximize, int alpha, int beta,
-			size_t depth, int justPlayed=-1);
+  virtual scoreAndLoc alphabeta(bool maximize, int alpha, int beta,
+				size_t depth, int justPlayed=-1);
     
 };

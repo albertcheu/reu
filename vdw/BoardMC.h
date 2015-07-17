@@ -24,8 +24,6 @@ class BoardMC: public Board{
 
   vector<int> indices,empties;
 
-  unordered_map<BitstringKey,pair<State*,bool> > table;
-  
   State* start;
 
   int storeDepth;

@@ -6,18 +6,14 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#include <unordered_map>
+
+//#include <thread>
 
 #define R_WIN 1
 #define DRAW 0
 #define B_WIN -1
 
 using namespace std;
-
-typedef unsigned long BitstringKey;
-const BitstringKey MAXKEY = ULONG_MAX;
-
-typedef unsigned long long Bitstring;
 
 bool memberHelper(vector<char>  & grid, char& w,
 		  size_t n, size_t k, int d, int loc);
@@ -31,10 +27,6 @@ class Board{
   size_t k, n;
 
   bool memberOfAP(int loc);
-
-  Bitstring gamestate;
-  //Map location to pair of random bitstrings, one for each player
-  vector<pair<Bitstring,Bitstring> > assignments;
 
  public:
   Board(size_t n, size_t k);
@@ -52,8 +44,5 @@ class Board{
 
   //Check if neither has won
   bool noWinner();
-  
-  //Check if there's no more plays left
-  //bool filled();
 
 };

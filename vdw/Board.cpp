@@ -1,25 +1,44 @@
 #include "Board.h"
 
-Board::Board(size_t n, size_t k)
-  :n(n), k(k), gamestate(0)
-{
-  for(size_t i = 0; i < n; i++){ grid.push_back('.'); }
+bool memberHelper(vector<char> & grid, char& w,
+		  size_t n, size_t k, int d, int loc){
+  if (w != '.') { return true; }
 
-  //Generates 64 random bits, which is what we need
-  mt19937 generator((unsigned)time(NULL));
-  for(size_t i = 0; i < n; i++){
+  if (loc+d >= n && loc-d < 0) { return false; }
 
-    pair<Bitstring,Bitstring> p = {generator(),generator()};
-    assignments.push_back(p);
+  int numLeft, numRight;
+  numLeft = numRight = 0;
+    
+  for(int i = loc+d; i < n; i += d){
+    if (grid[i] == grid[loc]) { numRight++; }
+    else { break; }
   }
 
+  if (1+numRight >= k) { w = grid[loc]; return true; }//true
+    
+  for(int i = loc-d; i > -1; i -= d){
+    if (grid[i] == grid[loc]) { numLeft++; }
+    else { break; }
+  }
+
+  if (numLeft + numRight + 1 >= k) { w = grid[loc]; return true; }
+
+  return true;
+
+}
+
+Board::Board(size_t n, size_t k)
+  :n(n), k(k)
+{
+  for(size_t i = 0; i < n; i++){ grid.push_back('.'); }
 }
 
 size_t Board::size(){return n;}
 
 bool Board::memberOfAP(int loc){
-  int d = 1;
-  while (true){
+
+  for(int d = 1; d <= (n-1)/(k-1); d++){
+
     if (loc+d >= n && loc-d < 0) { return false; }
 
     int numLeft, numRight;
@@ -38,10 +57,8 @@ bool Board::memberOfAP(int loc){
     }
 
     if (numLeft + numRight + 1 >= k) { return true; }
-
-    d++;
+    
   }
-
   return false; 
 
 }
@@ -87,10 +104,6 @@ void Board::print(){
 
 bool Board::play(char c, int loc){
   if (grid[loc] == '.'){
-    //update gamestate
-    pair<Bitstring,Bitstring> p = assignments[loc];
-    Bitstring which = (c=='R'?p.first:p.second);
-    gamestate ^= which;
 
     grid[loc] = c;
     return true;

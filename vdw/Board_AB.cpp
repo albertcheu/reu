@@ -1,13 +1,17 @@
 #include "Board_AB.h"
 
 Board_AB::Board_AB(size_t n, size_t k)
-  :Board(n,k),  recursionCount(0)
+  :Board(n,k), gamestate(0), zobrist(0), recursionCount(0)
 {
+  mt19937 generator((unsigned)time(NULL));
+  for(size_t i = 0; i < n; i++){
+    pair<Bitstring,Bitstring> p = {((Bitstring)1)<<(2*i + 1),
+				   ((Bitstring)1)<<(2*i)};
+    assignmentG.push_back(p);
 
-  //Depth 0 is the first move, no other branches
-  //so we put a dummy here
-  //killers.push_back(pair<size_t,size_t>(n,n));
-
+    p = {generator(),generator()};
+    assignmentZ.push_back(p);
+  }
 }
 
 bool Board_AB::symmetric(){
@@ -22,80 +26,49 @@ bool Board_AB::play(char c, int loc){
   if (gamestate == 0) cout << "Ran thru " << recursionCount << " nodes" << endl;
   recursionCount = 0;
   Board::play(c,loc);
+  zobrist ^= (c=='R'?assignmentZ[loc].first:assignmentZ[loc].second);
+  gamestate |= (c=='R'?assignmentG[loc].first:assignmentG[loc].second);
+
 }
 
 scoreAndLoc Board_AB::alphabeta(bool maximize, int alpha, int beta,
 				size_t depth, int justPlayed){
   recursionCount++;
-  if (justPlayed > -1 && memberOfAP(justPlayed))
+  if (depth > 0 && memberOfAP(justPlayed))
     { return ((grid[justPlayed]=='R')?r_win:b_win); }
 
   if (depth == n) { return draw; }
 
   int max = -10;  int min = 10;  int loc = -1;
-  /*
-  //Add placeholder that will be changed later on
-  if (depth == killers.size())
-    { killers.push_back(pair<size_t,size_t>(n,n)); }
 
-  //Do our (valid) killer moves for this depth result in a cutoff?
-  size_t killer = killers[depth].first;
-  if (alphabeta_helper(killer, maximize, depth, max, min,
-		       loc, alpha, beta))
-      {  return scoreAndLoc((maximize?max:min), loc); }
-  
-  killer = killers[depth].second;
-  if (killer != killers[depth].first &&
-      alphabeta_helper(killer, maximize, depth, max, min,
-		       loc, alpha, beta))
-    {  return scoreAndLoc((maximize?max:min), loc); }
-  */
-  //Otherwise, look at all possible moves
   //symmetry -> don't bother checking rhs
   bool s = symmetric();
 
   //Loop
   for(int i = ((n%2)?(n/2):((n/2) - 1)); i > -1; i--){
-    //if i was checked already
-    //bool wasChecked = ((i == killers[depth].first) || (i == killers[depth].second));
-
     //Check i
-    if (!(depth == 0 && i==0) &&
-	/*
-	!wasChecked &&
-	*/
-	alphabeta_helper(i, maximize, depth, max, min, loc, alpha, beta)){
-      //Store as a killer move
-      /*
-      if (killers[depth].second != n)
-	{ killers[depth].first = killers[depth].second; }
-      killers[depth].second = i;
-      */
-      break;
-
-    }
+    if (alphabeta_helper(i, maximize, depth, max, min, loc, alpha, beta))
+      { break; }
 
     if (s) {continue;}
     int j = n-i-1;
-    //wasChecked = ((j == killers[depth].first) || (j == killers[depth].second));
-    if (
-	/*
-	!wasChecked &&
-	*/
-	alphabeta_helper(j, maximize, depth, max, min, loc, alpha, beta)){
-      /*
-      if (killers[depth].second != n)
-	{ killers[depth].first = killers[depth].second; }
-      killers[depth].second = j;
-      */
-      break;
 
-    }
+    if (alphabeta_helper(j, maximize, depth, max, min, loc, alpha, beta))
+      { break; }
+
   }
 
   return scoreAndLoc((maximize?max:min), loc);
 }
 
+void showbits(unsigned char x)
+{
+  int i; 
+  for(i=8; i>0; i--)
+    (x&(1<<i))?putchar('1'):putchar('0');
+    
+  printf("\n");
+}
 bool Board_AB::alphabeta_helper(size_t i, bool maximize, size_t depth,
 				int& max, int& min, int& loc,
 				int& alpha, int& beta){
@@ -105,29 +78,60 @@ bool Board_AB::alphabeta_helper(size_t i, bool maximize, size_t depth,
   grid[i] = (maximize?'R':'B');
   int score = 0;
 
-  Bitstring which = (maximize?assignments[i].first:assignments[i].second);
-  gamestate ^= which;
+  //See if done before  
+  Bitstring z = (maximize?assignmentZ[i].first:assignmentZ[i].second);
+  zobrist ^= z;
+  BitstringKey key = zobrist % MAXKEY;
 
-  //See if done before
-  BitstringKey key = gamestate % MAXKEY;
+  Bitstring g = (maximize?assignmentG[i].first:assignmentG[i].second);
+  gamestate |= g;  
+
   bool gotScore = false;
-  if (table.find(key) != table.end()) {
-    pair<Bitstring,int> stateAndScore = table[key];
-    if (stateAndScore.first == gamestate) {
-      score = stateAndScore.second;
+  bool overwrite = true;
+  if (table.find(key) != table.end()){
+    Bitstring stored = table[key];
+    //Bitstring inuse = ((stored << REM) >> REM);
+    Bitstring inuse = (stored << REM);
+    inuse >>= REM;
+    unsigned char rem = (stored >> INUSE);
+    //showbits(rem);
+
+    //unsigned char storedScore = ((rem << 6) >> 6);
+    unsigned char storedScore = (rem << 6);
+    storedScore >>= 6;
+    //showbits(storedScore);
+
+    unsigned char storedDepth = (rem >> 2);
+    if (inuse == gamestate) {
       gotScore = true;
+      score = storedScore;
+      score--;//2,1,0 becomes 1,0,-1
     }
-    else {cout << "Collision" << endl; }
+    else if (storedDepth <= depth) { overwrite = false; }
+
   }
 
-  if (!gotScore){
-
+  if (!gotScore) {
     scoreAndLoc p = (maximize
 		     ? alphabeta(false, max, beta, depth+1, i)
 		     : alphabeta(true, alpha, min, depth+1, i));
     score = p.first;
+    if (overwrite) {
+      unsigned char repScore = score+1;
+      //showbits(repScore);
 
-    table[key] = {gamestate, score};
+      unsigned char repDepth = depth;
+      repDepth <<= 2;
+      //showbits(repDepth);
+
+      Bitstring storedVal = (repDepth | repScore);
+      //cout << "Depth:" << depth << endl;
+      //cout << "Score:" << score << endl;
+
+      storedVal <<= INUSE;//make room for gamestate
+      storedVal |= gamestate;
+      table[key] = storedVal;
+    }
   }
 
   //Alpha beta pruning
@@ -145,7 +149,8 @@ bool Board_AB::alphabeta_helper(size_t i, bool maximize, size_t depth,
 
   //Undo play
   grid[i] = '.';
-  gamestate ^= which;
+  zobrist ^= z;
+  gamestate ^= g;
 
   return alpha >= beta;
 

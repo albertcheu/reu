@@ -113,8 +113,11 @@ bool Board_AB::alphabeta_helper(size_t i, bool maximize, size_t depth,
 
   if (!gotScore) {
     scoreAndLoc p = (maximize
-		     ? alphabeta(false, max, beta, depth+1, i)
-		     : alphabeta(true, alpha, min, depth+1, i));
+		     //? alphabeta(false, max, beta, depth+1, i)
+		     //: alphabeta(true, alpha, min, depth+1, i));
+		     ? alphabeta(false, alpha, beta, depth+1, i)
+		     : alphabeta(true, alpha, beta, depth+1, i));
+
     score = p.first;
     if (overwrite) {
       unsigned char repScore = score+1;
@@ -135,6 +138,7 @@ bool Board_AB::alphabeta_helper(size_t i, bool maximize, size_t depth,
   }
 
   //Alpha beta pruning
+  /*
   if (maximize && score > max) {
     max = score;
     loc = i;
@@ -144,6 +148,22 @@ bool Board_AB::alphabeta_helper(size_t i, bool maximize, size_t depth,
   else if (!maximize && score < min){
     min = score;
     loc = i;
+    beta = (beta<min?beta:min);
+  }  
+  */
+  if (maximize) {
+    if (score > max) {
+      max = score;
+      loc = i;
+    }
+    alpha = (alpha>max?alpha:max);
+  }
+
+  else {
+    if (score < min){
+      min = score;
+      loc = i;
+    }
     beta = (beta<min?beta:min);
   }  
 

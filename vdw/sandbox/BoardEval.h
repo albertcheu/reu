@@ -1,11 +1,14 @@
 #pragma once
 #include "Board_AB.h"
-
-typedef vector<pair<float,size_t> > RankingVector;
+#include "Evaluator.h"
 
 class BoardEval: public Board_AB{
  protected:
   Evaluator& e;
+
+  bool alphabeta_helper(size_t i, bool maximize, size_t depth,
+                        int& max, int& min, int& loc,
+                        int& alpha, int& beta);
 
  public:
   BoardEval(size_t n, size_t k, Evaluator& e);
@@ -14,5 +17,6 @@ class BoardEval: public Board_AB{
 			size_t depth, int justPlayed=-1);
 
   bool play(char c, int loc);
+
 
 };

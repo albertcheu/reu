@@ -8,19 +8,21 @@ struct pair_hash {
 };
 
 typedef pair<size_t,size_t> Kap;
+typedef unordered_set<Kap,pair_hash> KapSet;
 
 class GreedyEvaluator: public Evaluator{
  public:
   GreedyEvaluator(size_t n, size_t k);
-  bool play(char c, int loc);
+  void place(bool maximize, size_t i);
+  void undo(bool maximize, size_t i);
 
  private:
-  void actualEvaluate(size_t i);
-  vector<unordered_set<Kap,pair_hash> > possibleR, possibleB;
+  vector<KapSet > possibleR, possibleB, stack;
 
-  char whodWin(size_t loc, bool redPlayer);
+  size_t actualEvaluate(bool maximize, size_t i);
 
-  unordered_set<Kap,pair_hash> removeFromOpponent(bool maximize, int loc);
 
-  void restoreToOpponent(bool maximize, unordered_set<Kap,pair_hash>& kaps);
+  void removeFromOpponent(bool maximize, int loc);
+
+  void restoreToOpponent(bool maximize);
 };

@@ -8,7 +8,7 @@ struct pair_hash {
 };
 
 typedef pair<size_t,size_t> Kap;
-typedef unordered_set<Kap,pair_hash> KapSet;
+typedef unordered_set<size_t> KapSet;
 
 class GreedyEvaluator: public Evaluator{
  public:
@@ -17,7 +17,8 @@ class GreedyEvaluator: public Evaluator{
   void undo(bool maximize, size_t i);
 
  private:
-  vector<KapSet > possibleR, possibleB, stack;
+  vector<Kap> kaps;
+  vector<KapSet> possibleR, possibleB, stack;
 
   size_t actualEvaluate(bool maximize, size_t i);
 

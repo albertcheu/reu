@@ -46,13 +46,14 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, int alpha, int beta,
 
   //Loop
   for(int i = ((n%2)?(n/2):((n/2) - 1)); i > -1; i--){
+  //for(size_t i = 0; i < n; i++){
     //Check i
     if (alphabeta_helper(i, maximize, depth, max, min, loc, alpha, beta))
       { break; }
 
+
     if (s) {continue;}
     int j = n-i-1;
-
     if (alphabeta_helper(j, maximize, depth, max, min, loc, alpha, beta))
       { break; }
 
@@ -61,14 +62,6 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, int alpha, int beta,
   return scoreAndLoc((maximize?max:min), loc);
 }
 
-void showbits(unsigned char x)
-{
-  int i; 
-  for(i=8; i>0; i--)
-    (x&(1<<i))?putchar('1'):putchar('0');
-    
-  printf("\n");
-}
 bool Board_AB::alphabeta_helper(size_t i, bool maximize, size_t depth,
 				int& max, int& min, int& loc,
 				int& alpha, int& beta){
@@ -85,22 +78,17 @@ bool Board_AB::alphabeta_helper(size_t i, bool maximize, size_t depth,
 
   Bitstring g = (maximize?assignmentG[i].first:assignmentG[i].second);
   gamestate |= g;  
+  //BitstringKey key = gamestate % MAXKEY;
 
   bool gotScore = false;
   bool overwrite = true;
   if (table.find(key) != table.end()){
     Bitstring stored = table[key];
-    //Bitstring inuse = ((stored << REM) >> REM);
     Bitstring inuse = (stored << REM);
     inuse >>= REM;
     unsigned char rem = (stored >> INUSE);
-    //showbits(rem);
-
-    //unsigned char storedScore = ((rem << 6) >> 6);
     unsigned char storedScore = (rem << 6);
     storedScore >>= 6;
-    //showbits(storedScore);
-
     unsigned char storedDepth = (rem >> 2);
     if (inuse == gamestate) {
       gotScore = true;
@@ -112,25 +100,13 @@ bool Board_AB::alphabeta_helper(size_t i, bool maximize, size_t depth,
   }
 
   if (!gotScore) {
-    scoreAndLoc p = (maximize
-		     //? alphabeta(false, max, beta, depth+1, i)
-		     //: alphabeta(true, alpha, min, depth+1, i));
-		     ? alphabeta(false, alpha, beta, depth+1, i)
-		     : alphabeta(true, alpha, beta, depth+1, i));
 
-    score = p.first;
+    score = alphabeta(!maximize, alpha, beta, depth+1, i).first;
     if (overwrite) {
       unsigned char repScore = score+1;
-      //showbits(repScore);
-
       unsigned char repDepth = depth;
       repDepth <<= 2;
-      //showbits(repDepth);
-
       Bitstring storedVal = (repDepth | repScore);
-      //cout << "Depth:" << depth << endl;
-      //cout << "Score:" << score << endl;
-
       storedVal <<= INUSE;//make room for gamestate
       storedVal |= gamestate;
       table[key] = storedVal;
@@ -138,19 +114,6 @@ bool Board_AB::alphabeta_helper(size_t i, bool maximize, size_t depth,
   }
 
   //Alpha beta pruning
-  /*
-  if (maximize && score > max) {
-    max = score;
-    loc = i;
-    alpha = (alpha>max?alpha:max);
-  }
-
-  else if (!maximize && score < min){
-    min = score;
-    loc = i;
-    beta = (beta<min?beta:min);
-  }  
-  */
   if (maximize) {
     if (score > max) {
       max = score;

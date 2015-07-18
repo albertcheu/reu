@@ -14,11 +14,11 @@ GreedyEvaluator::GreedyEvaluator(size_t n, size_t k)
 
       if (i + d*(k-1) >= n) { continue; }
 
-      Kap kap; kap.first=i; kap.second=d;
       for (size_t j = 0; j < k; j++){
-	possibleR[i+j*d].emplace(kap);
-	possibleB[i+j*d].emplace(kap);
+	possibleR[i+j*d].emplace(kaps.size());
+	possibleB[i+j*d].emplace(kaps.size());
       }
+      kaps.push_back({i,d});
 
     }
 
@@ -52,9 +52,9 @@ void GreedyEvaluator::restoreToOpponent(bool maximize){
 
   for(KapSet::iterator itr = stack.back().begin();
       itr != stack.back().end(); itr++){
-    Kap kap = *itr;
+    Kap kap = kaps[*itr];
     for (int elem = 0; elem < k; elem++){
-      possibles[kap.first + elem*kap.second].emplace(kap);
+      possibles[kap.first + elem*kap.second].emplace(*itr);
     }
   }
 

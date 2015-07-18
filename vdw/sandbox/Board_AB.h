@@ -1,7 +1,8 @@
 //#pragma once
 #include "Board.h"
 #include <unordered_map>
-
+#include <list>
+#include <functional>
 //64 bit number
 typedef unsigned long long Bitstring;
 const unsigned INUSE = 57;
@@ -14,6 +15,10 @@ const BitstringKey MAXKEY = ULONG_MAX;
 // the score (win, draw, lose) and the location of play that yields it
 typedef pair<int,int> scoreAndLoc;
 
+//Hashed(zobrist) -> linked list of (score,depth,gamestate) data
+typedef list<Bitstring> Chain;
+typedef unordered_map<BitstringKey,Chain> Table;
+
 //"Useful" (dummy) constants
 const scoreAndLoc r_win(R_WIN,R_WIN);
 const scoreAndLoc b_win(B_WIN,B_WIN);
@@ -22,6 +27,8 @@ const scoreAndLoc draw(DRAW,DRAW);
 class Board_AB: public Board {
 
 protected:
+
+  //vector<pair<size_t, size_t> > killers;
 
   //two bits dedicated to score
   //log(n) bits dedicated to depth; n <= 32 means it is 5
@@ -34,8 +41,8 @@ protected:
   //this will be hashed to get the key
   Bitstring zobrist;
 
-  //Hashed(zobrist) -> gamestate
-  unordered_map<BitstringKey,Bitstring> table;
+  Table t;
+  vector<Table> tables;
 
   size_t recursionCount;
 

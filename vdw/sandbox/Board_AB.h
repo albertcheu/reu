@@ -41,7 +41,7 @@ protected:
   //this will be hashed to get the key
   Bitstring zobrist;
 
-  Table t;
+
   vector<Table> tables;
 
   size_t recursionCount;
@@ -57,6 +57,7 @@ protected:
 			int& alpha, int& beta);
   
  public:
+  Table t;
   Board_AB(size_t n, size_t k);
 
   bool play(char c, int loc);

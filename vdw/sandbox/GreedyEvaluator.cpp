@@ -15,8 +15,8 @@ GreedyEvaluator::GreedyEvaluator(size_t n, size_t k)
       if (i + d*(k-1) >= n) { continue; }
 
       for (size_t j = 0; j < k; j++){
-	possibleR[i+j*d].emplace(kaps.size());
-	possibleB[i+j*d].emplace(kaps.size());
+	possibleR[i+j*d].first.emplace(kaps.size());
+	possibleB[i+j*d].first.emplace(kaps.size());
       }
       kaps.push_back({i,d});
 
@@ -28,37 +28,43 @@ GreedyEvaluator::GreedyEvaluator(size_t n, size_t k)
 
 void GreedyEvaluator::removeFromOpponent(bool maximize, int loc){
   vector<KapSet>& possibles = (maximize?possibleB:possibleR);
+  vector<size_t>& stack = (maximize?stackB:stackR);
 
-  stack.push_back(possibles[loc]);
+  stack.push_back(possibles[loc].first.size());
 
-  possibles[loc].clear();
-
-  for(KapSet::iterator itr = stack.back().begin();
-      itr!= stack.back().end(); itr++){
+  for(unordered_set<size_t>::iterator itr = possibles[loc].first.begin();
+      itr!= possibles[loc].first.end(); itr++){
 
     for (size_t i = 0; i < n; i++){
       if (i == loc) { continue; }
-
-      if (possibles[i].find(*itr) != possibles[i].end()) 
-	{ possibles[i].erase(*itr); }
+      if (possibles[i].first.find(*itr) != possibles[i].first.end()) {
+	possibles[i].first.erase(*itr);
+      }
     }
   }
 
+  for(unordered_set<size_t>::iterator itr = possibles[loc].first.begin();
+      itr!= possibles[loc].first.end(); itr++){
+    possibles[loc].second.push_back(*itr);
+  }
+  possibles[loc].first.clear();
 }
 
-void GreedyEvaluator::restoreToOpponent(bool maximize){
-
+void GreedyEvaluator::restoreToOpponent(bool maximize, int loc){
   vector<KapSet >& possibles = (maximize?possibleB:possibleR);
+  vector<size_t>& stack = (maximize?stackB:stackR);
 
-  for(KapSet::iterator itr = stack.back().begin();
-      itr != stack.back().end(); itr++){
-    Kap kap = kaps[*itr];
-    for (int elem = 0; elem < k; elem++){
-      possibles[kap.first + elem*kap.second].emplace(*itr);
+  size_t numRestore = stack.back();
+  stack.pop_back();
+
+  for(size_t i = 0; i < numRestore; i++){
+    size_t index = possibles[loc].second.back();
+    possibles[loc].second.pop_back();
+    for(size_t j = 0; j < k; j++){
+      size_t x = kaps[index].first + j*kaps[index].second;
+      possibles[x].first.emplace(index);
     }
   }
-
-  stack.pop_back();
 
 }
 
@@ -69,9 +75,9 @@ void GreedyEvaluator::place(bool maximize, size_t i){
 
 void GreedyEvaluator::undo(bool maximize, size_t i){
   grid[i] = '.';
-  restoreToOpponent(maximize);
+  restoreToOpponent(maximize, i);
 }
 
 size_t GreedyEvaluator::actualEvaluate(bool maximize, size_t i){
-  return (maximize?possibleR[i].size():possibleB[i].size());
+  return (maximize?possibleR[i].first.size():possibleB[i].first.size());
 }

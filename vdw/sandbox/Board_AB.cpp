@@ -35,7 +35,10 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, int alpha, int beta,
 				size_t depth, int justPlayed){
   recursionCount++;
   if (depth > 0 && memberOfAP(justPlayed))
-    { return ((grid[justPlayed]=='R')?r_win:b_win); }
+    { 
+      if (grid[justPlayed]=='R') { print(); }
+      return ((grid[justPlayed]=='R')?r_win:b_win);
+    }
 
   if (depth == n) { return draw; }
 
@@ -103,7 +106,7 @@ bool Board_AB::alphabeta_helper(size_t i, bool maximize, size_t depth,
 
   bool gotScore = false;
 
-  Table& table = ref((depth < n/2? t : tables[depth]));
+  Table& table = t;//ref((depth < n/2? t : tables[depth]));
 
   if (table.find(key) != table.end()){
     for(Chain::iterator itr = table[key].begin();

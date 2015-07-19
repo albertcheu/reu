@@ -4,6 +4,7 @@
 #include <cmath>
 #include <cfloat>
 #include <algorithm>
+#include <unordered_set>
 
 typedef vector<pair<size_t,size_t> > RankingVector;
 

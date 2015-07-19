@@ -35,3 +35,45 @@ scoreAndLoc BoardEval::alphabeta(bool maximize, int alpha, int beta,
 
   return scoreAndLoc((maximize?max:min), loc);
 }
+
+
+bool BoardEval::alphabeta_helper(size_t i, bool maximize, size_t depth,
+				int& max, int& min, int& loc,
+				int& alpha, int& beta){
+  if (i >= n || grid[i] != '.') { return false; }
+
+  //Play
+  grid[i] = (maximize?'R':'B');
+  int score = 0;
+
+  Bitstring g = (maximize?assignmentG[i].first:assignmentG[i].second);
+  gamestate |= g;  
+
+    score = alphabeta(!maximize, alpha, beta, depth+1, i).first;
+
+  //Alpha beta pruning
+  if (maximize) {
+    if (score > max) {
+      max = score;
+      loc = i;
+    }
+    alpha = (alpha>max?alpha:max);
+  }
+
+  else {
+    if (score < min){
+      min = score;
+      loc = i;
+    }
+    beta = (beta<min?beta:min);
+  }  
+
+  //Undo play
+  grid[i] = '.';
+
+  //zobrist ^= z;
+  gamestate ^= g;
+
+  return alpha >= beta;
+
+}

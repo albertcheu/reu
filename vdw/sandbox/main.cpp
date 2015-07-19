@@ -1,5 +1,5 @@
 #include "BoardEval.h"
-#include "GreedyEvaluator.h"
+#include "MCEvaluator.h"
 
 int toNumber(string s, size_t maxNum){
   int ans = 0;
@@ -40,7 +40,7 @@ void fillTable(int n, int k, Board_AB& b, int numThreads,
 */
 void search_for_G(int n, int k, int numThreads){
   //Iterate thru board sizes
-
+  srand((unsigned)time(NULL));
   while(true){
     cout << "Testing game(" << n << "," << k << ")..." << endl;
     clock_t t = clock();
@@ -49,9 +49,10 @@ void search_for_G(int n, int k, int numThreads){
     Board_AB b(n,k,table);
     if (numThreads > 1) { fillTable(n,k,b,numThreads,ref(table)); }
     */
-    Board_AB b(n,k);
+    //Board_AB b(n,k);
     //GreedyEvaluator ge(n,k);
-    //BoardEval b(n,k,ge);
+    MCEvaluator mce(n,k);
+    BoardEval b(n,k,mce);
 
     bool redPlayer = true;
     size_t depth = 0;
@@ -74,7 +75,10 @@ void search_for_G(int n, int k, int numThreads){
 
     char winner = b.winner();
 
-    if (winner == 'R') { break; }
+    if (winner == 'R') {
+
+      break;
+    }
     else if (winner == 'B') {
       cout << "Oh no, B should never win" << endl;
       break;

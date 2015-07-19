@@ -1,5 +1,4 @@
 #include "Evaluator.h"
-#include <unordered_set>
 
 struct pair_hash {
     inline std::size_t operator()(const std::pair<size_t,size_t> & v) const {
@@ -8,7 +7,7 @@ struct pair_hash {
 };
 
 typedef pair<size_t,size_t> Kap;
-typedef unordered_set<size_t> KapSet;
+typedef pair<unordered_set<size_t>,vector<size_t> > KapSet;
 
 class GreedyEvaluator: public Evaluator{
  public:
@@ -18,12 +17,13 @@ class GreedyEvaluator: public Evaluator{
 
  private:
   vector<Kap> kaps;
-  vector<KapSet> possibleR, possibleB, stack;
+  vector<KapSet> possibleR, possibleB;
+  vector<size_t> stackR, stackB;
 
   size_t actualEvaluate(bool maximize, size_t i);
 
 
   void removeFromOpponent(bool maximize, int loc);
 
-  void restoreToOpponent(bool maximize);
+  void restoreToOpponent(bool maximize, int loc);
 };

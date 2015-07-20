@@ -77,3 +77,4 @@ bool BoardEval::alphabeta_helper(size_t i, bool maximize, size_t depth,
   return alpha >= beta;
 
 }
+

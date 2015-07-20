@@ -1,5 +1,5 @@
 #include "BoardEval.h"
-#include "MCEvaluator.h"
+#include "RandomEvaluator.h"
 
 int toNumber(string s, size_t maxNum){
   int ans = 0;
@@ -38,6 +38,7 @@ void fillTable(int n, int k, Board_AB& b, int numThreads,
   
 }
 */
+
 void search_for_G(int n, int k, int numThreads){
   //Iterate thru board sizes
   srand((unsigned)time(NULL));
@@ -49,10 +50,12 @@ void search_for_G(int n, int k, int numThreads){
     Board_AB b(n,k,table);
     if (numThreads > 1) { fillTable(n,k,b,numThreads,ref(table)); }
     */
+
     //Board_AB b(n,k);
-    //GreedyEvaluator ge(n,k);
-    MCEvaluator mce(n,k);
-    BoardEval b(n,k,mce);
+    //GreedyEvaluator e(n,k);
+    //MCEvaluator e(n,k);
+    RandomEvaluator e(n,k);
+    BoardEval b(n,k,e);
 
     bool redPlayer = true;
     size_t depth = 0;

@@ -134,7 +134,7 @@ size_t MCEvaluator::actualEvaluate(bool maximize, size_t i){
     index++;
   }
 
-  for(size_t x = 0; x < 500; x++){ runTrial(); }
+  for(size_t x = 0; x < 1000; x++){ runTrial(); }
 
   undo(maximize,i);
   //print();

@@ -1,6 +1,9 @@
 //#pragma once
 #include "Board.h"
 #include <unordered_map>
+#define EXACT 0
+#define LOWER 1
+#define UPPER 2
 
 //64 bit number
 typedef unsigned long long Bitstring;
@@ -49,6 +52,14 @@ protected:
   bool alphabeta_helper(size_t i, bool maximize, size_t depth,
 			int& score, int& loc,
 			int& alpha, int& beta);
+
+  //If there is no entry in the table, return false
+  //Otherwise, extract (loc/flag/score/gamestate)
+  //Update values
+  //Return true if flag == exact, false otherwise
+  bool retrieve(int x, int& score, int& loc, int& alpha, int& beta);
+
+  void store(int score, int loc, int alphaOrig, int beta);
   
  public:
   Board_AB(size_t n, size_t k);

@@ -3,6 +3,8 @@
 #include <unordered_map>
 #include <list>
 #include <functional>
+//#include <omp.h>
+
 //64 bit number
 typedef unsigned long long Bitstring;
 const unsigned INUSE = 57;
@@ -16,7 +18,7 @@ const BitstringKey MAXKEY = ULONG_MAX;
 typedef pair<int,int> scoreAndLoc;
 
 //Hashed(zobrist) -> linked list of (score,depth,gamestate) data
-typedef list<Bitstring> Chain;
+typedef vector<Bitstring> Chain;
 typedef unordered_map<BitstringKey,Chain> Table;
 
 //"Useful" (dummy) constants

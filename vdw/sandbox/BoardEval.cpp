@@ -11,7 +11,8 @@ bool BoardEval::play(char c, int loc){
 }
 
 scoreAndLoc BoardEval::alphabeta(bool maximize, int alpha, int beta,
-					 size_t depth, int justPlayed){
+				 size_t depth, int justPlayed){
+  //cout << depth << endl;
   recursionCount++;
   if (depth > 0 && memberOfAP(justPlayed)) { return (maximize?b_win:r_win); }
   if (depth == n) { return draw; }
@@ -28,15 +29,14 @@ scoreAndLoc BoardEval::alphabeta(bool maximize, int alpha, int beta,
     bool cutoff = alphabeta_helper(i, maximize, depth, max, min,
 				   loc, alpha, beta);
     e.undo(maximize, i);
-    if (cutoff)
-      { break; }
+    if (cutoff) { break; }
 
   }
 
   return scoreAndLoc((maximize?max:min), loc);
 }
 
-
+/*
 bool BoardEval::alphabeta_helper(size_t i, bool maximize, size_t depth,
 				int& max, int& min, int& loc,
 				int& alpha, int& beta){
@@ -78,3 +78,4 @@ bool BoardEval::alphabeta_helper(size_t i, bool maximize, size_t depth,
 
 }
 
+*/

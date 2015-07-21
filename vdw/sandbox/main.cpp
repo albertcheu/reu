@@ -1,5 +1,7 @@
 #include "BoardEval.h"
-#include "RandomEvaluator.h"
+#include "GreedyEvaluator.h"
+//#include "RandomEvaluator.h"
+//#include "Board_AB.h"
 
 int toNumber(string s, size_t maxNum){
   int ans = 0;
@@ -52,9 +54,9 @@ void search_for_G(int n, int k, int numThreads){
     */
 
     //Board_AB b(n,k);
-    //GreedyEvaluator e(n,k);
+    GreedyEvaluator e(n,k);
     //MCEvaluator e(n,k);
-    RandomEvaluator e(n,k);
+    //RandomEvaluator e(n,k);
     BoardEval b(n,k,e);
 
     bool redPlayer = true;
@@ -63,7 +65,7 @@ void search_for_G(int n, int k, int numThreads){
     while(b.noWinner() && depth != n){
       int loc;
       scoreAndLoc sal = b.alphabeta(redPlayer,-10,10, depth++, justPlayed);
-      //cout << "Winner: " << sal.first << endl;
+      cout << "Winner: " << sal.first << endl;
       loc = sal.second;
 
       //cout << "Loc: " << loc << endl;

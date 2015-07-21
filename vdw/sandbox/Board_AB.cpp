@@ -54,10 +54,11 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, int alpha, int beta,
   }
   */
 
-  bool s = symmetric();
+  //bool s = symmetric();
 
   for(int i = ((n%2)?(n/2):((n/2) - 1)); i > -1; i--){
-
+  //for(int i = 0; i <= ((n%2)?(n/2):((n/2) - 1)); i++){
+  //for(int i = 0; i < n; i++){
     if (//!(i == killers[depth].first || i == killers[depth].second) &&
 	alphabeta_helper(i, maximize, depth, max, min, loc, alpha, beta))
       {
@@ -65,13 +66,14 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, int alpha, int beta,
 	//killers[depth].first = loc;
 	break;
       }
-
-    if (s) {continue;}
     int j = n-i-1;
 
+    
+    //if (s) {continue;}
     /*
     if (j == killers[depth].first || j == killers[depth].second)
       {continue;}
+    
     */
 
     if (alphabeta_helper(j, maximize, depth, max, min, loc, alpha, beta))
@@ -80,7 +82,6 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, int alpha, int beta,
 	//killers[depth].first = loc;
 	break;
       }
-
 
   }
 
@@ -109,9 +110,11 @@ bool Board_AB::alphabeta_helper(size_t i, bool maximize, size_t depth,
   Table& table = ref((depth < n/2? t : tables[depth]));
 
   if (table.find(key) != table.end()){
-    for(Chain::iterator itr = table[key].begin();
-	itr != table[key].end(); itr++){
-      Bitstring stored = *itr;
+    size_t size = table[key].size();
+    Bitstring* data = table[key].data();
+    #pragma omp parallel for
+    for(size_t j = 0; j < size; j++){
+      Bitstring stored = data[j];
       Bitstring inuse = (stored << REM);
       inuse >>= REM;
       unsigned char rem = (stored >> INUSE);
@@ -140,9 +143,8 @@ bool Board_AB::alphabeta_helper(size_t i, bool maximize, size_t depth,
     storedVal |= gamestate;
 
 
-      if (table.find(key) == table.end())
-	{ table[key] = Chain(); }
-      table[key].push_front(storedVal);
+    if (table.find(key) == table.end()) { table[key] = Chain(); }
+    table[key].push_back(storedVal);
 
   }
 

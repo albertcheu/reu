@@ -1,7 +1,7 @@
-#include "BoardEval.h"
-#include "GreedyEvaluator.h"
+//#include "BoardEval.h"
+//#include "GreedyEvaluator.h"
 //#include "RandomEvaluator.h"
-//#include "Board_AB.h"
+#include "Board_AB.h"
 
 int toNumber(string s, size_t maxNum){
   int ans = 0;
@@ -53,11 +53,11 @@ void search_for_G(int n, int k, int numThreads){
     if (numThreads > 1) { fillTable(n,k,b,numThreads,ref(table)); }
     */
 
-    //Board_AB b(n,k);
-    GreedyEvaluator e(n,k);
+    Board_AB b(n,k);
+    //GreedyEvaluator e(n,k);
     //MCEvaluator e(n,k);
     //RandomEvaluator e(n,k);
-    BoardEval b(n,k,e);
+    //BoardEval b(n,k,e);
 
     bool redPlayer = true;
     size_t depth = 0;

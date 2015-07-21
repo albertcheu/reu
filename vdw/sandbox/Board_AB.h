@@ -1,25 +1,20 @@
 //#pragma once
 #include "Board.h"
 #include <unordered_map>
-#include <list>
-#include <functional>
-//#include <omp.h>
 
 //64 bit number
 typedef unsigned long long Bitstring;
-const unsigned INUSE = 57;
-const unsigned REM = 7;
+const unsigned GAMESTATE = 55;
+const unsigned METADATA = 9;
 
 //32 bit number
 typedef unsigned long BitstringKey;
 const BitstringKey MAXKEY = ULONG_MAX;
 
+typedef vector<Bitstring> Chain;
+
 // the score (win, draw, lose) and the location of play that yields it
 typedef pair<int,int> scoreAndLoc;
-
-//Hashed(zobrist) -> linked list of (score,depth,gamestate) data
-typedef vector<Bitstring> Chain;
-typedef unordered_map<BitstringKey,Chain> Table;
 
 //"Useful" (dummy) constants
 const scoreAndLoc r_win(R_WIN,R_WIN);
@@ -29,8 +24,6 @@ const scoreAndLoc draw(DRAW,DRAW);
 class Board_AB: public Board {
 
 protected:
-
-  //vector<pair<size_t, size_t> > killers;
 
   //two bits dedicated to score
   //log(n) bits dedicated to depth; n <= 32 means it is 5
@@ -43,8 +36,7 @@ protected:
   //this will be hashed to get the key
   Bitstring zobrist;
 
-
-  vector<Table> tables;
+  unordered_map<BitstringKey,Chain> table;
 
   size_t recursionCount;
 
@@ -55,17 +47,16 @@ protected:
   //Return whether or not we can stop searching (alpha >= beta)
   
   bool alphabeta_helper(size_t i, bool maximize, size_t depth,
-			int& max, int& min, int& loc,
+			int& score, int& loc,
 			int& alpha, int& beta);
   
  public:
-  Table t;
   Board_AB(size_t n, size_t k);
 
   bool play(char c, int loc);
 
   //The meat of the program
-  virtual scoreAndLoc alphabeta(bool maximize, int alpha, int beta,
-				size_t depth, int justPlayed=-1);
+  scoreAndLoc alphabeta(bool maximize, int alpha, int beta,
+			size_t depth, int x=-1);
     
 };

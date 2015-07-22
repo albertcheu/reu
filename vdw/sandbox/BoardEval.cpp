@@ -11,29 +11,41 @@ bool BoardEval::play(char c, int loc){
 }
 
 scoreAndLoc BoardEval::alphabeta(bool maximize, int alpha, int beta,
-				 size_t depth, int justPlayed){
-  //cout << depth << endl;
+				 size_t depth, int x){
   recursionCount++;
-  if (depth > 0 && memberOfAP(justPlayed)) { return (maximize?b_win:r_win); }
-  if (depth == n) { return draw; }
 
-  int max = -10;  int min = 10;  int loc = -1;
+  int score = -10;
+  int loc = -1;
+  int alphaOrig = alpha;
+  if (retrieve(score, loc, alpha, beta)) { return scoreAndLoc(score,loc); }
+
+  if (depth > 0){
+    if (memberOfAP(x)){
+      int sign = (maximize?1:-1);
+      int result = ((!maximize)?R_WIN:B_WIN);
+      return scoreAndLoc(sign * result, x);
+    }
+    if (depth == n) { return draw; }
+  }
+
   RankingVector rv;
   e.evaluate(maximize, rv);
 
   //Loop
-  for (size_t x = 0; x < rv.size(); x++){
-    size_t i = rv[x].second;
+  for (size_t j = 0; j < rv.size(); j++){
+    size_t i = rv[j].second;
     e.place(maximize, i);
 
-    bool cutoff = alphabeta_helper(i, maximize, depth, max, min,
+    bool cutoff = alphabeta_helper(i, maximize, depth, score,
 				   loc, alpha, beta);
     e.undo(maximize, i);
     if (cutoff) { break; }
 
   }
 
-  return scoreAndLoc((maximize?max:min), loc);
+  store(score, loc, alphaOrig, beta);
+    
+  return scoreAndLoc(score, loc);
 }
 
 /*

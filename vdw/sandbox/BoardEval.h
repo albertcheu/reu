@@ -14,7 +14,7 @@ class BoardEval: public Board_AB{
   BoardEval(size_t n, size_t k, Evaluator& e);
 
   scoreAndLoc alphabeta(bool maximize, int alpha, int beta,
-			size_t depth, int justPlayed=-1);
+			size_t depth, int x=-1);
 
   bool play(char c, int loc);
 

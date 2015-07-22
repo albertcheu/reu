@@ -14,7 +14,11 @@ const unsigned METADATA = 9;
 typedef unsigned long BitstringKey;
 const BitstringKey MAXKEY = ULONG_MAX;
 
-typedef vector<Bitstring> Chain;
+struct Entry{
+  int score, loc, flag;
+  Bitstring state;
+};
+typedef vector<Entry> Chain;
 
 // the score (win, draw, lose) and the location of play that yields it
 typedef pair<int,int> scoreAndLoc;
@@ -57,7 +61,7 @@ protected:
   //Otherwise, extract (loc/flag/score/gamestate)
   //Update values
   //Return true if flag == exact, false otherwise
-  bool retrieve(int x, int& score, int& loc, int& alpha, int& beta);
+  bool retrieve(int& score, int& loc, int& alpha, int& beta);
 
   void store(int score, int loc, int alphaOrig, int beta);
   
@@ -67,7 +71,7 @@ protected:
   bool play(char c, int loc);
 
   //The meat of the program
-  scoreAndLoc alphabeta(bool maximize, int alpha, int beta,
-			size_t depth, int x=-1);
+  virtual scoreAndLoc alphabeta(bool maximize, int alpha, int beta,
+				size_t depth, int x=-1);
     
 };

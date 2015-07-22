@@ -61,6 +61,7 @@ void search_for_G(int n, int k, int numThreads){
 
     bool redPlayer = true;
     size_t depth = 0;
+
     int justPlayed = -1;
     while(b.noWinner() && depth != n){
       int loc;
@@ -68,11 +69,12 @@ void search_for_G(int n, int k, int numThreads){
       cout << "Winner: " << sal.first << endl;
       loc = sal.second;
 
-      //cout << "Loc: " << loc << endl;
+      cout << "Loc: " << loc << endl;
       b.play(redPlayer?'R':'B', loc);
       redPlayer = (!redPlayer);
       justPlayed = loc;
     }
+    
     b.print();
 
     t = clock() - t;

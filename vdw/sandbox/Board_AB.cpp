@@ -3,6 +3,9 @@
 Board_AB::Board_AB(size_t n, size_t k)
   :Board(n,k), gamestate(0), zobrist(0), recursionCount(0)
 {
+  assignmentG.clear();
+  assignmentZ.clear();
+
   mt19937 generator((unsigned)time(NULL));
   for(size_t i = 0; i < n; i++){
     pair<Bitstring,Bitstring> p = {((Bitstring)1)<<(2*i + 1),
@@ -12,7 +15,7 @@ Board_AB::Board_AB(size_t n, size_t k)
     p = {generator(),generator()};
     assignmentZ.push_back(p);
 
-    killers.push_back({n,n});
+    //killers.push_back({n,n});
   }
 }
 
@@ -190,7 +193,7 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, int alpha, int beta,
     }
     if (depth == n) { return draw; }
   }
-
+  /*
   size_t& killer1 = killers[depth].first;
   if (killer1 != n && alphabeta_helper(killer1, maximize, depth, score,
 				       loc, alpha, beta)){
@@ -201,7 +204,7 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, int alpha, int beta,
 				       loc, alpha, beta)){
     return scoreAndLoc(score,loc);
   }
-
+  */
   //symmetry -> don't bother checking rhs
   bool s = symmetric();
 
@@ -211,22 +214,22 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, int alpha, int beta,
   //for(size_t i = 0; i <= ((n%2)?(n/2):((n/2) - 1)); i++){
     //Check i
 
-    if (i != killer1 && i != killer2 &&
+    if (//i != killer1 && i != killer2 &&
 	alphabeta_helper(i, maximize, depth, score, loc, alpha, beta))
       {
-	killers[depth].second = killer1;
-	killer1 = i;
+	//killers[depth].second = killer1;
+	//killer1 = i;
 	break;
       }
     
     if (s) {continue;}
     
     int j = n-i-1;
-    if (j != killer1 && j != killer2 &&
+    if (//j != killer1 && j != killer2 &&
 	alphabeta_helper(j, maximize, depth, score, loc, alpha, beta))
       {
-	killers[depth].second = killer1;
-	killer1 = i;
+	//killers[depth].second = killer1;
+	//killer1 = i;
 	break;
       }
     

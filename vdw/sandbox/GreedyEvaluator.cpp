@@ -3,6 +3,10 @@
 GreedyEvaluator::GreedyEvaluator(size_t n, size_t k)
   :Evaluator(n,k)
 {
+  possibleR.clear(); possibleB.clear();
+  stackR.clear(); stackB.clear();
+  kaps.clear();
+
   for(size_t i = 0; i < n; i++){
     possibleR.push_back(KapSet());
     possibleB.push_back(KapSet());
@@ -35,17 +39,14 @@ void GreedyEvaluator::removeFromOpponent(bool maximize, int loc){
   for(unordered_set<size_t>::iterator itr = possibles[loc].first.begin();
       itr!= possibles[loc].first.end(); itr++){
 
+    possibles[loc].second.push_back(*itr);
+
     for (size_t i = 0; i < n; i++){
       if (i == loc) { continue; }
       if (possibles[i].first.find(*itr) != possibles[i].first.end()) {
 	possibles[i].first.erase(*itr);
       }
     }
-  }
-
-  for(unordered_set<size_t>::iterator itr = possibles[loc].first.begin();
-      itr!= possibles[loc].first.end(); itr++){
-    possibles[loc].second.push_back(*itr);
   }
   possibles[loc].first.clear();
 }
@@ -70,13 +71,26 @@ void GreedyEvaluator::restoreToOpponent(bool maximize, int loc){
 
 void GreedyEvaluator::place(bool maximize, size_t i){
   grid[i] = (maximize?'R':'B');
-  removeFromOpponent(maximize, i);
+  try{
+    removeFromOpponent(maximize, i);
+  }
+  catch(int er){
+    cout << "Failed to remove" << endl;
+    removeFromOpponent(maximize, i);
+  }
 }
 
 void GreedyEvaluator::undo(bool maximize, size_t i){
   grid[i] = '.';
-  restoreToOpponent(maximize, i);
+  try{
+    restoreToOpponent(maximize, i);
+  }
+  catch(int er){
+    cout << "Failed to restore" << endl;
+    restoreToOpponent(maximize, i);
+  }
 }
+
 
 size_t GreedyEvaluator::actualEvaluate(bool maximize, size_t i){
   return (maximize?possibleR[i].first.size():possibleB[i].first.size());

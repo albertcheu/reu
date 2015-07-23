@@ -1,12 +1,12 @@
 #include "BoardEval.h"
 
-BoardEval::BoardEval(size_t n, size_t k, Evaluator& e)
+BoardEval::BoardEval(size_t n, size_t k, Evaluator* e)
   :Board_AB(n,k), e(e)
 {}
 
 bool BoardEval::play(char c, int loc){
   bool ans = Board_AB::play(c,loc);
-  if (ans) { e.place(c=='R',loc); }
+  if (ans) { e->place(c=='R',loc); }
   return ans;
 }
 
@@ -29,16 +29,16 @@ scoreAndLoc BoardEval::alphabeta(bool maximize, int alpha, int beta,
   }
 
   RankingVector rv;
-  e.evaluate(maximize, rv);
+  e->evaluate(maximize, rv);
 
   //Loop
   for (size_t j = 0; j < rv.size(); j++){
     size_t i = rv[j].second;
-    e.place(maximize, i);
+    e->place(maximize, i);
 
     bool cutoff = alphabeta_helper(i, maximize, depth, score,
 				   loc, alpha, beta);
-    e.undo(maximize, i);
+    e->undo(maximize, i);
     if (cutoff) { break; }
 
   }

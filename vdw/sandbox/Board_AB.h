@@ -6,19 +6,19 @@
 #define UPPER 2
 
 //64 bit number
-typedef unsigned long long Bitstring;
-const unsigned GAMESTATE = 55;
-const unsigned METADATA = 9;
+typedef unsigned long long int Bitstring;
+const unsigned int GAMESTATE = 55;
+const unsigned int METADATA = 9;
 
 //32 bit number
-typedef unsigned long BitstringKey;
+typedef unsigned long int BitstringKey;
 const BitstringKey MAXKEY = ULONG_MAX;
 
 struct Entry{
   int score, loc, flag;
   Bitstring state;
 };
-typedef vector<Entry> Chain;
+typedef vector<Bitstring> Chain;
 
 // the score (win, draw, lose) and the location of play that yields it
 typedef pair<int,int> scoreAndLoc;
@@ -31,6 +31,7 @@ const scoreAndLoc draw(DRAW,DRAW);
 class Board_AB: public Board {
 
 protected:
+  vector<pair<size_t,size_t> > killers;
 
   //two bits dedicated to score
   //log(n) bits dedicated to depth; n <= 32 means it is 5

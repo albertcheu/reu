@@ -66,10 +66,10 @@ void search_for_G(int n, int k, int numThreads){
     while(b.noWinner() && depth != n){
       int loc;
       scoreAndLoc sal = b.alphabeta(redPlayer,-10,10, depth++, justPlayed);
-      cout << "Winner: " << sal.first << endl;
+      //cout << "Winner: " << sal.first << endl;
       loc = sal.second;
 
-      cout << "Loc: " << loc << endl;
+      //cout << "Loc: " << loc << endl;
       b.play(redPlayer?'R':'B', loc);
       redPlayer = (!redPlayer);
       justPlayed = loc;

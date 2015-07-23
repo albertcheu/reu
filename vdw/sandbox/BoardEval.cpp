@@ -22,8 +22,8 @@ scoreAndLoc BoardEval::alphabeta(bool maximize, int alpha, int beta,
   if (depth > 0){
     if (memberOfAP(x)){
       int sign = (maximize?1:-1);
-      int result = ((!maximize)?R_WIN:B_WIN);
-      return scoreAndLoc(sign * result, x);
+      int result = sign * ((!maximize)?R_WIN:B_WIN);
+      return scoreAndLoc(result, x);
     }
     if (depth == n) { return draw; }
   }

@@ -11,6 +11,8 @@ Board_AB::Board_AB(size_t n, size_t k)
 
     p = {generator(),generator()};
     assignmentZ.push_back(p);
+
+    killers.push_back({n,n});
   }
 }
 
@@ -35,7 +37,7 @@ bool Board_AB::retrieve(int& score, int& loc, int& alpha, int& beta){
   BitstringKey key = zobrist % MAXKEY;
 
   if (table.find(key) == table.end()){ return false; }
-  /*
+
   size_t size = table[key].size();
   Bitstring* data = table[key].data();
 
@@ -44,11 +46,10 @@ bool Board_AB::retrieve(int& score, int& loc, int& alpha, int& beta){
     Bitstring storedState = (stored << METADATA);
     storedState >>= METADATA;
     short metadata = (stored >> GAMESTATE);
-    short storedScore = (metadata << 14);
-    storedScore >>= 14;
+    short storedScore = (metadata % 4);
     storedScore--;
-    short storedFlag = (metadata << 12);
-    storedScore >>= 14;
+    short storedFlag = (metadata % 16);
+    storedFlag >>= 2;
     short storedLoc = (metadata >> 4);
 
     if (storedState == gamestate) {
@@ -59,12 +60,12 @@ bool Board_AB::retrieve(int& score, int& loc, int& alpha, int& beta){
       }
 
       else if (storedFlag == LOWER){
-	//cout << "Found lowerbound" << endl;
+
 	alpha = (alpha>storedScore?alpha:storedScore);
       }
 
       else {
-	//cout << "Found upperbound" << endl;
+
 	beta = (beta<storedScore?beta:storedScore);
       }
 
@@ -77,7 +78,8 @@ bool Board_AB::retrieve(int& score, int& loc, int& alpha, int& beta){
     }
 
   }
-  */
+
+  /*
   for(int i = 0; i < table[key].size(); i++){
     Entry entry = table[key][i];
     Bitstring storedState = entry.state;
@@ -90,14 +92,10 @@ bool Board_AB::retrieve(int& score, int& loc, int& alpha, int& beta){
 	score = storedScore; return true;
       }
 
-      else if (storedFlag == LOWER){
-	//cout << "Found lowerbound" << endl;
-	alpha = (alpha>storedScore?alpha:storedScore);
-      }
+      else if (storedFlag == LOWER)
+	{ alpha = (alpha>storedScore?alpha:storedScore); }
 
-      else {
-	beta = (beta<storedScore?beta:storedScore);
-      }
+      else { beta = (beta<storedScore?beta:storedScore); }
 
       if (alpha >= beta) {
 	loc = storedLoc;
@@ -106,32 +104,50 @@ bool Board_AB::retrieve(int& score, int& loc, int& alpha, int& beta){
       return false;
     }
   }
+  */
   return false;
 }
 
 void Board_AB::store(int score, int loc, int alphaOrig, int beta){
-  /*
+
   short storedScore = (unsigned short) score+1;
   short storedFlag = EXACT;
   if (score <= alphaOrig) {
-    //cout << "Storing upperbound" << endl;
     storedFlag = UPPER;
   }
   else if (score >= beta) {
-    //cout << "Storing lowerbound" << endl;
     storedFlag = LOWER;
   }
-  //else { print(); }
-
   storedFlag <<= 2;
+
   short storedLoc = loc;
   storedLoc <<= 4;
 
   Bitstring storedVal = (storedLoc | storedFlag | storedScore);
   storedVal <<= GAMESTATE;
   storedVal |= gamestate;
-  */
 
+  BitstringKey key = zobrist % MAXKEY;
+  if (table.find(key) == table.end()) {
+    table[key].push_back(storedVal);
+    return;
+  }
+  
+  bool push = true;
+  for(int i = 0; i < table[key].size(); i++){
+    Bitstring stored = table[key][i];
+    Bitstring storedState = (stored << METADATA) >> METADATA;
+    short metadata = (stored >> GAMESTATE);
+    short existedFlag = (metadata % 16) >> 2;
+    if (storedState == gamestate) {
+      if (existedFlag != EXACT) { table[key][i] = storedVal; }
+      push = false;
+      break;
+    }
+  }
+  if (push) { table[key].push_back(storedVal); }
+
+  /*
   int flag = EXACT;
   if (score <= alphaOrig) { flag = UPPER; }
   else if (score >= beta) { flag = LOWER; }
@@ -142,16 +158,18 @@ void Board_AB::store(int score, int loc, int alphaOrig, int beta){
     table[key].push_back(storedVal);
     return;
   }
-
+  
+  bool push = true;
   for(int i = 0; i < table[key].size(); i++){
     Entry entry = table[key][i];
-    if (entry.state == gamestate && entry.flag != EXACT) {
-      table[key][i] = storedVal;
-      return;
+    if (entry.state == gamestate) {
+      if (entry.flag != EXACT) { table[key][i] = storedVal; }
+      push = false;
+      break;
     }
   }
-  table[key].push_back(storedVal);
-
+  if (push) { table[key].push_back(storedVal); }
+  */
 }
 
 scoreAndLoc Board_AB::alphabeta(bool maximize, int alpha, int beta,
@@ -162,7 +180,6 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, int alpha, int beta,
   int loc = -1;
   int alphaOrig = alpha;
   if (retrieve(score, loc, alpha, beta)){ return scoreAndLoc(score,loc); }
-  //cout << "Did not find, depth " << depth << endl;
 
   if (depth > 0){
     if (memberOfAP(x)){
@@ -173,7 +190,18 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, int alpha, int beta,
     }
     if (depth == n) { return draw; }
   }
-  
+
+  size_t& killer1 = killers[depth].first;
+  if (killer1 != n && alphabeta_helper(killer1, maximize, depth, score,
+				       loc, alpha, beta)){
+    return scoreAndLoc(score,loc);
+  }
+  size_t killer2 = killers[depth].second;
+  if (killer2 != n && alphabeta_helper(killer2, maximize, depth, score,
+				       loc, alpha, beta)){
+    return scoreAndLoc(score,loc);
+  }
+
   //symmetry -> don't bother checking rhs
   bool s = symmetric();
 
@@ -183,14 +211,24 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, int alpha, int beta,
   //for(size_t i = 0; i <= ((n%2)?(n/2):((n/2) - 1)); i++){
     //Check i
 
-    if (alphabeta_helper(i, maximize, depth, score, loc, alpha, beta))
-      { break; }
+    if (i != killer1 && i != killer2 &&
+	alphabeta_helper(i, maximize, depth, score, loc, alpha, beta))
+      {
+	killers[depth].second = killer1;
+	killer1 = i;
+	break;
+      }
     
     if (s) {continue;}
     
     int j = n-i-1;
-    if (alphabeta_helper(j, maximize, depth, score, loc, alpha, beta))
-      { break; }
+    if (j != killer1 && j != killer2 &&
+	alphabeta_helper(j, maximize, depth, score, loc, alpha, beta))
+      {
+	killers[depth].second = killer1;
+	killer1 = i;
+	break;
+      }
     
   }
 

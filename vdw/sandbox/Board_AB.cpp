@@ -37,13 +37,15 @@ bool Board_AB::play(char c, int loc){
 }
 
 bool Board_AB::retrieve(int& score, int& loc, int& alpha, int& beta){
+
   BitstringKey key = zobrist % MAXKEY;
 
   if (table.find(key) == table.end()){ return false; }
-
+  /*
   size_t size = table[key].size();
   Bitstring* data = table[key].data();
 
+  #pragma omp parallel for
   for(size_t j = 0; j < size; j++){
     Bitstring stored = data[j];
     Bitstring storedState = (stored << METADATA);
@@ -59,37 +61,34 @@ bool Board_AB::retrieve(int& score, int& loc, int& alpha, int& beta){
       
       if (storedFlag == EXACT) {
 	loc = storedLoc;
-	score = (int)storedScore; return true;
+	score = (int)storedScore;
+	return true;
       }
-
-      else if (storedFlag == LOWER){
-
-	alpha = (alpha>storedScore?alpha:storedScore);
-      }
-
-      else {
-
-	beta = (beta<storedScore?beta:storedScore);
-      }
+      else if (storedFlag == LOWER)
+	{ alpha = (alpha>storedScore?alpha:storedScore); }
+      else { beta = (beta<storedScore?beta:storedScore); }
 
       if (alpha >= beta) {
 	loc = storedLoc;
-	score = (int)storedScore; return true;
+	score = (int)storedScore;
+	return true;
       }
 
       return false;
     }
 
   }
+  */
 
-  /*
   for(int i = 0; i < table[key].size(); i++){
     Entry entry = table[key][i];
     Bitstring storedState = entry.state;
-    int storedFlag = entry.flag;
-    int storedLoc = entry.loc;
-    int storedScore = entry.score;
+
     if (storedState == gamestate){
+      int storedFlag = entry.flag;
+      int storedLoc = entry.loc;
+      int storedScore = entry.score;
+
       if (storedFlag == EXACT) {
 	loc = storedLoc;
 	score = storedScore; return true;
@@ -102,25 +101,28 @@ bool Board_AB::retrieve(int& score, int& loc, int& alpha, int& beta){
 
       if (alpha >= beta) {
 	loc = storedLoc;
-	score = storedScore; return true;
+	score = storedScore;
+	return true;
       }
+
       return false;
     }
   }
-  */
+
   return false;
 }
 
 void Board_AB::store(int score, int loc, int alphaOrig, int beta){
 
-  short storedScore = (unsigned short) score+1;
-  short storedFlag = EXACT;
+  int storedScore = score+1;
+  int flag = EXACT;
   if (score <= alphaOrig) {
-    storedFlag = UPPER;
+    flag = UPPER;
   }
   else if (score >= beta) {
-    storedFlag = LOWER;
+    flag = LOWER;
   }
+  /*
   storedFlag <<= 2;
 
   short storedLoc = loc;
@@ -137,6 +139,7 @@ void Board_AB::store(int score, int loc, int alphaOrig, int beta){
   }
   
   bool push = true;
+  #pragma omp parallel for
   for(int i = 0; i < table[key].size(); i++){
     Bitstring stored = table[key][i];
     Bitstring storedState = (stored << METADATA) >> METADATA;
@@ -149,11 +152,8 @@ void Board_AB::store(int score, int loc, int alphaOrig, int beta){
     }
   }
   if (push) { table[key].push_back(storedVal); }
+*/
 
-  /*
-  int flag = EXACT;
-  if (score <= alphaOrig) { flag = UPPER; }
-  else if (score >= beta) { flag = LOWER; }
 
   Entry storedVal = {score, loc, flag, gamestate};
   BitstringKey key = zobrist % MAXKEY;
@@ -172,7 +172,7 @@ void Board_AB::store(int score, int loc, int alphaOrig, int beta){
     }
   }
   if (push) { table[key].push_back(storedVal); }
-  */
+
 }
 
 scoreAndLoc Board_AB::alphabeta(bool maximize, int alpha, int beta,

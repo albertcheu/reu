@@ -1,7 +1,10 @@
 //#pragma once
 #include "Board.h"
 #include <unordered_map>
+
 #define EXACT 0
+#define INEXACT 1
+
 #define LOWER 1
 #define UPPER 2
 
@@ -15,10 +18,13 @@ typedef unsigned long int BitstringKey;
 const BitstringKey MAXKEY = ULONG_MAX;
 
 struct Entry{
-  int score, loc, flag;
+  int score, loc;
+  int flag;
   Bitstring state;
+  //int primaryScore, primaryLoc;
+  //int secondaryScore, secondaryLoc;
 };
-typedef vector<Bitstring> Chain;
+typedef vector<Entry> Chain;
 
 // the score (win, draw, lose) and the location of play that yields it
 typedef pair<int,int> scoreAndLoc;

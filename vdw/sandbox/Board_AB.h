@@ -59,8 +59,8 @@ protected:
   //Return whether or not we can stop searching (alpha >= beta)
   
   bool alphabeta_helper(size_t i, bool maximize, size_t depth,
-			int& score, int& loc,
-			int& alpha, int& beta,
+			char& score, char& loc,
+			char& alpha, char& beta,
 			bool& firstChild
 			);
 
@@ -69,12 +69,12 @@ protected:
   //Update values
   //Return true if flag == exact, false otherwise
   bool retrieve(BitstringKey key, Bitstring gs,
-		int& score, int& loc, int& alpha, int& beta);
-  bool retrieveSmart(int& score, int& loc, int& alpha, int& beta);
+		char& score, char& loc, char& alpha, char& beta);
+  bool retrieveSmart(char& score, char& loc, char& alpha, char& beta);
   
   void store(BitstringKey key, Bitstring gs,
-	     int score, int loc, int alphaOrig, int beta);
-  void storeSmart(int score, int loc, int alphaOrig, int beta);
+	     char score, char loc, char alphaOrig, char beta);
+  void storeSmart(char score, char loc, char alphaOrig, char beta);
   
  public:
   Board_AB(size_t n, size_t k);
@@ -82,7 +82,7 @@ protected:
   bool play(char c, char loc);
 
   //The meat of the program
-  virtual scoreAndLoc alphabeta(bool maximize, int alpha, int beta,
-				size_t depth, int x=-1);
+  virtual scoreAndLoc alphabeta(bool maximize, char alpha, char beta,
+				size_t depth, char x=-1);
     
 };

@@ -21,10 +21,8 @@ struct Entry{
   int score, loc;
   int flag;
   Bitstring state;
-  //int primaryScore, primaryLoc;
-  //int secondaryScore, secondaryLoc;
 };
-typedef vector<Entry> Chain;
+typedef vector<Bitstring> Chain;
 
 // the score (win, draw, lose) and the location of play that yields it
 typedef pair<int,int> scoreAndLoc;
@@ -71,6 +69,7 @@ protected:
   bool retrieve(int& score, int& loc, int& alpha, int& beta);
 
   void store(int score, int loc, int alphaOrig, int beta);
+  void storeMirror(int score, int loc, int alphaOrig, int beta);
   
  public:
   Board_AB(size_t n, size_t k);

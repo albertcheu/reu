@@ -41,11 +41,10 @@ bool Board_AB::retrieve(int& score, int& loc, int& alpha, int& beta){
   BitstringKey key = zobrist % MAXKEY;
 
   if (table.find(key) == table.end()){ return false; }
-  /*
+
   size_t size = table[key].size();
   Bitstring* data = table[key].data();
 
-  #pragma omp parallel for
   for(size_t j = 0; j < size; j++){
     Bitstring stored = data[j];
     Bitstring storedState = (stored << METADATA);
@@ -78,8 +77,7 @@ bool Board_AB::retrieve(int& score, int& loc, int& alpha, int& beta){
     }
 
   }
-  */
-
+  /*
   for(int i = 0; i < table[key].size(); i++){
     Entry entry = table[key][i];
     Bitstring storedState = entry.state;
@@ -108,13 +106,11 @@ bool Board_AB::retrieve(int& score, int& loc, int& alpha, int& beta){
       return false;
     }
   }
-
+  */
   return false;
 }
 
 void Board_AB::store(int score, int loc, int alphaOrig, int beta){
-
-  int storedScore = score+1;
   int flag = EXACT;
   if (score <= alphaOrig) {
     flag = UPPER;
@@ -122,13 +118,15 @@ void Board_AB::store(int score, int loc, int alphaOrig, int beta){
   else if (score >= beta) {
     flag = LOWER;
   }
-  /*
-  storedFlag <<= 2;
+
+  flag <<= 2;
+
+  int storedScore = score+1;
 
   short storedLoc = loc;
   storedLoc <<= 4;
 
-  Bitstring storedVal = (storedLoc | storedFlag | storedScore);
+  Bitstring storedVal = (storedLoc | flag | storedScore);
   storedVal <<= GAMESTATE;
   storedVal |= gamestate;
 
@@ -139,7 +137,6 @@ void Board_AB::store(int score, int loc, int alphaOrig, int beta){
   }
   
   bool push = true;
-  #pragma omp parallel for
   for(int i = 0; i < table[key].size(); i++){
     Bitstring stored = table[key][i];
     Bitstring storedState = (stored << METADATA) >> METADATA;
@@ -151,10 +148,8 @@ void Board_AB::store(int score, int loc, int alphaOrig, int beta){
       break;
     }
   }
-  if (push) { table[key].push_back(storedVal); }
-*/
 
-
+    /*
   Entry storedVal = {score, loc, flag, gamestate};
   BitstringKey key = zobrist % MAXKEY;
   if (table.find(key) == table.end()) {
@@ -171,7 +166,29 @@ void Board_AB::store(int score, int loc, int alphaOrig, int beta){
       break;
     }
   }
+
+  */
   if (push) { table[key].push_back(storedVal); }
+}
+
+void Board_AB::storeMirror(int score, int loc, int alphaOrig, int beta){
+  Bitstring oldZ = zobrist;
+  Bitstring oldG = gamestate;
+
+  zobrist = gamestate = 0;
+  for(int i = n-1; i > -1; i--){
+    if (grid[i] != '.') {
+      pair<Bitstring,Bitstring>& aZ = assignmentZ[n-i-1];
+      pair<Bitstring,Bitstring>& aG = assignmentG[n-i-1];
+      zobrist ^= (grid[i]=='R'?aZ.first:aZ.second);
+      gamestate |= (grid[i]=='R'?aG.first:aG.second);
+    }
+  }
+
+  store(score,n-loc-1,alphaOrig,beta);
+
+  gamestate = oldG;
+  zobrist = oldZ;
 
 }
 
@@ -236,6 +253,7 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, int alpha, int beta,
   }
 
   store(score, loc, alphaOrig, beta);
+  if (!(s && loc == n/2)) storeMirror(score, loc, alphaOrig, beta);
 
   return scoreAndLoc(score, loc);
 }

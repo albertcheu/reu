@@ -25,7 +25,7 @@ struct Entry{
 typedef vector<Bitstring> Chain;
 
 // the score (win, draw, lose) and the location of play that yields it
-typedef pair<int,int> scoreAndLoc;
+typedef pair<char,char> scoreAndLoc;
 
 //"Useful" (dummy) constants
 const scoreAndLoc r_win(R_WIN,R_WIN);
@@ -79,7 +79,7 @@ protected:
  public:
   Board_AB(size_t n, size_t k);
 
-  bool play(char c, int loc);
+  bool play(char c, char loc);
 
   //The meat of the program
   virtual scoreAndLoc alphabeta(bool maximize, int alpha, int beta,

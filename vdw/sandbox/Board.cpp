@@ -1,7 +1,7 @@
 #include "Board.h"
 
 bool memberHelper(vector<char> & grid, char& w,
-		  size_t n, size_t k, int d, int loc){
+		  size_t n, size_t k, char d, char loc){
   if (w != '.') { return true; }
 
   if (loc+d >= n && loc-d < 0) { return false; }
@@ -35,7 +35,7 @@ Board::Board(size_t n, size_t k)
 
 size_t Board::size(){return n;}
 
-bool Board::memberOfAP(int loc){
+bool Board::memberOfAP(char loc){
 
   for(int d = 1; d <= (n-1)/(k-1); d++){
 
@@ -102,7 +102,7 @@ void Board::print(){
   cout << endl;
 }
 
-bool Board::play(char c, int loc){
+bool Board::play(char c, char loc){
   if (grid[loc] == '.'){
 
     grid[loc] = c;

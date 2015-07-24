@@ -27,7 +27,7 @@ bool Board_AB::symmetric(){
   return true;
 }
 
-bool Board_AB::play(char c, int loc){
+bool Board_AB::play(char c, char loc){
   if (gamestate == 0) cout << "Ran thru " << recursionCount << " nodes" << endl;
   recursionCount = 0;
   Board::play(c,loc);
@@ -49,9 +49,9 @@ bool Board_AB::retrieve(BitstringKey key, Bitstring gs,
     Bitstring storedState = (stored << METADATA);
     storedState >>= METADATA;
     short metadata = (stored >> GAMESTATE);
-    short storedScore = (metadata % 4);
+    char storedScore = (metadata % 4);
     storedScore--;
-    short storedFlag = (metadata % 16);
+    char storedFlag = (metadata % 16);
     storedFlag >>= 2;
     short storedLoc = (metadata >> 4);
 
@@ -111,12 +111,12 @@ bool Board_AB::retrieve(BitstringKey key, Bitstring gs,
 
 void Board_AB::store(BitstringKey key, Bitstring gs,
 		     int score, int loc, int alphaOrig, int beta){
-  int flag = EXACT;
+  char flag = EXACT;
   if (score <= alphaOrig) { flag = UPPER; }
   else if (score >= beta) { flag = LOWER; }
   flag <<= 2;
 
-  int storedScore = score+1;
+  char storedScore = score+1;
 
   short storedLoc = loc;
   storedLoc <<= 4;
@@ -136,7 +136,7 @@ void Board_AB::store(BitstringKey key, Bitstring gs,
     Bitstring stored = table[key][i];
     Bitstring storedState = (stored << METADATA) >> METADATA;
     short metadata = (stored >> GAMESTATE);
-    short existedFlag = (metadata % 16) >> 2;
+    char existedFlag = (metadata % 16) >> 2;
     if (storedState == gs) {
       if (existedFlag != EXACT) { table[key][i] = storedVal; }
       push = false;

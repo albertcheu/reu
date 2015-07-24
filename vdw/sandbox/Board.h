@@ -17,7 +17,7 @@
 using namespace std;
 
 bool memberHelper(vector<char>  & grid, char& w,
-		  size_t n, size_t k, int d, int loc);
+		  size_t n, size_t k, char d, char loc);
 
 class Board{
  protected:
@@ -27,7 +27,7 @@ class Board{
   //the size of the arithmetic progression and of the board
   size_t k, n;
 
-  bool memberOfAP(int loc);
+  bool memberOfAP(char loc);
 
  public:
   Board(size_t n, size_t k);
@@ -35,7 +35,7 @@ class Board{
   void print();
 
   //Put the player in this loc, return false if already occupied
-  virtual bool play(char c, int loc);
+  virtual bool play(char c, char loc);
 
   //Return who won ('R' or 'B'); if no winner, return '.'
   char winner();

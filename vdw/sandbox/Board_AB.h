@@ -60,7 +60,9 @@ protected:
   
   bool alphabeta_helper(size_t i, bool maximize, size_t depth,
 			int& score, int& loc,
-			int& alpha, int& beta);
+			int& alpha, int& beta,
+			bool& firstChild
+			);
 
   //If there is no entry in the table, return false
   //Otherwise, extract (loc/flag/score/gamestate)

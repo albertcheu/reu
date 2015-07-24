@@ -212,13 +212,6 @@ void Board_AB::storeSmart(int score, int loc, int alphaOrig, int beta){
   if (mirroredKey < key)
     { store(mirroredKey,mirroredState,score, n-loc-1, alphaOrig, beta);}
   else { store(key,gamestate,score, loc, alphaOrig, beta);}
-  
-  /*
-  if (table.find(mirroredKey) != table.end())
-    { store(mirroredKey, mirroredState, score, n-loc-1, alphaOrig, beta); }
-  
-  else { store(zobrist % MAXKEY, gamestate, score, loc, alphaOrig, beta); }
-  */
 }
 
 scoreAndLoc Board_AB::alphabeta(bool maximize, int alpha, int beta,
@@ -251,17 +244,14 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, int alpha, int beta,
     return scoreAndLoc(score,loc);
   }
   */
+
   //symmetry -> don't bother checking rhs
   bool s = symmetric();
+  bool firstChild = true;
 
-  //Loop
-  //for(size_t i = 0; i < n; i++){
   for(int i = ((n%2)?(n/2):((n/2) - 1)); i > -1; i--){
-  //for(size_t i = 0; i <= ((n%2)?(n/2):((n/2) - 1)); i++){
-    //Check i
-
     if (//i != killer1 && i != killer2 &&
-	alphabeta_helper(i, maximize, depth, score, loc, alpha, beta))
+	alphabeta_helper(i, maximize, depth, score, loc, alpha, beta,firstChild))
       {
 	//killers[depth].second = killer1;
 	//killer1 = i;
@@ -272,7 +262,7 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, int alpha, int beta,
     
     int j = n-i-1;
     if (//j != killer1 && j != killer2 &&
-	alphabeta_helper(j, maximize, depth, score, loc, alpha, beta))
+	alphabeta_helper(j, maximize, depth, score, loc, alpha, beta,firstChild))
       {
 	//killers[depth].second = killer1;
 	//killer1 = i;
@@ -288,7 +278,9 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, int alpha, int beta,
 
 bool Board_AB::alphabeta_helper(size_t i, bool maximize, size_t depth,
 				int& score, int& loc,
-				int& alpha, int& beta){
+				int& alpha, int& beta,
+				bool& firstChild
+				){
   if (i >= n || grid[i] != '.') { return false; }
 
   grid[i] = (maximize?'R':'B');
@@ -299,7 +291,20 @@ bool Board_AB::alphabeta_helper(size_t i, bool maximize, size_t depth,
   Bitstring g = (maximize?assignmentG[i].first:assignmentG[i].second);
   gamestate |= g;
   
-  int curScore = -1 * alphabeta(!maximize, -beta, -alpha, depth+1, i).first;
+  int curScore = 0;
+
+  //PVS
+  if (firstChild) {
+    curScore = -alphabeta(!maximize, -beta, -alpha, depth+1, i).first;
+    firstChild = false;
+  }
+  else {
+    curScore = -alphabeta(!maximize, -alpha - 1, -alpha, depth+1, i).first;
+    if (alpha < curScore && curScore < beta)
+      { curScore = -alphabeta(!maximize, -beta, -curScore, depth+1, i).first; }
+  }
+  
+
   if (curScore > score) {
     loc = i;
     score = curScore;

@@ -36,9 +36,8 @@ bool Board_AB::play(char c, int loc){
 
 }
 
-bool Board_AB::retrieve(int& score, int& loc, int& alpha, int& beta){
-
-  BitstringKey key = zobrist % MAXKEY;
+bool Board_AB::retrieve(BitstringKey key, Bitstring gs,
+			int& score, int& loc, int& alpha, int& beta){
 
   if (table.find(key) == table.end()){ return false; }
 
@@ -56,7 +55,7 @@ bool Board_AB::retrieve(int& score, int& loc, int& alpha, int& beta){
     storedFlag >>= 2;
     short storedLoc = (metadata >> 4);
 
-    if (storedState == gamestate) {
+    if (storedState == gs) {
       
       if (storedFlag == EXACT) {
 	loc = storedLoc;
@@ -82,7 +81,7 @@ bool Board_AB::retrieve(int& score, int& loc, int& alpha, int& beta){
     Entry entry = table[key][i];
     Bitstring storedState = entry.state;
 
-    if (storedState == gamestate){
+    if (storedState == gs){
       int storedFlag = entry.flag;
       int storedLoc = entry.loc;
       int storedScore = entry.score;
@@ -110,15 +109,11 @@ bool Board_AB::retrieve(int& score, int& loc, int& alpha, int& beta){
   return false;
 }
 
-void Board_AB::store(int score, int loc, int alphaOrig, int beta){
+void Board_AB::store(BitstringKey key, Bitstring gs,
+		     int score, int loc, int alphaOrig, int beta){
   int flag = EXACT;
-  if (score <= alphaOrig) {
-    flag = UPPER;
-  }
-  else if (score >= beta) {
-    flag = LOWER;
-  }
-
+  if (score <= alphaOrig) { flag = UPPER; }
+  else if (score >= beta) { flag = LOWER; }
   flag <<= 2;
 
   int storedScore = score+1;
@@ -128,21 +123,21 @@ void Board_AB::store(int score, int loc, int alphaOrig, int beta){
 
   Bitstring storedVal = (storedLoc | flag | storedScore);
   storedVal <<= GAMESTATE;
-  storedVal |= gamestate;
+  storedVal |= gs;//gamestate;
 
-  BitstringKey key = zobrist % MAXKEY;
+  //BitstringKey key = zobrist % MAXKEY;
   if (table.find(key) == table.end()) {
     table[key].push_back(storedVal);
     return;
   }
-  
+
   bool push = true;
   for(int i = 0; i < table[key].size(); i++){
     Bitstring stored = table[key][i];
     Bitstring storedState = (stored << METADATA) >> METADATA;
     short metadata = (stored >> GAMESTATE);
     short existedFlag = (metadata % 16) >> 2;
-    if (storedState == gamestate) {
+    if (storedState == gs) {
       if (existedFlag != EXACT) { table[key][i] = storedVal; }
       push = false;
       break;
@@ -169,27 +164,61 @@ void Board_AB::store(int score, int loc, int alphaOrig, int beta){
 
   */
   if (push) { table[key].push_back(storedVal); }
+  
 }
 
-void Board_AB::storeMirror(int score, int loc, int alphaOrig, int beta){
-  Bitstring oldZ = zobrist;
-  Bitstring oldG = gamestate;
+bool Board_AB::retrieveSmart(int& score, int& loc, int& alpha, int& beta){
+  bool ans = false;
 
-  zobrist = gamestate = 0;
+  Bitstring mirroredState = 0;
+  Bitstring mirroredZ = 0;
+
   for(int i = n-1; i > -1; i--){
     if (grid[i] != '.') {
       pair<Bitstring,Bitstring>& aZ = assignmentZ[n-i-1];
       pair<Bitstring,Bitstring>& aG = assignmentG[n-i-1];
-      zobrist ^= (grid[i]=='R'?aZ.first:aZ.second);
-      gamestate |= (grid[i]=='R'?aG.first:aG.second);
+      mirroredZ ^= (grid[i]=='R'?aZ.first:aZ.second);
+      mirroredState |= (grid[i]=='R'?aG.first:aG.second);
+    }
+  }
+  
+  BitstringKey key = zobrist % MAXKEY;
+  BitstringKey mirroredKey = mirroredZ % MAXKEY;
+
+  if (mirroredKey < key){
+    ans = retrieve(mirroredKey,mirroredState,score, loc, alpha, beta);
+    loc = n-loc-1;
+  }
+
+  else { ans = retrieve(key,gamestate,score, loc, alpha, beta);}
+
+  return ans;
+}
+
+void Board_AB::storeSmart(int score, int loc, int alphaOrig, int beta){
+  Bitstring mirroredState = 0;
+  Bitstring mirroredZ = 0;
+  for(int i = n-1; i > -1; i--){
+    if (grid[i] != '.') {
+      pair<Bitstring,Bitstring>& aZ = assignmentZ[n-i-1];
+      pair<Bitstring,Bitstring>& aG = assignmentG[n-i-1];
+      mirroredZ ^= (grid[i]=='R'?aZ.first:aZ.second);
+      mirroredState |= (grid[i]=='R'?aG.first:aG.second);
     }
   }
 
-  store(score,n-loc-1,alphaOrig,beta);
-
-  gamestate = oldG;
-  zobrist = oldZ;
-
+  BitstringKey mirroredKey = mirroredZ % MAXKEY;
+  BitstringKey key = zobrist % MAXKEY;
+  if (mirroredKey < key)
+    { store(mirroredKey,mirroredState,score, n-loc-1, alphaOrig, beta);}
+  else { store(key,gamestate,score, loc, alphaOrig, beta);}
+  
+  /*
+  if (table.find(mirroredKey) != table.end())
+    { store(mirroredKey, mirroredState, score, n-loc-1, alphaOrig, beta); }
+  
+  else { store(zobrist % MAXKEY, gamestate, score, loc, alphaOrig, beta); }
+  */
 }
 
 scoreAndLoc Board_AB::alphabeta(bool maximize, int alpha, int beta,
@@ -199,7 +228,7 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, int alpha, int beta,
   int score = -10;
   int loc = -1;
   int alphaOrig = alpha;
-  if (retrieve(score, loc, alpha, beta)){ return scoreAndLoc(score,loc); }
+  if (retrieveSmart(score, loc, alpha, beta)){ return scoreAndLoc(score,loc); }
 
   if (depth > 0){
     if (memberOfAP(x)){
@@ -252,8 +281,7 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, int alpha, int beta,
     
   }
 
-  store(score, loc, alphaOrig, beta);
-  if (!(s && loc == n/2)) storeMirror(score, loc, alphaOrig, beta);
+  storeSmart(score, loc, alphaOrig, beta);
 
   return scoreAndLoc(score, loc);
 }

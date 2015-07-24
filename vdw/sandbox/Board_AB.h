@@ -66,10 +66,13 @@ protected:
   //Otherwise, extract (loc/flag/score/gamestate)
   //Update values
   //Return true if flag == exact, false otherwise
-  bool retrieve(int& score, int& loc, int& alpha, int& beta);
-
-  void store(int score, int loc, int alphaOrig, int beta);
-  void storeMirror(int score, int loc, int alphaOrig, int beta);
+  bool retrieve(BitstringKey key, Bitstring gs,
+		int& score, int& loc, int& alpha, int& beta);
+  bool retrieveSmart(int& score, int& loc, int& alpha, int& beta);
+  
+  void store(BitstringKey key, Bitstring gs,
+	     int score, int loc, int alphaOrig, int beta);
+  void storeSmart(int score, int loc, int alphaOrig, int beta);
   
  public:
   Board_AB(size_t n, size_t k);

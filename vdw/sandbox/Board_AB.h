@@ -35,7 +35,7 @@ const scoreAndLoc draw(DRAW,DRAW);
 class Board_AB: public Board {
 
 protected:
-  vector<pair<size_t,size_t> > killers;
+  //vector<pair<size_t,size_t> > killers;
 
   //two bits dedicated to score
   //log(n) bits dedicated to depth; n <= 32 means it is 5
@@ -58,7 +58,7 @@ protected:
   //If it is better than what we have seen, update max/min
   //Return whether or not we can stop searching (alpha >= beta)
   
-  bool alphabeta_helper(size_t i, bool maximize, size_t depth,
+  bool alphabeta_helper(char i, bool maximize, char depth,
 			char& score, char& loc,
 			char& alpha, char& beta,
 			bool& firstChild
@@ -77,12 +77,12 @@ protected:
   void storeSmart(char score, char loc, char alphaOrig, char beta);
   
  public:
-  Board_AB(size_t n, size_t k);
+  Board_AB(char n, char k);
 
   bool play(char c, char loc);
 
   //The meat of the program
   virtual scoreAndLoc alphabeta(bool maximize, char alpha, char beta,
-				size_t depth, char x=-1);
+				char depth, char x=-1);
     
 };

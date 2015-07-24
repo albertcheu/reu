@@ -45,7 +45,7 @@ void search_for_G(int n, int k, int numThreads){
   //Iterate thru board sizes
   srand((unsigned)time(NULL));
   while(true){
-    cout << "Testing game(" << n << "," << k << ")..." << endl;
+    cout << "game(" << n << "," << k << ")" << endl;
     clock_t t = clock();
     /*
     unordered_map<BitstringKey,pair<Bitstring,int> > table;
@@ -58,10 +58,12 @@ void search_for_G(int n, int k, int numThreads){
     //MCEvaluator e(n,k);
     //RandomEvaluator e(n,k);
     //BoardEval b(n,k,&e);
-
+    scoreAndLoc sal = b.alphabeta(true,-10,10, 0);
+    
+    /*
     bool redPlayer = true;
-    size_t depth = 0;
-
+    char depth = 0;
+    
     int justPlayed = -1;
     while(b.noWinner() && depth != n){
       int loc;
@@ -76,25 +78,25 @@ void search_for_G(int n, int k, int numThreads){
     }
     
     b.print();
+    */
 
     t = clock() - t;
     cout << "It took me " << ((float)t)/CLOCKS_PER_SEC << " seconds" << endl;
 
+    /*
     char winner = b.winner();
-
-    if (winner == 'R') {
-
-      break;
-    }
+    if (winner == 'R') { break; }
     else if (winner == 'B') {
       cout << "Oh no, B should never win" << endl;
       break;
     }
+    */
+    if (sal.first == 1) { break; }
     else { n++; }
 
   }
 
-  cout << "I think GW(k=" << k << ") = " << n << endl;
+  cout << "GW(k = " << k << ") = " << n << endl;
 }
 
 int main(int argc, char** argv){

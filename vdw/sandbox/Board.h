@@ -17,7 +17,7 @@
 using namespace std;
 
 bool memberHelper(vector<char>  & grid, char& w,
-		  size_t n, size_t k, char d, char loc);
+		  char n, char k, char d, char loc);
 
 class Board{
  protected:
@@ -25,13 +25,13 @@ class Board{
   vector<char> grid;
 
   //the size of the arithmetic progression and of the board
-  size_t k, n;
+  char k, n;
 
   bool memberOfAP(char loc);
 
  public:
-  Board(size_t n, size_t k);
-  size_t size();
+  Board(char n, char k);
+  char size();
   void print();
 
   //Put the player in this loc, return false if already occupied

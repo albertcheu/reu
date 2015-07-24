@@ -1,13 +1,13 @@
 #include "Board_AB.h"
 
-Board_AB::Board_AB(size_t n, size_t k)
+Board_AB::Board_AB(char n, char k)
   :Board(n,k), gamestate(0), zobrist(0), recursionCount(0)
 {
   assignmentG.clear();
   assignmentZ.clear();
 
   mt19937 generator((unsigned)time(NULL));
-  for(size_t i = 0; i < n; i++){
+  for(char i = 0; i < n; i++){
     pair<Bitstring,Bitstring> p = {((Bitstring)1)<<(2*i + 1),
 				   ((Bitstring)1)<<(2*i)};
     assignmentG.push_back(p);
@@ -20,8 +20,8 @@ Board_AB::Board_AB(size_t n, size_t k)
 }
 
 bool Board_AB::symmetric(){
-  size_t middle = (n-1)/2;
-  for (size_t i = 0; i < n; i++){
+  char middle = (n-1)/2;
+  for (char i = 0; i < n; i++){
     if (i <= middle && grid[i] != grid[n-1-i]) { return false; }
   }
   return true;
@@ -41,10 +41,10 @@ bool Board_AB::retrieve(BitstringKey key, Bitstring gs,
 
   if (table.find(key) == table.end()){ return false; }
 
-  size_t size = table[key].size();
+  char size = table[key].size();
   Bitstring* data = table[key].data();
 
-  for(size_t j = 0; j < size; j++){
+  for(char j = 0; j < size; j++){
     Bitstring stored = data[j];
     Bitstring storedState = (stored << METADATA);
     storedState >>= METADATA;
@@ -215,7 +215,7 @@ void Board_AB::storeSmart(char score, char loc, char alphaOrig, char beta){
 }
 
 scoreAndLoc Board_AB::alphabeta(bool maximize, char alpha, char beta,
-				size_t depth, char x){
+				char depth, char x){
   recursionCount++;
 
   char score = -10;
@@ -233,12 +233,12 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, char alpha, char beta,
     if (depth == n) { return draw; }
   }
   /*
-  size_t& killer1 = killers[depth].first;
+  char& killer1 = killers[depth].first;
   if (killer1 != n && alphabeta_helper(killer1, maximize, depth, score,
 				       loc, alpha, beta)){
     return scoreAndLoc(score,loc);
   }
-  size_t killer2 = killers[depth].second;
+  char killer2 = killers[depth].second;
   if (killer2 != n && alphabeta_helper(killer2, maximize, depth, score,
 				       loc, alpha, beta)){
     return scoreAndLoc(score,loc);
@@ -276,7 +276,7 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, char alpha, char beta,
   return scoreAndLoc(score, loc);
 }
 
-bool Board_AB::alphabeta_helper(size_t i, bool maximize, size_t depth,
+bool Board_AB::alphabeta_helper(char i, bool maximize, char depth,
 				char& score, char& loc,
 				char& alpha, char& beta,
 				bool& firstChild

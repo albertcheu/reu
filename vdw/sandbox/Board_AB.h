@@ -35,6 +35,8 @@ const scoreAndLoc draw(DRAW,DRAW);
 class Board_AB: public Board {
 
 protected:
+  unsigned short storageCutoff;
+  size_t tableSize;
   //vector<pair<size_t,size_t> > killers;
 
   //two bits dedicated to score

@@ -16,12 +16,13 @@ const unsigned int METADATA = 9;
 //32 bit number
 typedef unsigned long int BitstringKey;
 const BitstringKey MAXKEY = ULONG_MAX;
-
+/*
 struct Entry{
   int score, loc;
   int flag;
   Bitstring state;
 };
+*/
 typedef vector<Bitstring> Chain;
 
 // the score (win, draw, lose) and the location of play that yields it
@@ -35,8 +36,7 @@ const scoreAndLoc draw(DRAW,DRAW);
 class Board_AB: public Board {
 
 protected:
-  unsigned short storageCutoff;
-  size_t tableSize;
+
   //vector<pair<size_t,size_t> > killers;
 
   //two bits dedicated to score

@@ -1,8 +1,7 @@
 #include "Board_AB.h"
 
 Board_AB::Board_AB(char n, char k)
-  :Board(n,k), gamestate(0), zobrist(0), recursionCount(0),
-  tableSize(0)
+  :Board(n,k), gamestate(0), zobrist(0), recursionCount(0)
 {
   assignmentG.clear();
   assignmentZ.clear();
@@ -18,8 +17,7 @@ Board_AB::Board_AB(char n, char k)
 
     //killers.push_back({n,n});
   }
-  double avgLength = (n + (2*k-1)) / 2.0;
-  storageCutoff = pow(0.01,1/avgLength)*10000;
+
 }
 
 bool Board_AB::symmetric(){
@@ -129,7 +127,6 @@ void Board_AB::store(BitstringKey key, Bitstring gs,
   storedVal |= gs;
 
   if (table.find(key) == table.end()) {
-    tableSize++;
     table[key].push_back(storedVal);
     return;
   }
@@ -167,7 +164,7 @@ void Board_AB::store(BitstringKey key, Bitstring gs,
 
   */
   if (push)
-    { tableSize++; table[key].push_back(storedVal); }
+    { table[key].push_back(storedVal); }
   
 }
 
@@ -189,12 +186,12 @@ bool Board_AB::retrieveSmart(char& score, char& loc, char& alpha, char& beta){
   BitstringKey key = zobrist % MAXKEY;
   BitstringKey mirroredKey = mirroredZ % MAXKEY;
 
-  if (mirroredKey <= key && mirroredState % 10000 > storageCutoff){
+  if (mirroredKey < key){
     ans = retrieve(mirroredKey,mirroredState,score, loc, alpha, beta);
     loc = n-loc-1;
   }
 
-  else if (key <= mirroredKey && gamestate  % 10000 > storageCutoff)
+  else
     { ans = retrieve(key,gamestate,score, loc, alpha, beta);}
 
   return ans;
@@ -214,9 +211,9 @@ void Board_AB::storeSmart(char score, char loc, char alphaOrig, char beta){
 
   BitstringKey mirroredKey = mirroredZ % MAXKEY;
   BitstringKey key = zobrist % MAXKEY;
-  if (mirroredKey <= key && mirroredState % 10000 > storageCutoff)
+  if (mirroredKey < key)
     { store(mirroredKey,mirroredState,score, n-loc-1, alphaOrig, beta);}
-  else if (key <= mirroredKey && gamestate  % 10000 > storageCutoff)
+  else
     { store(key,gamestate,score, loc, alphaOrig, beta);}
 }
 
@@ -278,8 +275,6 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, char alpha, char beta,
   }
 
   storeSmart(score, loc, alphaOrig, beta);
-
-  if (depth == 0) { cout << tableSize << endl; }
 
   return scoreAndLoc(score, loc);
 }

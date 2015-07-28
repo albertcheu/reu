@@ -1,28 +1,34 @@
 #include "Board_AB.h"
 
-Board_AB::Board_AB(size_t n, size_t k)
+Board_AB::Board_AB(char n, char k)
   :Board(n,k), gamestate(0), zobrist(0), recursionCount(0)
 {
+  assignmentG.clear();
+  assignmentZ.clear();
+
   mt19937 generator((unsigned)time(NULL));
-  for(size_t i = 0; i < n; i++){
+  for(char i = 0; i < n; i++){
     pair<Bitstring,Bitstring> p = {((Bitstring)1)<<(2*i + 1),
 				   ((Bitstring)1)<<(2*i)};
     assignmentG.push_back(p);
 
     p = {generator(),generator()};
     assignmentZ.push_back(p);
+
+    //killers.push_back({n,n});
   }
+
 }
 
 bool Board_AB::symmetric(){
-  size_t middle = (n-1)/2;
-  for (size_t i = 0; i < n; i++){
+  char middle = (n-1)/2;
+  for (char i = 0; i < n; i++){
     if (i <= middle && grid[i] != grid[n-1-i]) { return false; }
   }
   return true;
 }
 
-bool Board_AB::play(char c, int loc){
+bool Board_AB::play(char c, char loc){
   if (gamestate == 0) cout << "Ran thru " << recursionCount << " nodes" << endl;
   recursionCount = 0;
   Board::play(c,loc);
@@ -31,106 +37,283 @@ bool Board_AB::play(char c, int loc){
 
 }
 
-scoreAndLoc Board_AB::alphabeta(bool maximize, int alpha, int beta,
-				size_t depth, int justPlayed){
+bool Board_AB::retrieve(BitstringKey key, Bitstring gs,
+			char& score, char& loc, char& alpha, char& beta){
+
+  if (table.find(key) == table.end()){ return false; }
+
+  char size = table[key].size();
+  Bitstring* data = table[key].data();
+
+  for(char j = 0; j < size; j++){
+    Bitstring stored = data[j];
+    Bitstring storedState = (stored << METADATA);
+    storedState >>= METADATA;
+    short metadata = (stored >> GAMESTATE);
+    char storedScore = (metadata % 4);
+    storedScore--;
+    char storedFlag = (metadata % 16);
+    storedFlag >>= 2;
+    short storedLoc = (metadata >> 4);
+
+    if (storedState == gs) {
+      
+      if (storedFlag == EXACT) {
+	loc = storedLoc;
+	score = (char)storedScore;
+	return true;
+      }
+      else if (storedFlag == LOWER)
+	{ alpha = (alpha>storedScore?alpha:storedScore); }
+      else { beta = (beta<storedScore?beta:storedScore); }
+
+      if (alpha >= beta) {
+	loc = storedLoc;
+	score = (char)storedScore;
+	return true;
+      }
+
+      return false;
+    }
+
+  }
+  /*
+  for(int i = 0; i < table[key].size(); i++){
+    Entry entry = table[key][i];
+    Bitstring storedState = entry.state;
+
+    if (storedState == gs){
+      int storedFlag = entry.flag;
+      int storedLoc = entry.loc;
+      int storedScore = entry.score;
+
+      if (storedFlag == EXACT) {
+	loc = storedLoc;
+	score = storedScore; return true;
+      }
+
+      else if (storedFlag == LOWER)
+	{ alpha = (alpha>storedScore?alpha:storedScore); }
+
+      else { beta = (beta<storedScore?beta:storedScore); }
+
+      if (alpha >= beta) {
+	loc = storedLoc;
+	score = storedScore;
+	return true;
+      }
+
+      return false;
+    }
+  }
+  */
+  return false;
+}
+
+void Board_AB::store(BitstringKey key, Bitstring gs,
+		     char score, char loc, char alphaOrig, char beta){
+  char flag = EXACT;
+  if (score <= alphaOrig) { flag = UPPER; }
+  else if (score >= beta) { flag = LOWER; }
+  flag <<= 2;
+
+  char storedScore = score+1;
+
+  short storedLoc = loc;
+  storedLoc <<= 4;
+
+  Bitstring storedVal = (storedLoc | flag | storedScore);
+  storedVal <<= GAMESTATE;
+  storedVal |= gs;
+
+  if (table.find(key) == table.end()) {
+    table[key].push_back(storedVal);
+    return;
+  }
+
+  bool push = true;
+  for(int i = 0; i < table[key].size(); i++){
+    Bitstring stored = table[key][i];
+    Bitstring storedState = (stored << METADATA) >> METADATA;
+    short metadata = (stored >> GAMESTATE);
+    char existedFlag = (metadata % 16) >> 2;
+    if (storedState == gs) {
+      if (existedFlag != EXACT) { table[key][i] = storedVal; }
+      push = false;
+      break;
+    }
+  }
+
+    /*
+  Entry storedVal = {score, loc, flag, gamestate};
+  BitstringKey key = zobrist % MAXKEY;
+  if (table.find(key) == table.end()) {
+    table[key].push_back(storedVal);
+    return;
+  }
+  
+  bool push = true;
+  for(int i = 0; i < table[key].size(); i++){
+    Entry entry = table[key][i];
+    if (entry.state == gamestate) {
+      if (entry.flag != EXACT) { table[key][i] = storedVal; }
+      push = false;
+      break;
+    }
+  }
+
+  */
+  if (push)
+    { table[key].push_back(storedVal); }
+  
+}
+
+bool Board_AB::retrieveSmart(char& score, char& loc, char& alpha, char& beta){
+  bool ans = false;
+
+  Bitstring mirroredState = 0;
+  Bitstring mirroredZ = 0;
+
+  for(int i = n-1; i > -1; i--){
+    if (grid[i] != '.') {
+      pair<Bitstring,Bitstring>& aZ = assignmentZ[n-i-1];
+      pair<Bitstring,Bitstring>& aG = assignmentG[n-i-1];
+      mirroredZ ^= (grid[i]=='R'?aZ.first:aZ.second);
+      mirroredState |= (grid[i]=='R'?aG.first:aG.second);
+    }
+  }
+  
+  BitstringKey key = zobrist % MAXKEY;
+  BitstringKey mirroredKey = mirroredZ % MAXKEY;
+
+  if (mirroredKey < key){
+    ans = retrieve(mirroredKey,mirroredState,score, loc, alpha, beta);
+    loc = n-loc-1;
+  }
+
+  else
+    { ans = retrieve(key,gamestate,score, loc, alpha, beta);}
+
+  return ans;
+}
+
+void Board_AB::storeSmart(char score, char loc, char alphaOrig, char beta){
+  Bitstring mirroredState = 0;
+  Bitstring mirroredZ = 0;
+  for(int i = n-1; i > -1; i--){
+    if (grid[i] != '.') {
+      pair<Bitstring,Bitstring>& aZ = assignmentZ[n-i-1];
+      pair<Bitstring,Bitstring>& aG = assignmentG[n-i-1];
+      mirroredZ ^= (grid[i]=='R'?aZ.first:aZ.second);
+      mirroredState |= (grid[i]=='R'?aG.first:aG.second);
+    }
+  }
+
+  BitstringKey mirroredKey = mirroredZ % MAXKEY;
+  BitstringKey key = zobrist % MAXKEY;
+  if (mirroredKey < key)
+    { store(mirroredKey,mirroredState,score, n-loc-1, alphaOrig, beta);}
+  else
+    { store(key,gamestate,score, loc, alphaOrig, beta);}
+}
+
+scoreAndLoc Board_AB::alphabeta(bool maximize, char alpha, char beta,
+				char depth, char x){
   recursionCount++;
-  if (depth > 0 && memberOfAP(justPlayed))
-    { return ((grid[justPlayed]=='R')?r_win:b_win); }
 
-  if (depth == n) { return draw; }
+  char score = -10;
+  char loc = -1;
+  char alphaOrig = alpha;
+  if (retrieveSmart(score, loc, alpha, beta)){ return scoreAndLoc(score,loc); }
 
-  int max = -10;  int min = 10;  int loc = -1;
+  if (depth > 0){
+    if (memberOfAP(x)){
+      int sign = (maximize?1:-1);
+      int result = sign * ((!maximize)?R_WIN:B_WIN);
+
+      return scoreAndLoc(result, x);
+    }
+    if (depth == n) { return draw; }
+  }
+  /*
+  char& killer1 = killers[depth].first;
+  if (killer1 != n && alphabeta_helper(killer1, maximize, depth, score,
+				       loc, alpha, beta)){
+    return scoreAndLoc(score,loc);
+  }
+  char killer2 = killers[depth].second;
+  if (killer2 != n && alphabeta_helper(killer2, maximize, depth, score,
+				       loc, alpha, beta)){
+    return scoreAndLoc(score,loc);
+  }
+  */
 
   //symmetry -> don't bother checking rhs
   bool s = symmetric();
+  bool firstChild = true;
 
-  //Loop
   for(int i = ((n%2)?(n/2):((n/2) - 1)); i > -1; i--){
-  //for(size_t i = 0; i < n; i++){
-    //Check i
-    if (alphabeta_helper(i, maximize, depth, max, min, loc, alpha, beta))
-      { break; }
-
-
+    if (//i != killer1 && i != killer2 &&
+	alphabeta_helper(i, maximize, depth, score, loc, alpha, beta,firstChild))
+      {
+	//killers[depth].second = killer1;
+	//killer1 = i;
+	break;
+      }
+    
     if (s) {continue;}
+    
     int j = n-i-1;
-    if (alphabeta_helper(j, maximize, depth, max, min, loc, alpha, beta))
-      { break; }
-
+    if (//j != killer1 && j != killer2 &&
+	alphabeta_helper(j, maximize, depth, score, loc, alpha, beta,firstChild))
+      {
+	//killers[depth].second = killer1;
+	//killer1 = i;
+	break;
+      }
+    
   }
 
-  return scoreAndLoc((maximize?max:min), loc);
+  storeSmart(score, loc, alphaOrig, beta);
+
+  return scoreAndLoc(score, loc);
 }
 
-bool Board_AB::alphabeta_helper(size_t i, bool maximize, size_t depth,
-				int& max, int& min, int& loc,
-				int& alpha, int& beta){
+bool Board_AB::alphabeta_helper(char i, bool maximize, char depth,
+				char& score, char& loc,
+				char& alpha, char& beta,
+				bool& firstChild
+				){
   if (i >= n || grid[i] != '.') { return false; }
 
-  //Play
   grid[i] = (maximize?'R':'B');
-  int score = 0;
 
-  //See if done before  
   Bitstring z = (maximize?assignmentZ[i].first:assignmentZ[i].second);
   zobrist ^= z;
-  BitstringKey key = zobrist % MAXKEY;
 
   Bitstring g = (maximize?assignmentG[i].first:assignmentG[i].second);
-  gamestate |= g;  
-  //BitstringKey key = gamestate % MAXKEY;
+  gamestate |= g;
+  
+  char curScore = 0;
 
-  bool gotScore = false;
-  bool overwrite = true;
-  if (table.find(key) != table.end()){
-    Bitstring stored = table[key];
-    Bitstring inuse = (stored << REM);
-    inuse >>= REM;
-    unsigned char rem = (stored >> INUSE);
-    unsigned char storedScore = (rem << 6);
-    storedScore >>= 6;
-    unsigned char storedDepth = (rem >> 2);
-    if (inuse == gamestate) {
-      gotScore = true;
-      score = storedScore;
-      score--;//2,1,0 becomes 1,0,-1
-    }
-    else if (storedDepth <= depth) { overwrite = false; }
-
+  //PVS
+  if (firstChild) {
+    curScore = -alphabeta(!maximize, -beta, -alpha, depth+1, i).first;
+    firstChild = false;
   }
-
-  if (!gotScore) {
-
-    score = alphabeta(!maximize, alpha, beta, depth+1, i).first;
-    if (overwrite) {
-      unsigned char repScore = score+1;
-      unsigned char repDepth = depth;
-      repDepth <<= 2;
-      Bitstring storedVal = (repDepth | repScore);
-      storedVal <<= INUSE;//make room for gamestate
-      storedVal |= gamestate;
-      table[key] = storedVal;
-    }
-  }
-
-  //Alpha beta pruning
-  if (maximize) {
-    if (score > max) {
-      max = score;
-      loc = i;
-    }
-    alpha = (alpha>max?alpha:max);
-  }
-
   else {
-    if (score < min){
-      min = score;
-      loc = i;
-    }
-    beta = (beta<min?beta:min);
-  }  
+    curScore = -alphabeta(!maximize, -alpha - 1, -alpha, depth+1, i).first;
+    if (alpha < curScore && curScore < beta)
+      { curScore = -alphabeta(!maximize, -beta, -curScore, depth+1, i).first; }
+  }
+  
 
-  //Undo play
+  if (curScore > score) {
+    loc = i;
+    score = curScore;
+    alpha = (alpha<score?score:alpha);
+  }
+
   grid[i] = '.';
   zobrist ^= z;
   gamestate ^= g;

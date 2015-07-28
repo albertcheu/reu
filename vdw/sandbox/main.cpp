@@ -2,6 +2,7 @@
 //#include "GreedyEvaluator.h"
 //#include "RandomEvaluator.h"
 #include "Board_AB.h"
+#include "BoardMC.h"
 
 int toNumber(string s, size_t maxNum){
   int ans = 0;
@@ -41,7 +42,7 @@ void fillTable(int n, int k, Board_AB& b, int numThreads,
 }
 */
 
-void search_for_G(int n, int k, int numThreads){
+void search_for_G(int n, int k){
   //Iterate thru board sizes
   srand((unsigned)time(NULL));
   while(true){
@@ -91,7 +92,8 @@ void search_for_G(int n, int k, int numThreads){
       break;
     }
     */
-    if (sal.first == 1) { break; }
+    if (sal.first == 1) { cout << "Red won" << endl; break; }
+    else if (sal.first == -1) { cout << "Blue won" << endl; break; }
     else { n++; }
 
   }
@@ -102,7 +104,7 @@ void search_for_G(int n, int k, int numThreads){
 int main(int argc, char** argv){
   string s = "";
 
-  if (argc >= 3) {
+  if (argc >= 4) {
 
     //n
     s = argv[1];
@@ -125,18 +127,15 @@ int main(int argc, char** argv){
       return 0;
     }
 
-    int numThreads = 2;
-    if (argc == 4){
-      s = argv[3];
-      numThreads = toNumber(s, 10);
-      if (numThreads == -1) {
-	cout << "Please enter 0 < numThreads < 10" << endl;
-	return 0;
-      }
+    s = argv[3];
+    if (s == "ab"){ search_for_G(n, k); }
+
+    else {
+      cout << "mc" << endl;
+      BoardMC bmc(n,k);
+      bmc.montecarlo();
     }
 
-    search_for_G(n, k, numThreads);
-    
   }
 
 }

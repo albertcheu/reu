@@ -6,9 +6,6 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#include <omp.h>
-
-//#include <thread>
 
 #define R_WIN 1
 #define DRAW 0

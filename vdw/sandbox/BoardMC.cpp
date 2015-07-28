@@ -20,7 +20,7 @@ int bestDepth(int n, int cutoff){
 }
 
 BoardMC::BoardMC(size_t n, size_t k)
-  :Board(n,k), storeDepth(bestDepth(n, 90000))
+  :RoundBoard(n,k), storeDepth(bestDepth(n, 90000))
 {
   cout << storeDepth << endl ;
 

@@ -1,11 +1,18 @@
-all: main.cpp Board.o Board_AB.o
-	g++ Board.o Board_AB.o main.cpp -o runMe -std=c++11 
+all: main.cpp Board.o RoundBoard.o Board_AB.o BoardMC.o
+	g++ Board.o RoundBoard.o Board_AB.o BoardMC.o main.cpp -o runMe -std=c++11 
 
 Board.o: Board.h Board.cpp
 	g++ -std=c++11 -O3 -c Board.cpp Board.h
 
-Board_AB.o: Board.h Board_AB.h Board_AB.cpp
-	g++ -std=c++11 -O3 -c Board.h Board_AB.cpp Board_AB.h
+RoundBoard.o: Board.h RoundBoard.h RoundBoard.cpp
+	g++ -std=c++11 -O3 -c Board.h RoundBoard.h RoundBoard.cpp
+
+Board_AB.o: RoundBoard.h Board_AB.h Board_AB.cpp
+	g++ -std=c++11 -O3 -c RoundBoard.h Board_AB.cpp Board_AB.h
+
+BoardMC.o: RoundBoard.h BoardMC.h BoardMC.cpp
+	g++ -std=c++11 -O3 -c RoundBoard.h BoardMC.cpp BoardMC.h
+
 
 Evaluator.o: Board.h Evaluator.h Evaluator.cpp
 	g++ -std=c++11 -c Board.h Evaluator.h Evaluator.cpp

@@ -1,5 +1,5 @@
 //#pragma once
-#include "Board.h"
+#include "RoundBoard.h"
 #include <unordered_map>
 
 #define EXACT 0
@@ -33,7 +33,7 @@ const scoreAndLoc r_win(R_WIN,R_WIN);
 const scoreAndLoc b_win(B_WIN,B_WIN);
 const scoreAndLoc draw(DRAW,DRAW);
 
-class Board_AB: public Board {
+class Board_AB: public RoundBoard {
 
 protected:
 

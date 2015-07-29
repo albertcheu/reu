@@ -2,7 +2,23 @@
 
 RoundBoard::RoundBoard(char n, char k)
   :Board(n,k)
-{}
+{
+  checker = vector<vector<char> >();
+  checker.push_back(vector<char>());
+		    
+  for(char d = 1; d <= (n-1)/(k-1); d++){
+    vector<char> c;
+    for(char left = n-d; left > 0; left -= d) { c.push_back(left); }
+    reverse(c.begin(), c.end());
+    c.push_back(0);
+    for(char right = d; right < n; right += d) { c.push_back(right); }
+
+    for(char i = 0; i < c.size(); i++){ cout << (short)c[i] << ' '; }
+    cout << endl;
+
+    checker.push_back(c);
+  }
+}
 
 void RoundBoard::shiftGrid(){
   char x = grid[0];
@@ -13,59 +29,55 @@ void RoundBoard::shiftGrid(){
 }
 
 bool RoundBoard::memberOfAP(char loc){
-  return winner() == grid[loc];
-  /*
-  for(int d = 1; d <= (n-1)/(k-1); d++){
+  bool ans = false;
 
-    if (loc+d >= n && loc-d < 0) { return false; }
-
-    int numLeft, numRight;
-    numLeft = numRight = 0;
-    
-    for(int i = loc+d; i < n; i += d){
-      if (grid[i] == grid[loc]) { numRight++; }
-      else { break; }
+  for(char i = 0; i < n; i++){
+    if (! ans){
+      char pos = loc-i;
+      if (pos < 0) { pos += n; }
+      if (Board::memberOfAP(pos)) { ans = true; }
     }
-
-    if (1+numRight >= k) { return true; }
-    
-    for(int i = loc-d; i > -1; i -= d){
-      if (grid[i] == grid[loc]) { numLeft++; }
-      else { break; }
-    }
-
-    if (numLeft + numRight + 1 >= k) { return true; }
-    
+    shiftGrid();
   }
-  return false; 
-  */
-  /*
-  for(char d = 1; d <= (n-1)/(k-1); d++){
 
-    //if ((loc+d)%n > limit || (loc-d)%n < limit) { return false; }
+  return ans;
+  
+  //return winner() == grid[loc];
 
-    int numLeft, numRight; numLeft = numRight = 0;
+  /*  
+  for(int d = 1; d <= (n-1)/(k-1); d++){
+    const vector<char>& c = checker[d];
+    char left = (c.size() / 2) - 1;
+    while(left > -1){
+      char l = (c[left]+loc)%n;
+      if (grid[l] != grid[loc]) { break; }
+      left--;
+    }
+    left++;
 
-    bool rising = true;
-    for(char i = (loc+d)%n; i <= limit; i = (i+d)%n){
+    char right = (c.size() / 2) + 1;
+    while(right < c.size()){
+      char r = (c[right]+loc)%n;
+      if (grid[r] != grid[loc]) { break; }
+      right++;
+    }
+    right--;
 
+    if (right-left+1 < k) {continue;}
 
-      if (grid[i] == grid[loc]) {
-	numRight++;
-      }
-      else { break; }
+    //We have inclusive range - winnow it
+    while(left < right && c[left] <= c[right]){
+      if (c[left+1] > c[right]) { left++; break; }
+      if (c[left] > c[right-1]) { right--; break; }
+      left++; right--;
     }
 
-    if (1+numRight >= k) { return true; }
-    
-    for(char i = (loc-d)%n; i >= limit; i = (i-d)%n){
-      if (i== limit && touchedLimit) { break; }
-      if (grid[i] == grid[loc]) { numLeft++; }
-      else { break; }
+    unordered_set<char> set;
+    for(char i = left; i <= right; i++){
+      set.emplace(c[i]);
     }
 
-    if (numLeft + numRight + 1 >= k) { return true; }
-    
+    if (set.size() >= k) { return true; }
   }
   return false; 
   */

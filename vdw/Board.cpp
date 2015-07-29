@@ -36,7 +36,6 @@ Board::Board(char n, char k)
 char Board::size(){return n;}
 
 bool Board::memberOfAP(char loc){
-
   for(int d = 1; d <= (n-1)/(k-1); d++){
 
     if (loc+d >= n && loc-d < 0) { return false; }

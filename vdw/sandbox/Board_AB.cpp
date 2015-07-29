@@ -157,8 +157,7 @@ bool Board_AB::retrieveSmart(char& score, char& loc, char& alpha, char& beta){
   ans = retrieve(minKey,state,score, loc, alpha, beta);
   if (mirrored) { loc = ((n-loc-1)+shift)%n; }
   else { loc = (loc+shift)%n; }
-
-  return ans;
+  
   /*
   Bitstring mirroredState = 0;
   Bitstring mirroredZ = 0;
@@ -181,8 +180,7 @@ bool Board_AB::retrieveSmart(char& score, char& loc, char& alpha, char& beta){
   }
 
   else { ans = retrieve(key,gamestate,score, loc, alpha, beta);}
-  */
-
+*/
   return ans;
 }
 
@@ -224,6 +222,7 @@ void Board_AB::storeSmart(char score, char loc, char alphaOrig, char beta){
   if (mirrored) { loc = ((n-loc-1)+shift)%n; }
   else { loc = (loc+shift)%n; }
   store(minKey, state, score, loc, alphaOrig, beta);
+
   /*
   Bitstring mirroredState = 0;
   Bitstring mirroredZ = 0;
@@ -253,7 +252,7 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, char alpha, char beta,
   char alphaOrig = alpha;
   if (retrieveSmart(score, loc, alpha, beta)){ return scoreAndLoc(score,loc); }
 
-  if (depth > 2*k-1){
+  if (depth >= 2*k-1){
     if (memberOfAP(x)){
       int sign = (maximize?1:-1);
       int result = sign * ((!maximize)?R_WIN:B_WIN);
@@ -262,6 +261,7 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, char alpha, char beta,
     }
     if (depth == n) { return draw; }
   }
+
   /*
   char& killer1 = killers[depth].first;
   if (killer1 != n && alphabeta_helper(killer1, maximize, depth, score,

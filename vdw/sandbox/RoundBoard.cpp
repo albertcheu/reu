@@ -13,9 +13,6 @@ RoundBoard::RoundBoard(char n, char k)
     c.push_back(0);
     for(char right = d; right < n; right += d) { c.push_back(right); }
 
-    for(char i = 0; i < c.size(); i++){ cout << (short)c[i] << ' '; }
-    cout << endl;
-
     checker.push_back(c);
   }
 }
@@ -29,6 +26,7 @@ void RoundBoard::shiftGrid(){
 }
 
 bool RoundBoard::memberOfAP(char loc){
+  /*
   bool ans = false;
 
   for(char i = 0; i < n; i++){
@@ -41,10 +39,10 @@ bool RoundBoard::memberOfAP(char loc){
   }
 
   return ans;
-  
-  //return winner() == grid[loc];
+  */  
 
-  /*  
+  //return winner() == grid[loc];
+    
   for(int d = 1; d <= (n-1)/(k-1); d++){
     const vector<char>& c = checker[d];
     char left = (c.size() / 2) - 1;
@@ -63,24 +61,13 @@ bool RoundBoard::memberOfAP(char loc){
     }
     right--;
 
-    if (right-left+1 < k) {continue;}
+    //if (right-left+1 < k) {continue;}
 
-    //We have inclusive range - winnow it
-    while(left < right && c[left] <= c[right]){
-      if (c[left+1] > c[right]) { left++; break; }
-      if (c[left] > c[right-1]) { right--; break; }
-      left++; right--;
-    }
-
-    unordered_set<char> set;
-    for(char i = left; i <= right; i++){
-      set.emplace(c[i]);
-    }
-
-    if (set.size() >= k) { return true; }
+    if (right-left+1 >= k) { return true; }
   }
-  return false; 
-  */
+
+  return false;
+
 }
 
 char RoundBoard::winner(){

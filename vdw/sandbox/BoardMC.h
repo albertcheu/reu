@@ -39,7 +39,7 @@ class BoardMC: public RoundBoard{
   float score(State* s);
   
  public:
-  BoardMC(size_t n, size_t k);
+  BoardMC(num n, num k);
   ~BoardMC();
 
   void montecarlo();

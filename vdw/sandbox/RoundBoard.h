@@ -4,12 +4,12 @@
 #include <unordered_set>
 class RoundBoard: public Board{
  protected:
-  bool memberOfAP(char loc);
+  bool memberOfAP(num loc);
   void shiftGrid();
-  vector<vector<char> > checker;
+  vector<vector<num> > checker;
 
  public:
-  RoundBoard(char n, char k);
+  RoundBoard(num n, num k);
 
   char winner();
 };

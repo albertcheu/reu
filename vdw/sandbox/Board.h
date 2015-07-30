@@ -12,9 +12,10 @@
 #define B_WIN -1
 
 using namespace std;
+typedef unsigned char num;
 
-bool memberHelper(vector<char>  & grid, char& w,
-		  char n, char k, char d, char loc);
+//bool memberHelper(vector<char>  & grid, char& w,
+//		  char n, char k, char d, char loc);
 
 class Board{
  protected:
@@ -22,17 +23,17 @@ class Board{
   vector<char> grid;
 
   //the size of the arithmetic progression and of the board
-  char k, n;
+  num k, n;
 
-  bool memberOfAP(char loc);
+  bool memberOfAP(num loc);
 
  public:
-  Board(char n, char k);
-  char size();
+  Board(num n, num k);
+  num size();
   void print();
 
   //Put the player in this loc, return false if already occupied
-  virtual bool play(char c, char loc);
+  virtual bool play(char c, num loc);
 
   //Return who won ('R' or 'B'); if no winner, return '.'
   char winner();

@@ -44,7 +44,6 @@ void fillTable(int n, int k, Board_AB& b, int numThreads,
 
 void search_for_G(int n, int k){
   //Iterate thru board sizes
-  srand((unsigned)time(NULL));
   while(true){
     cout << "game(" << n << "," << k << ")" << endl;
     clock_t t = clock();
@@ -132,7 +131,7 @@ int main(int argc, char** argv){
     if (s == "ab"){ search_for_G(n, k); }
 
     else {
-      cout << "mc" << endl;
+      srand((unsigned)time(NULL));
       BoardMC bmc(n,k);
       bmc.montecarlo();
     }

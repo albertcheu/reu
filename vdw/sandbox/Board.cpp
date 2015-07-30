@@ -1,5 +1,5 @@
 #include "Board.h"
-
+/*
 bool memberHelper(vector<char> & grid, char& w,
 		  char n, char k, char d, char loc){
   if (w != '.') { return true; }
@@ -26,16 +26,17 @@ bool memberHelper(vector<char> & grid, char& w,
   return true;
 
 }
+*/
 
-Board::Board(char n, char k)
+Board::Board(num n, num k)
   :n(n), k(k)
 {
-  for(char i = 0; i < n; i++){ grid.push_back('.'); }
+  for(num i = 0; i < n; i++){ grid.push_back('.'); }
 }
 
-char Board::size(){return n;}
+num Board::size(){return n;}
 
-bool Board::memberOfAP(char loc){
+bool Board::memberOfAP(num loc){
 
   for(int d = 1; d <= (n-1)/(k-1); d++){
 
@@ -102,7 +103,7 @@ void Board::print(){
   cout << endl;
 }
 
-bool Board::play(char c, char loc){
+bool Board::play(char c, num loc){
   if (grid[loc] == '.'){
 
     grid[loc] = c;

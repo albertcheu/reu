@@ -58,8 +58,8 @@ void search_for_G(int n, int k){
     //MCEvaluator e(n,k);
     //RandomEvaluator e(n,k);
     //BoardEval b(n,k,&e);
-
-    scoreAndLoc sal = b.alphabeta(true,-10,10, 0);
+    num depth = 0;
+    scoreAndLoc sal = b.alphabeta(true,-10,10,depth);
 
     /*
     bool redPlayer = true;

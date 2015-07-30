@@ -3,8 +3,6 @@
 #include <unordered_map>
 
 #define EXACT 0
-#define INEXACT 1
-
 #define LOWER 1
 #define UPPER 2
 
@@ -26,7 +24,7 @@ struct Entry{
 typedef vector<Bitstring> Chain;
 
 // the score (win, draw, lose) and the location of play that yields it
-typedef pair<num,num> scoreAndLoc;
+typedef pair<char,num> scoreAndLoc;
 
 //"Useful" (dummy) constants
 const scoreAndLoc r_win(R_WIN,R_WIN);
@@ -61,8 +59,8 @@ protected:
   //Return whether or not we can stop searching (alpha >= beta)
   
   bool alphabeta_helper(num i, bool maximize, num depth,
-			num& score, num& loc,
-			num& alpha, num& beta,
+			char& score, num& loc,
+			char& alpha, char& beta,
 			bool& firstChild
 			);
 
@@ -71,12 +69,12 @@ protected:
   //Update values
   //Return true if flag == exact, false otherwise
   bool retrieve(BitstringKey key, Bitstring gs,
-		num& score, num& loc, num& alpha, num& beta);
-  bool retrieveSmart(num& score, num& loc, num& alpha, num& beta);
+		char& score, num& loc, char& alpha, char& beta);
+  bool retrieveSmart(char& score, num& loc, char& alpha, char& beta);
   
   void store(BitstringKey key, Bitstring gs,
-	     num score, num loc, num alphaOrig, num beta);
-  void storeSmart(num score, num loc, num alphaOrig, num beta);
+	     char score, num loc, char alphaOrig, char beta);
+  void storeSmart(char score, num loc, char alphaOrig, char beta);
   
  public:
   Board_AB(num n, num k);
@@ -84,7 +82,7 @@ protected:
   bool play(char c, num loc);
 
   //The meat of the program
-  virtual scoreAndLoc alphabeta(bool maximize, num alpha, num beta,
-				num depth, num x=-1);
+  virtual scoreAndLoc alphabeta(bool maximize, char alpha, char beta,
+				num depth, num x=255);
     
 };

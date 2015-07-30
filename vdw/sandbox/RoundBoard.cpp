@@ -9,12 +9,10 @@ RoundBoard::RoundBoard(num n, num k)
   for(num d = 1; d <= (n-1)/(k-1); d++){
     //cout << "d" << endl;
     vector<num> c;
-    for(num left = n-d; left <= n; left -= d) { c.push_back(left); }
+    for(int left = n-d; left > -1; left -= d) { c.push_back(left); }
     reverse(c.begin(), c.end());
     c.push_back(0);
-    for(num right = d; right < n; right += d) {
-      c.push_back(right);
-    }
+    for(int right = d; right < n; right += d) { c.push_back(right); }
 
     checker.push_back(c);
   }
@@ -23,7 +21,7 @@ RoundBoard::RoundBoard(num n, num k)
 
 void RoundBoard::shiftGrid(){
   num x = grid[0];
-  for(num i = 0; i < n-1; i++){
+  for(int i = 0; i < n-1; i++){
     grid[i] = grid[i+1];
   }
   grid[n-1] = x;
@@ -47,9 +45,9 @@ bool RoundBoard::memberOfAP(num loc){
 
   //return winner() == grid[loc];
     
-  for(int d = 1; d <= (n-1)/(k-1); d++){
+  for(num d = 1; d <= (n-1)/(k-1); d++){
     const vector<num>& c = checker[d];
-    num left = (c.size() / 2) - 1;
+    int left = (c.size() / 2) - 1;
     while(left > -1){
       num l = (c[left]+loc)%n;
       if (grid[l] != grid[loc]) { break; }

@@ -38,7 +38,7 @@ bool Board_AB::play(char c, num loc){
 }
 
 bool Board_AB::retrieve(BitstringKey key, Bitstring gs,
-			num& score, num& loc, num& alpha, num& beta){
+			char& score, num& loc, char& alpha, char& beta){
 
   if (table.find(key) == table.end()){ return false; }
 
@@ -50,7 +50,7 @@ bool Board_AB::retrieve(BitstringKey key, Bitstring gs,
     Bitstring storedState = (stored << METADATA);
     storedState >>= METADATA;
     short metadata = (stored >> GAMESTATE);
-    num storedScore = (metadata % 4);
+    char storedScore = (metadata % 4);
     storedScore--;
     num storedFlag = (metadata % 16);
     storedFlag >>= 2;
@@ -60,7 +60,7 @@ bool Board_AB::retrieve(BitstringKey key, Bitstring gs,
       
       if (storedFlag == EXACT) {
 	loc = storedLoc;
-	score = (num)storedScore;
+	score = (char)storedScore;
 	return true;
       }
       else if (storedFlag == LOWER)
@@ -69,7 +69,7 @@ bool Board_AB::retrieve(BitstringKey key, Bitstring gs,
 
       if (alpha >= beta) {
 	loc = storedLoc;
-	score = (num)storedScore;
+	score = (char)storedScore;
 	return true;
       }
 
@@ -81,13 +81,13 @@ bool Board_AB::retrieve(BitstringKey key, Bitstring gs,
 }
 
 void Board_AB::store(BitstringKey key, Bitstring gs,
-		     num score, num loc, num alphaOrig, num beta){
+		     char score, num loc, char alphaOrig, char beta){
   num flag = EXACT;
   if (score <= alphaOrig) { flag = UPPER; }
   else if (score >= beta) { flag = LOWER; }
   flag <<= 2;
 
-  num storedScore = score+1;
+  char storedScore = score+1;
 
   short storedLoc = loc;
   storedLoc <<= 4;
@@ -118,7 +118,7 @@ void Board_AB::store(BitstringKey key, Bitstring gs,
   
 }
 
-bool Board_AB::retrieveSmart(num& score, num& loc, num& alpha, num& beta){
+bool Board_AB::retrieveSmart(char& score, num& loc, char& alpha, char& beta){
   bool ans = false;
 
   BitstringKey minKey = MAXKEY;
@@ -184,7 +184,7 @@ bool Board_AB::retrieveSmart(num& score, num& loc, num& alpha, num& beta){
   return ans;
 }
 
-void Board_AB::storeSmart(num score, num loc, num alphaOrig, num beta){
+void Board_AB::storeSmart(char score, num loc, char alphaOrig, char beta){
 
   BitstringKey minKey = MAXKEY;
   Bitstring state = 0;
@@ -243,20 +243,19 @@ void Board_AB::storeSmart(num score, num loc, num alphaOrig, num beta){
   */
 }
 
-scoreAndLoc Board_AB::alphabeta(bool maximize, num alpha, num beta,
+scoreAndLoc Board_AB::alphabeta(bool maximize, char alpha, char beta,
 				num depth, num x){
   recursionCount++;
 
-  num score = -10;
-  num loc = -1;
-  num alphaOrig = alpha;
+  char score = -10;
+  num loc = 0;
+  char alphaOrig = alpha;
   if (retrieveSmart(score, loc, alpha, beta)){ return scoreAndLoc(score,loc); }
 
   if (depth >= 2*k-1){
     if (memberOfAP(x)){
-      int sign = (maximize?1:-1);
-      int result = sign * ((!maximize)?R_WIN:B_WIN);
-
+      char sign = (maximize?1:-1);
+      char result = sign * ((!maximize)?R_WIN:B_WIN);
       return scoreAndLoc(result, x);
     }
     if (depth == n) { return draw; }
@@ -307,8 +306,8 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, num alpha, num beta,
 }
 
 bool Board_AB::alphabeta_helper(num i, bool maximize, num depth,
-				num& score, num& loc,
-				num& alpha, num& beta,
+				char& score, num& loc,
+				char& alpha, char& beta,
 				bool& firstChild
 				){
   if (i >= n || grid[i] != '.') { return false; }
@@ -321,7 +320,7 @@ bool Board_AB::alphabeta_helper(num i, bool maximize, num depth,
   Bitstring g = (maximize?assignmentG[i].first:assignmentG[i].second);
   gamestate |= g;
   
-  num curScore = 0;
+  char curScore = 0;
 
   //PVS
   if (firstChild) {

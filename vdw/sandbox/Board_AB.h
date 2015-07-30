@@ -1,6 +1,7 @@
 //#pragma once
 #include "RoundBoard.h"
 #include <unordered_map>
+#include <list>
 
 #define EXACT 0
 #define LOWER 1
@@ -21,7 +22,7 @@ struct Entry{
   Bitstring state;
 };
 */
-typedef vector<Bitstring> Chain;
+typedef list<Bitstring> Chain;
 
 // the score (win, draw, lose) and the location of play that yields it
 typedef pair<char,num> scoreAndLoc;

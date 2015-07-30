@@ -41,12 +41,8 @@ bool Board_AB::retrieve(BitstringKey key, Bitstring gs,
 			char& score, num& loc, char& alpha, char& beta){
 
   if (table.find(key) == table.end()){ return false; }
-
-  size_t size = table[key].size();
-  Bitstring* data = table[key].data();
-
-  for(size_t j = 0; j < size; j++){
-    Bitstring stored = data[j];
+  for(Chain::iterator itr = table[key].begin(); itr!=table[key].end();itr++){
+    Bitstring stored = *itr;
     Bitstring storedState = (stored << METADATA);
     storedState >>= METADATA;
     short metadata = (stored >> GAMESTATE);
@@ -102,13 +98,13 @@ void Board_AB::store(BitstringKey key, Bitstring gs,
   }
 
   bool push = true;
-  for(int i = 0; i < table[key].size(); i++){
-    Bitstring stored = table[key][i];
+  for(Chain::iterator itr = table[key].begin(); itr!=table[key].end();itr++){
+    Bitstring stored = *itr;
     Bitstring storedState = (stored << METADATA) >> METADATA;
     short metadata = (stored >> GAMESTATE);
     num existedFlag = (metadata % 16) >> 2;
     if (storedState == gs) {
-      if (existedFlag != EXACT) { table[key][i] = storedVal; }
+      if (existedFlag != EXACT) { *itr = storedVal; }
       push = false;
       break;
     }

@@ -85,7 +85,9 @@ void search_for_G_AB(int n, int k){
     clock_t t = clock();
 
     Board_AB b(n,k);
-
+    num depth = 0;
+    scoreAndLoc sal = b.alphabeta(true,-10,10,depth);
+    /*
     //Play alphabeta against itself (red player = player 1)
     bool redPlayer = true;
     size_t depth = 0;
@@ -99,14 +101,14 @@ void search_for_G_AB(int n, int k){
       justPlayed = loc;
     }
     b.print();
-
+    */
     t = clock() - t;
     cout << "It took me " << ((float)t)/CLOCKS_PER_SEC << " seconds" << endl;
 
     //Stop when player 1 wins
-    if (b.winner() == 'R') { break; }
+    if (sal.first == 1) { break; }
 
-    if (b.winner() == 'B') {
+    else if (sal.first == -1){
       cout << "Oh no, blue won!" <<endl;
       break;
     }

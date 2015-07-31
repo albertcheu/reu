@@ -6,20 +6,20 @@
 #include <algorithm>
 #include <unordered_set>
 
-typedef vector<pair<size_t,size_t> > RankingVector;
+typedef vector<pair<size_t,num> > RankingVector;
 
 class Evaluator: public Board{
 
  protected:
 
-  Evaluator(size_t n, size_t k);
-  virtual size_t actualEvaluate(bool maximize, size_t i)=0;
+  Evaluator(num n, num k);
+  virtual size_t actualEvaluate(bool maximize, num i)=0;
 
 
  public:
   //During tree traversal, we plop in and pull out characters
-  virtual void place(bool maximize, size_t i)=0;
-  virtual void undo(bool maximize, size_t i)=0;
+  virtual void place(bool maximize, num i)=0;
+  virtual void undo(bool maximize, num i)=0;
 
   void evaluate(bool maximize, RankingVector& rankedPositions);
 };

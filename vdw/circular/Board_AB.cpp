@@ -1,7 +1,8 @@
 #include "Board_AB.h"
 
 Board_AB::Board_AB(num n, num k)
-  :Board(n,k), gamestate(0), zobrist(0), recursionCount(0)
+  :RoundBoard(n,k), gamestate(0), zobrist(0), recursionCount(0)
+  ,tableSize(0)
 {
   assignmentG.clear();
   assignmentZ.clear();
@@ -93,6 +94,7 @@ void Board_AB::store(BitstringKey key, Bitstring gs,
   storedVal |= gs;
 
   if (table.find(key) == table.end()) {
+    tableSize++;
     table[key].push_back(storedVal);
     return;
   }
@@ -110,13 +112,13 @@ void Board_AB::store(BitstringKey key, Bitstring gs,
     }
   }
 
-  if (push) { table[key].push_back(storedVal); }
+  if (push) { tableSize++; table[key].push_back(storedVal); }
   
 }
 
 bool Board_AB::retrieveSmart(char& score, num& loc, char& alpha, char& beta){
   bool ans = false;
-/*
+  /*
   BitstringKey minKey = MAXKEY;
   Bitstring state = 0;
   bool mirrored = false;
@@ -153,7 +155,7 @@ bool Board_AB::retrieveSmart(char& score, num& loc, char& alpha, char& beta){
   ans = retrieve(minKey,state,score, loc, alpha, beta);
   if (mirrored) { loc = ((n-loc-1)+shift)%n; }
   else { loc = (loc+shift)%n; }
-*/  
+  */
 
   Bitstring mirroredState = 0;
   Bitstring mirroredZ = 0;
@@ -297,7 +299,10 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, char alpha, char beta,
   }
 
   storeSmart(score, loc, alphaOrig, beta);
-  if (depth == 0) { cout << recursionCount << endl; }
+  if (depth == 0) {
+    cout << "States hit: " << recursionCount << endl;
+    cout << "Table size: " << tableSize << endl;
+  }
   return scoreAndLoc(score, loc);
 }
 

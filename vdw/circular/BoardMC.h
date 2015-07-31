@@ -4,12 +4,13 @@
 #include <unordered_set>
 #include <cstdlib>
 #include <cstdio>
-#include "Board.h"
+#include "RoundBoard.h"
 
 struct State{
-  State(int depth, int loc, bool redPlayer, State* parent);
+  State(int depth, num loc, bool redPlayer, State* parent);
 
-  int depth, loc, numTrials;
+  int depth, numTrials;
+  num loc;
   int redWins, blueWins;
   bool redPlayer;
   State* parent;
@@ -18,11 +19,11 @@ struct State{
 
 int bestDepth(int n, int cutoff);
 
-class BoardMC: public Board{
+class BoardMC: public RoundBoard{
  private:
-  unordered_set<int> moves;
+  unordered_set<num> moves;
 
-  vector<int> indices,empties;
+  vector<num> indices,empties;
 
   State* start;
 
@@ -39,7 +40,7 @@ class BoardMC: public Board{
   float score(State* s);
   
  public:
-  BoardMC(size_t n, size_t k);
+  BoardMC(num n, num k);
   ~BoardMC();
 
   void montecarlo();

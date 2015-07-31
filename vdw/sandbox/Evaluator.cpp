@@ -1,16 +1,16 @@
 #include "Evaluator.h"
 
-Evaluator::Evaluator(size_t n, size_t k)
+Evaluator::Evaluator(num n, num k)
   :Board(n,k)
 {}
 
-bool pairCompare(const std::pair<size_t,size_t>& firstElem,
-		 const std::pair<size_t,size_t>& secondElem)
+bool pairCompare(const std::pair<size_t,num>& firstElem,
+		 const std::pair<size_t,num>& secondElem)
 { return firstElem.first >= secondElem.first; }
 
 void Evaluator::evaluate(bool maximize, RankingVector& rankedPositions){
 
-  for(size_t i = 0; i < n; i++){
+  for(num i = 0; i < n; i++){
     if (grid[i] != '.') { continue; }
     rankedPositions.push_back({actualEvaluate(maximize, i), i});
   }

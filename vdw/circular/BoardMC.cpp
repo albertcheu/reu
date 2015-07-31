@@ -1,32 +1,33 @@
 #include "BoardMC.h"
 
-State::State(int depth, int loc, bool redPlayer, State* parent)
+State::State(int depth, num loc, bool redPlayer, State* parent)
   :depth(depth), loc(loc), redPlayer(redPlayer), parent(parent),
    redWins(0), blueWins(0), numTrials(0)
 {}
 
-int bestDepth(int n, int cutoff){
+int bestDepth(num n, int cutoff){
+
   int numNodes = 1;
-  int leaves = n/2;
-  int factor = n-1;
+  int leaves = 1;//n/2;
+  int factor = n-2;//n-1;
   int depth = 0;
-  while (numNodes < cutoff) {
+  while (factor > 0 && numNodes < cutoff) {
     depth++;
     numNodes += leaves;
     leaves *= (factor--);
   }
 
-  return depth-1;
+  return (3>depth-1?3:depth-1);
 }
 
-BoardMC::BoardMC(size_t n, size_t k)
-  :Board(n,k), storeDepth(bestDepth(n, 90000))
+BoardMC::BoardMC(num n, num k)
+  :RoundBoard(n,k), storeDepth(bestDepth(n,6000000))
 {
   cout << storeDepth << endl ;
 
-  start = new State(0,-1,true,NULL);
+  start = new State(0,0,true,NULL);
 
-  for(int i = 0; i < n; i++){
+  for(num i = 0; i < n; i++){
     //The board is empty, so all of [1,n] are available moves  
     moves.emplace(i);
     //
@@ -35,8 +36,7 @@ BoardMC::BoardMC(size_t n, size_t k)
   }
 
   //Build tree up to storeDepth
-  int ans = buildTree(start);
-  cout << ans << endl;
+  cout << buildTree(start) << endl;
 
 }
 
@@ -44,8 +44,9 @@ int BoardMC::buildTree(State* s){
   int ans = 1;
 
   //fill children
-  for(int i = 0; i < n; i++){
-    unordered_set<int>::iterator itr = moves.find(i);
+  for(num i = 0; i < n; i++){
+
+    unordered_set<num>::iterator itr = moves.find(i);
     //Cannot use moves we've already used
     if (itr == moves.end()) { continue; }
 
@@ -61,7 +62,8 @@ int BoardMC::buildTree(State* s){
     }
 
     else { ans += 1; }
-    if (s->depth==0 && i==n/2) { break; }
+    //if (s->depth==0 && i==n/2) { break; }
+    if (s->depth==0) { break; }
   }
 
   return ans;
@@ -93,9 +95,9 @@ void BoardMC::montecarlo(){
   //labels
   fprintf(gp,"set ylabel \"Percent of games won\"\n");
   fprintf(gp,"set ylabel font \",16\"\n");
-  fprintf(gp,"set xlabel \"First move\"\n");
-  fprintf(gp,"set xlabel font \",16\"\n");
+  //fprintf(gp,"set xlabel \"First move\"\n");
   fprintf(gp,"unset key\n");
+
   //Data
   fprintf(gp, "%s\n", "plot '-' with lines");
 
@@ -106,16 +108,21 @@ void BoardMC::montecarlo(){
     //Every ten thousand trials, draw
     if (total % 10000 == 0 && total > 0) {
       float avgSuccess, numWins, numTrials;
-      size_t size = start->children.size();
-      for (int i = 0; i < size; i++){
-	numWins = start->children[i]->redWins;
-	numTrials = start->children[i]->numTrials;
+
+      //size_t size = start->children.size();
+
+      //for (int i = 0; i < size; i++){
+      numWins = start->redWins;//children[i]->redWins;
+      numTrials = start->numTrials;//children[i]->numTrials;
+
 	avgSuccess = numWins / numTrials;
+	
 	fprintf(gp, "%f\n", avgSuccess*100);
-      }
-      
+	fprintf(gp, "%f\n", avgSuccess*100);
+	//}
+
       fprintf(gp,"E\n");
-      fprintf(gp,"set arrow 1 from 0,50 to %lu,50 nohead\n",size);
+      fprintf(gp,"set arrow 1 from 0,50 to 1,50 nohead\n");
       fprintf(gp,"refresh\n");
 
       if ((total+10000) % 1000000 == 0) {
@@ -185,7 +192,7 @@ bool BoardMC::runTrialTraverse(State* s){
   bool redWon = true;
   float optimalScore = 0.0f;
   State* bestChild = NULL;
-  for (int i = 0; i < s->children.size(); i++){
+  for (size_t i = 0; i < s->children.size(); i++){
 
     //Find a "bandit arm" that hasn't been played...
     if (s->children[i]->numTrials == 0) { bestChild = s->children[i]; break; }
@@ -222,8 +229,8 @@ bool BoardMC::runTrialRandom(State* s){
   //Randomly color remaining moves
   random_shuffle(indices.begin(),indices.end());
   int j = 0;
-  for(int i = 0; i < n; i++){
-    unordered_set<int>::iterator itr = moves.find(indices[i]);
+  for(num i = 0; i < n; i++){
+    unordered_set<num>::iterator itr = moves.find(indices[i]);
     if (itr == moves.end()){ continue; }
 
     //Color
@@ -245,7 +252,7 @@ bool BoardMC::runTrialRandom(State* s){
 
   //Clear out what we colored
   grid[s->loc] = '.';
-  for(int i = 0; i < j; i++){
+  for(num i = 0; i < j; i++){
     grid[empties[i]] = '.';
   }
 

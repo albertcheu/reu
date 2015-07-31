@@ -1,8 +1,6 @@
-//#include "BoardEval.h"
-//#include "GreedyEvaluator.h"
-//#include "RandomEvaluator.h"
 #include "Board_AB.h"
 #include "BoardMC.h"
+#include "GreedyEvaluator.h"
 
 int toNumber(string s, size_t maxNum){
   int ans = 0;
@@ -16,89 +14,151 @@ int toNumber(string s, size_t maxNum){
   if (ans < 1 || ans > maxNum) { return -1; }
   return ans;
 }
-/*
-void blarg(int n,int k, mutex& lock, int i, int numThreads,
-	   vector<pair<Bitstring,Bitstring> >& assignments,
-	   unordered_map<BitstringKey,pair<Bitstring,int> >& table){
-  BoardThread bt(n,k,lock,i,numThreads,assignments,table);
-  bt.fillTable();
-}
 
-void fillTable(int n, int k, Board_AB& b, int numThreads,
-	       unordered_map<BitstringKey,pair<Bitstring,int> >& table){
+void play_game(int n, int k){
+  cout << "Welcome to VDW game. You are 'B' and I am 'R'" << endl;
 
-  mutex lock;
-  vector<thread> threads;
+  //Is the computer playing first? 
+  bool computer1 = true;
 
-  for(int i = 0; i < numThreads; i++){
-    threads.push_back(thread(blarg, n,k,ref(lock),i, numThreads,
-			     ref(b.assignments), ref(table)));
+  string s = "";
+  while(s != "y" && s != "n"){
+    cout << "Do you want to play first? [y/n]: ";
+    cin >> s;
+    if (s == "y") { computer1 = false; }
   }
 
-  for(int i = 0; i < numThreads; i++){
-    threads[i].join();
-  }
-  
-}
-*/
+  bool player1 = true;
+  Board_AB b(n, k);
+  b.print();
+  size_t depth = (computer1?0:1);
 
-void search_for_G(int n, int k){
+  //While there is no winner (and we can still play)
+  while(b.noWinner() && depth != n){
+    cout << endl << "Player " << (player1?1:2) << " plays on: ";
+    int loc;
+
+    if (player1 == computer1){
+      scoreAndLoc sal = b.alphabeta(true,-10,10,depth);
+      loc = sal.second;
+      cout << loc+1 << endl;
+      b.play('R', loc);
+    }
+    
+    else{
+      //Get user input
+      cin >> s;
+
+      //Fail if not number in range
+      loc = toNumber(s, n);
+      if (loc == -1) {
+	cout << "Please enter a number from 1 to " << n << endl;
+	continue;
+      }
+
+      //Fail if space already occupied (play otherwise)
+      loc--;
+      if (!b.play('B', loc)) {
+	cout << "Space taken" << endl;
+	continue;
+      }
+    }
+    //Show grid
+    b.print();
+
+    //Switch turns
+    player1 = !player1;
+
+    depth++;
+  }
+
+  char winner = b.winner();
+  if (winner == 'R') { cout << "R won!" << endl; }
+  else if (winner == 'B') { cout << "B won!" << endl; }
+  else { cout << "Nobody won!" << endl; }
+}
+
+void kapUsageLinear(size_t n, size_t k){
+  vector<size_t> possibles;
+  for(size_t i = 0; i < n; i++){ possibles.push_back(0); }
+
+  size_t maxD = (n-1)/(k-1);
+  for(size_t i = 0; i < n; i++){
+    for(size_t d = 1; d <= maxD; d++){
+      if (i + d*(k-1) >= n) { continue; }
+      for (size_t j = 0; j < k; j++){ possibles[i+j*d]++; }
+    }
+  }
+
+  size_t max = 0;
+  for(size_t i = 0; i <= (n%2?n/2:n/2-1); i++)
+    {
+      cout << possibles[i] << ' ';
+      max = (max>possibles[i]?max:possibles[i]);
+    }
+  cout << endl;
+  cout << max << endl;
+}
+
+void kapUsageCircular(size_t n, size_t k){
+  vector<size_t> possibles;
+  for(size_t i = 0; i < n; i++){ possibles.push_back(0); }
+
+  size_t maxD = (n-1)/(k-1);
+  for(size_t i = 0; i < n; i++){
+    for(size_t d = 1; d <= maxD; d++){
+      if (i+d*(k-1) >= n && (i+d*(k-1)) % n >= i) { continue; }
+      for (size_t j = 0; j < k; j++){ possibles[(i+j*d) % n]++; }
+    }
+  }
+
+  size_t max = 0;
+  for(size_t i = 0; i <n; i++) { max = (max>possibles[i]?max:possibles[i]); }
+  cout << max << endl;
+}
+
+void search_for_G_AB(int n, int k){
   //Iterate thru board sizes
+
   while(true){
-    cout << "game(" << n << "," << k << ")" << endl;
+    cout << "Testing game(" << n << "," << k << ")..." << endl;
     clock_t t = clock();
-    /*
-    unordered_map<BitstringKey,pair<Bitstring,int> > table;
-    Board_AB b(n,k,table);
-    if (numThreads > 1) { fillTable(n,k,b,numThreads,ref(table)); }
-    */
 
     Board_AB b(n,k);
-    //GreedyEvaluator e(n,k);
-    //MCEvaluator e(n,k);
-    //RandomEvaluator e(n,k);
-    //BoardEval b(n,k,&e);
     num depth = 0;
     scoreAndLoc sal = b.alphabeta(true,-10,10,depth);
-
     /*
+    //Play alphabeta against itself (red player = player 1)
     bool redPlayer = true;
-    char depth = 0;
-    
+    size_t depth = 0;
     int justPlayed = -1;
     while(b.noWinner() && depth != n){
-      int loc;
       scoreAndLoc sal = b.alphabeta(redPlayer,-10,10, depth++, justPlayed);
-      //cout << "Winner: " << sal.first << endl;
-      loc = sal.second;
-
-      //cout << "Loc: " << loc << endl;
+      int loc = sal.second;
+      cout << loc+1 << endl;
       b.play(redPlayer?'R':'B', loc);
       redPlayer = (!redPlayer);
       justPlayed = loc;
     }
-    
     b.print();
     */
-
     t = clock() - t;
     cout << "It took me " << ((float)t)/CLOCKS_PER_SEC << " seconds" << endl;
 
-    /*
-    char winner = b.winner();
-    if (winner == 'R') { break; }
-    else if (winner == 'B') {
-      cout << "Oh no, B should never win" << endl;
+    //Stop when player 1 wins
+    if (sal.first == 1) { break; }
+
+    else if (sal.first == -1){
+      cout << "Oh no, blue won!" <<endl;
       break;
     }
-    */
-    if (sal.first == 1) { cout << "Red won" << endl; break; }
-    else if (sal.first == -1) { cout << "Blue won" << endl; break; }
+
+    //Continue with bigger board size
     else { n++; }
 
   }
 
-  cout << "GW(k = " << k << ") = " << n << endl;
+  cout << "I think GW(k=" << k << ") = " << n << endl;
 }
 
 int main(int argc, char** argv){
@@ -127,15 +187,19 @@ int main(int argc, char** argv){
       return 0;
     }
 
+    //whether to play montecarlo or alphabeta
     s = argv[3];
-    if (s == "ab"){ search_for_G(n, k); }
-
-    else {
-      srand((unsigned)time(NULL));
+    if (s == "mc") {
+      cout << "Running Monte Carlo..." << endl;
       BoardMC bmc(n,k);
       bmc.montecarlo();
     }
-
+    else if (s == "ab") {
+      cout << "Running alpha-beta..." << endl;
+      search_for_G_AB(n, k);
+    }
+    else if (s == "linear"){ kapUsageLinear(n,k); }
+    else if (s == "circular"){ kapUsageCircular(n,k); }
   }
 
 }

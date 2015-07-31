@@ -1,5 +1,5 @@
 //#pragma once
-#include "Board.h"
+#include "RoundBoard.h"
 #include <unordered_map>
 #include <list>
 
@@ -32,7 +32,7 @@ const scoreAndLoc r_win(R_WIN,R_WIN);
 const scoreAndLoc b_win(B_WIN,B_WIN);
 const scoreAndLoc draw(DRAW,DRAW);
 
-class Board_AB: public Board {
+class Board_AB: public RoundBoard {
 
 protected:
 
@@ -76,8 +76,11 @@ protected:
   void store(BitstringKey key, Bitstring gs,
 	     char score, num loc, char alphaOrig, char beta);
   void storeSmart(char score, num loc, char alphaOrig, char beta);
+
+  Bitstring tableSize;
   
  public:
+
   Board_AB(num n, num k);
 
   bool play(char c, num loc);

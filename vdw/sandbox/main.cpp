@@ -1,6 +1,7 @@
 #include "Board_AB.h"
 #include "BoardMC.h"
-//#include "GreedyEvaluator.h"
+#include "GreedyEvaluator.h"
+#include "BoardEval.h"
 
 int toNumber(string s, size_t maxNum){
   int ans = 0;
@@ -150,9 +151,13 @@ void search_for_G_AB(int n, int k){
     cout << "Testing game(" << n << "," << k << ")..." << endl;
     clock_t t = clock();
 
-    Board_AB b(n,k);
-    num depth = 0;
-    scoreAndLoc sal = b.alphabeta(true,-10,10,depth);
+    //Board_AB b(n,k);
+    GreedyEvaluator ge(n,k);
+    cout << "Made greedy evaluator" << endl;
+    BoardEval b(n,k,ref(ge));
+    cout << "Made boardEval" << endl;
+    scoreAndLoc sal = b.alphabeta(true,-10,10,0);
+
     /*
     //Play alphabeta against itself (red player = player 1)
     bool redPlayer = true;
@@ -226,6 +231,9 @@ int main(int argc, char** argv){
     }
     else if (s == "linear"){ kapUsageLinear(n,k); }
     else if (s == "circular"){ kapUsageCircular(n,k); }
+    else if (s == "greedy") {
+      GreedyEvaluator ge(n,k);
+    }
   }
 
 }

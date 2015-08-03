@@ -12,7 +12,7 @@
 #define B_WIN -1
 
 using namespace std;
-typedef size_t num;
+typedef unsigned char num;
 
 //bool memberHelper(vector<char>  & grid, char& w,
 //		  char n, char k, char d, char loc);

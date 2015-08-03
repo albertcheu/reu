@@ -3,10 +3,6 @@
 GreedyEvaluator::GreedyEvaluator(num n, num k)
   :Evaluator(n,k)
 {
-  possibleR.clear(); possibleB.clear();
-  stackR.clear(); stackB.clear();
-  kaps.clear();
-
   for(num i = 0; i < n; i++){
     possibleR.push_back(KapSet());
     possibleB.push_back(KapSet());
@@ -28,6 +24,10 @@ GreedyEvaluator::GreedyEvaluator(num n, num k)
 
   }
 
+  for(num i = 0; i < n; i++){
+    cout << possibleR[i].first.size() << ' ';
+  }
+  cout << endl;
 }
 
 void GreedyEvaluator::removeFromOpponent(bool maximize, num loc){
@@ -55,8 +55,15 @@ void GreedyEvaluator::restoreToOpponent(bool maximize, num loc){
   vector<KapSet >& possibles = (maximize?possibleB:possibleR);
   vector<size_t>& stack = (maximize?stackB:stackR);
 
-  size_t numRestore = stack.back();
-  stack.pop_back();
+  size_t numRestore = 0;
+  try{
+    numRestore = stack.back();
+    stack.pop_back();
+  }
+  catch(int er){
+    cout << "Unable to pop!" << endl;
+    exit(1);
+  }
 
   for(size_t i = 0; i < numRestore; i++){
     size_t index = possibles[loc].second.back();

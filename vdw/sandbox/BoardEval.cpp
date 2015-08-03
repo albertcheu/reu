@@ -1,51 +1,58 @@
 #include "BoardEval.h"
 
-BoardEval::BoardEval(size_t n, size_t k, Evaluator* e)
+BoardEval::BoardEval(num n, num k, Evaluator& e)
   :Board_AB(n,k), e(e)
 {}
 
-bool BoardEval::play(char c, int loc){
+bool BoardEval::play(char c, num loc){
   bool ans = Board_AB::play(c,loc);
-  if (ans) { e->place(c=='R',loc); }
+  if (ans) { e.place(c=='R',loc); }
   return ans;
 }
 
-scoreAndLoc BoardEval::alphabeta(bool maximize, int alpha, int beta,
-				 size_t depth, int x){
+scoreAndLoc BoardEval::alphabeta(bool maximize, char alpha, char beta,
+				 num depth, num x){
+  //if (recursionCount % 10000 == 0) { cout << recursionCount << endl; }
   recursionCount++;
 
-  int score = -10;
-  int loc = -1;
-  int alphaOrig = alpha;
-  if (retrieve(score, loc, alpha, beta)) { return scoreAndLoc(score,loc); }
+  char score = -10;
+  num loc = n;
+  char alphaOrig = alpha;
 
-  if (depth > 0){
+  if (depth >= 2*k-1){
     if (memberOfAP(x)){
-      int sign = (maximize?1:-1);
-      int result = sign * ((!maximize)?R_WIN:B_WIN);
+      char sign = (maximize?1:-1);
+      char result = sign * ((!maximize)?R_WIN:B_WIN);
       return scoreAndLoc(result, x);
     }
     if (depth == n) { return draw; }
   }
 
+  if (retrieveSmart(score, loc, alpha, beta)) { return scoreAndLoc(score,loc); }
+
   RankingVector rv;
-  e->evaluate(maximize, rv);
+  e.evaluate(maximize, rv);
 
   //Loop
+  bool firstChild = true;
   for (size_t j = 0; j < rv.size(); j++){
-    size_t i = rv[j].second;
-    e->place(maximize, i);
+    num i = rv[j].second;
+    if (loc == n) { loc = i; }
 
+    e.place(maximize, i);
     bool cutoff = alphabeta_helper(i, maximize, depth, score,
-				   loc, alpha, beta);
-    e->undo(maximize, i);
+				   loc, alpha, beta,firstChild);
+    e.undo(maximize, i);
     if (cutoff) { break; }
 
   }
 
-  store(score, loc, alphaOrig, beta);
-    
+  storeSmart(score, loc, alphaOrig, beta);
+
+  if (depth == 0) { cout << recursionCount << endl; }
+
   return scoreAndLoc(score, loc);
+
 }
 
 /*

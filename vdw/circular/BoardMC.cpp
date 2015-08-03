@@ -1,6 +1,6 @@
 #include "BoardMC.h"
 
-State::State(int depth, num loc, bool redPlayer, State* parent)
+State::  State(num depth, num loc, bool redPlayer, State* parent)
   :depth(depth), loc(loc), redPlayer(redPlayer), parent(parent),
    redWins(0), blueWins(0), numTrials(0)
 {}
@@ -63,7 +63,7 @@ int BoardMC::buildTree(State* s){
 
     else { ans += 1; }
     //if (s->depth==0 && i==n/2) { break; }
-    if (s->depth==0) { break; }
+    if (s == start) { break; }
   }
 
   return ans;
@@ -89,6 +89,7 @@ int BoardMC::freeRecursive(State* s){
 }
 
 void BoardMC::montecarlo(){
+  /*
   FILE* gp = (FILE*) popen("gnuplot -persist","w");  
   //Title
   fprintf(gp,"set title \"game(%d,%d)\"\n",n,k);
@@ -100,15 +101,18 @@ void BoardMC::montecarlo(){
 
   //Data
   fprintf(gp, "%s\n", "plot '-' with lines");
-
+  */
+  cout << "Starting montecarlo" << endl;
   string userInput = "";
   while(true){
-    int total = start->numTrials;
+    size_t total = start->numTrials;
+    cout << total << endl;
 
     //Every ten thousand trials, draw
     if (total % 10000 == 0 && total > 0) {
+      cout << total << endl;
       float avgSuccess, numWins, numTrials;
-
+      
       //size_t size = start->children.size();
 
       //for (int i = 0; i < size; i++){
@@ -116,7 +120,8 @@ void BoardMC::montecarlo(){
       numTrials = start->numTrials;//children[i]->numTrials;
 
 	avgSuccess = numWins / numTrials;
-	
+	cout << avgSuccess << endl;
+	/*
 	fprintf(gp, "%f\n", avgSuccess*100);
 	fprintf(gp, "%f\n", avgSuccess*100);
 	//}
@@ -130,7 +135,7 @@ void BoardMC::montecarlo(){
 	fprintf(gp, "set term png\nset output \"montecarlo.png\"\n");
       }
       else { fprintf(gp, "set term wxt\n"); }
-
+	*/
       //Every million trials, ask if we should stop
       if (total % 1000000 == 0){
 	cout << "Completed " << total << " trials.";
@@ -139,8 +144,8 @@ void BoardMC::montecarlo(){
       }
 
       if (userInput != "quit"){
-	fprintf(gp, "replot\n");
-	fflush(gp);
+	//fprintf(gp, "replot\n");
+	//fflush(gp);
       }
       else { break; }
       
@@ -150,7 +155,7 @@ void BoardMC::montecarlo(){
     runTrialTraverse(start);
 
   }
-  pclose(gp);
+  //pclose(gp);
 }
 
 bool BoardMC::runTrial(State* s){

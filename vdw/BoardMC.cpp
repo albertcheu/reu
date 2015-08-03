@@ -19,8 +19,9 @@ int bestDepth(int n, int cutoff){
   return depth-1;
 }
 
-BoardMC::BoardMC(size_t n, size_t k)
-  :Board(n,k), storeDepth(bestDepth(n, 90000))
+BoardMC::BoardMC(num n, num k)
+  :Board(n,k), storeDepth(bestDepth(n, 10000000)),
+   gen((unsigned)chrono::system_clock::now().time_since_epoch().count())
 {
   cout << storeDepth << endl ;
 
@@ -89,7 +90,7 @@ int BoardMC::freeRecursive(State* s){
 void BoardMC::montecarlo(){
   FILE* gp = (FILE*) popen("gnuplot -persist","w");  
   //Title
-  fprintf(gp,"set title \"game(%d,%d)\"\n",n,k);
+  fprintf(gp,"set title \"game(%lu,%lu)\"\n",n,k);
   //labels
   fprintf(gp,"set ylabel \"Percent of games won\"\n");
   fprintf(gp,"set ylabel font \",16\"\n");
@@ -106,21 +107,25 @@ void BoardMC::montecarlo(){
     //Every ten thousand trials, draw
     if (total % 10000 == 0 && total > 0) {
       float avgSuccess, numWins, numTrials;
+      double maxSuccess = 0;
       size_t size = start->children.size();
       for (int i = 0; i < size; i++){
 	numWins = start->children[i]->redWins;
 	numTrials = start->children[i]->numTrials;
 	avgSuccess = numWins / numTrials;
+	if (avgSuccess > maxSuccess) { maxSuccess = avgSuccess; }
 	fprintf(gp, "%f\n", avgSuccess*100);
       }
       
       fprintf(gp,"E\n");
-      fprintf(gp,"set arrow 1 from 0,50 to %lu,50 nohead\n",size);
+      if (maxSuccess > 0.5)
+	{ fprintf(gp,"set arrow 1 from 0,50 to %lu,50 nohead\n",size-1); }
+      else { fprintf(gp,"set noarrow\n"); }
       fprintf(gp,"refresh\n");
 
       if ((total+10000) % 1000000 == 0) {
 	//Save image
-	fprintf(gp, "set term png\nset output \"montecarlo.png\"\n");
+	fprintf(gp, "set term png\nset output \"game(%lu,%lu).png\"\n",n,k);
       }
       else { fprintf(gp, "set term wxt\n"); }
 
@@ -220,7 +225,8 @@ bool BoardMC::runTrialRandom(State* s){
   bool draw = true;
 
   //Randomly color remaining moves
-  random_shuffle(indices.begin(),indices.end());
+
+  shuffle(indices.begin(),indices.end(),gen);
   int j = 0;
   for(int i = 0; i < n; i++){
     unordered_set<int>::iterator itr = moves.find(indices[i]);

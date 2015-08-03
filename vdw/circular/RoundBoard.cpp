@@ -3,20 +3,20 @@
 RoundBoard::RoundBoard(num n, num k)
   :Board(n,k)
 {
-  checker = vector<vector<num> >();
+  //checker = vector<vector<num> >();
   checker.push_back(vector<num>());
 		    
   for(num d = 1; d <= (n-1)/(k-1); d++){
     //cout << "d" << endl;
     vector<num> c;
-    for(int left = n-d; left > -1; left -= d) { c.push_back(left); }
+    for(num left = n-d; left < n; left -= d) { c.push_back(left); }
     reverse(c.begin(), c.end());
     c.push_back(0);
-    for(int right = d; right < n; right += d) { c.push_back(right); }
+    for(num right = d; right < n; right += d) { c.push_back(right); }
 
     checker.push_back(c);
   }
-
+  cout << "Made checker" << endl;
 }
 
 void RoundBoard::shiftGrid(){

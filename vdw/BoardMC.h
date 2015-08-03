@@ -4,6 +4,7 @@
 #include <unordered_set>
 #include <cstdlib>
 #include <cstdio>
+#include <chrono>
 #include "Board.h"
 
 struct State{
@@ -20,6 +21,9 @@ int bestDepth(int n, int cutoff);
 
 class BoardMC: public Board{
  private:
+
+  mt19937 gen;
+
   unordered_set<int> moves;
 
   vector<int> indices,empties;
@@ -39,7 +43,7 @@ class BoardMC: public Board{
   float score(State* s);
   
  public:
-  BoardMC(size_t n, size_t k);
+  BoardMC(num n, num k);
   ~BoardMC();
 
   void montecarlo();

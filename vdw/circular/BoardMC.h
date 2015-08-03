@@ -7,11 +7,10 @@
 #include "RoundBoard.h"
 
 struct State{
-  State(int depth, num loc, bool redPlayer, State* parent);
+  State(num depth, num loc, bool redPlayer, State* parent);
 
-  int depth, numTrials;
-  num loc;
-  int redWins, blueWins;
+  num depth, loc;
+  size_t numTrials, redWins, blueWins;
   bool redPlayer;
   State* parent;
   vector<State*> children;

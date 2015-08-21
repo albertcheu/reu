@@ -62,7 +62,10 @@ int BoardMC::buildTree(State* s){
     }
 
     else { ans += 1; }
-    if (s->depth==0 && i==n/2) { break; }
+    if (s->depth==0 &&
+	((i==n/2 && n%2) || (i==n/2 - 1 && n%2==0))
+	)
+      { break; }
   }
 
   return ans;
@@ -88,17 +91,20 @@ int BoardMC::freeRecursive(State* s){
 }
 
 void BoardMC::montecarlo(){
+  size_t size = start->children.size();
+
   FILE* gp = (FILE*) popen("gnuplot -persist","w");  
   //Title
-  fprintf(gp,"set title \"game(%lu,%lu)\"\n",n,k);
+  fprintf(gp,"set title \"game(%lu,%lu)\" font \",16\"\n",n,k);
   //labels
   fprintf(gp,"set ylabel \"Percent of games won\"\n");
-  fprintf(gp,"set ylabel font \",16\"\n");
+  fprintf(gp,"set ylabel font \",14\"\n");
   fprintf(gp,"set xlabel \"First move\"\n");
-  fprintf(gp,"set xlabel font \",16\"\n");
+  fprintf(gp,"set xlabel font \",14\"\n");
+  fprintf(gp,"set xrange [1:%lu]\n",size);
   fprintf(gp,"unset key\n");
   //Data
-  fprintf(gp, "%s\n", "plot '-' with lines");
+  fprintf(gp, "plot '-' u ($0+1):1 w lines\n");
 
   string userInput = "";
   while(true){
@@ -108,7 +114,6 @@ void BoardMC::montecarlo(){
     if (total % 10000 == 0 && total > 0) {
       float avgSuccess, numWins, numTrials;
       double maxSuccess = 0;
-      size_t size = start->children.size();
       for (int i = 0; i < size; i++){
 	numWins = start->children[i]->redWins;
 	numTrials = start->children[i]->numTrials;
@@ -119,7 +124,7 @@ void BoardMC::montecarlo(){
       
       fprintf(gp,"E\n");
       if (maxSuccess > 0.5)
-	{ fprintf(gp,"set arrow 1 from 0,50 to %lu,50 nohead\n",size-1); }
+	{ fprintf(gp,"set arrow 1 from 1,50 to %lu,50 nohead\n",size); }
       else { fprintf(gp,"set noarrow\n"); }
       fprintf(gp,"refresh\n");
 

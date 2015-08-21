@@ -16,6 +16,11 @@ void kapUsageLinear(size_t n, size_t k){
   for(size_t i = 0; i <= (n%2?n/2:n/2-1); i++)
     { max = (max>possibles[i]?max:possibles[i]); }
   cout << max << endl;
+  
+  size_t min = ULONG_MAX;
+  for(size_t i = 0; i <= (n%2?n/2:n/2-1); i++)
+    { min = (min<possibles[i]?min:possibles[i]); }
+  cout << min << endl;
 }
 
 void kapUsageCircular(size_t n, size_t k){

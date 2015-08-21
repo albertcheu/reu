@@ -1,6 +1,3 @@
-//#include "BoardEval.h"
-//#include "GreedyEvaluator.h"
-//#include "RandomEvaluator.h"
 #include "Board_AB.h"
 #include "BoardMC.h"
 
@@ -16,31 +13,6 @@ int toNumber(string s, size_t maxNum){
   if (ans < 1 || ans > maxNum) { return -1; }
   return ans;
 }
-/*
-void blarg(int n,int k, mutex& lock, int i, int numThreads,
-	   vector<pair<Bitstring,Bitstring> >& assignments,
-	   unordered_map<BitstringKey,pair<Bitstring,int> >& table){
-  BoardThread bt(n,k,lock,i,numThreads,assignments,table);
-  bt.fillTable();
-}
-
-void fillTable(int n, int k, Board_AB& b, int numThreads,
-	       unordered_map<BitstringKey,pair<Bitstring,int> >& table){
-
-  mutex lock;
-  vector<thread> threads;
-
-  for(int i = 0; i < numThreads; i++){
-    threads.push_back(thread(blarg, n,k,ref(lock),i, numThreads,
-			     ref(b.assignments), ref(table)));
-  }
-
-  for(int i = 0; i < numThreads; i++){
-    threads[i].join();
-  }
-  
-}
-*/
 
 void search_for_G(int n, int k){
   //Iterate thru board sizes

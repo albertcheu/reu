@@ -1,36 +1,36 @@
 #include "BoardMC.h"
 
-State::  State(num depth, num loc, bool redPlayer, State* parent)
+State::State(num depth, num loc, bool redPlayer, State* parent)
   :depth(depth), loc(loc), redPlayer(redPlayer), parent(parent),
    redWins(0), blueWins(0), numTrials(0)
 {}
 
 int bestDepth(num n, int cutoff){
-
   int numNodes = 1;
-  int leaves = 1;//n/2;
-  int factor = n-2;//n-1;
-  int depth = 0;
-  while (factor > 0 && numNodes < cutoff) {
+  int leaves = n/2;
+  int factor = n-2;
+  int depth = 1;
+
+  while (factor > 0){
     depth++;
     numNodes += leaves;
     leaves *= (factor--);
+    if (numNodes+leaves >= cutoff) { break; }
   }
 
   return (3>depth-1?3:depth-1);
 }
 
 BoardMC::BoardMC(num n, num k)
-  :RoundBoard(n,k), storeDepth(bestDepth(n,6000000))
+  :RoundBoard(n,k), storeDepth(bestDepth(n,40000000)),
+   gen((unsigned)chrono::system_clock::now().time_since_epoch().count())   
 {
   cout << storeDepth << endl ;
 
-  start = new State(0,0,true,NULL);
+  start = new State(0,0,false,NULL);
 
-  for(num i = 0; i < n; i++){
-    //The board is empty, so all of [1,n] are available moves  
+  for(num i = 1; i < n; i++){
     moves.emplace(i);
-    //
     indices.push_back(i);
     empties.push_back(i);
   }
@@ -44,7 +44,7 @@ int BoardMC::buildTree(State* s){
   int ans = 1;
 
   //fill children
-  for(num i = 0; i < n; i++){
+  for(num i = 1; i < n; i++){
 
     unordered_set<num>::iterator itr = moves.find(i);
     //Cannot use moves we've already used
@@ -62,8 +62,8 @@ int BoardMC::buildTree(State* s){
     }
 
     else { ans += 1; }
-    //if (s->depth==0 && i==n/2) { break; }
-    if (s == start) { break; }
+
+    if (s == start && s->children.size() == n/2) { break; }
   }
 
   return ans;
@@ -89,53 +89,21 @@ int BoardMC::freeRecursive(State* s){
 }
 
 void BoardMC::montecarlo(){
-  /*
-  FILE* gp = (FILE*) popen("gnuplot -persist","w");  
-  //Title
-  fprintf(gp,"set title \"game(%d,%d)\"\n",n,k);
-  //labels
-  fprintf(gp,"set ylabel \"Percent of games won\"\n");
-  fprintf(gp,"set ylabel font \",16\"\n");
-  //fprintf(gp,"set xlabel \"First move\"\n");
-  fprintf(gp,"unset key\n");
 
-  //Data
-  fprintf(gp, "%s\n", "plot '-' with lines");
-  */
   cout << "Starting montecarlo" << endl;
   string userInput = "";
   while(true){
     size_t total = start->numTrials;
-    cout << total << endl;
+    //cout << total << endl;
 
-    //Every ten thousand trials, draw
     if (total % 10000 == 0 && total > 0) {
       cout << total << endl;
-      float avgSuccess, numWins, numTrials;
-      
-      //size_t size = start->children.size();
+      float avgSuccess, numWins;
+      numWins = start->redWins;
 
-      //for (int i = 0; i < size; i++){
-      numWins = start->redWins;//children[i]->redWins;
-      numTrials = start->numTrials;//children[i]->numTrials;
+      avgSuccess = numWins / total;
+      cout << avgSuccess << endl;
 
-	avgSuccess = numWins / numTrials;
-	cout << avgSuccess << endl;
-	/*
-	fprintf(gp, "%f\n", avgSuccess*100);
-	fprintf(gp, "%f\n", avgSuccess*100);
-	//}
-
-      fprintf(gp,"E\n");
-      fprintf(gp,"set arrow 1 from 0,50 to 1,50 nohead\n");
-      fprintf(gp,"refresh\n");
-
-      if ((total+10000) % 1000000 == 0) {
-	//Save image
-	fprintf(gp, "set term png\nset output \"montecarlo.png\"\n");
-      }
-      else { fprintf(gp, "set term wxt\n"); }
-	*/
       //Every million trials, ask if we should stop
       if (total % 1000000 == 0){
 	cout << "Completed " << total << " trials.";
@@ -143,28 +111,24 @@ void BoardMC::montecarlo(){
 	cin >> userInput;
       }
 
-      if (userInput != "quit"){
-	//fprintf(gp, "replot\n");
-	//fflush(gp);
-      }
-      else { break; }
+      if (userInput == "quit") { break; }
       
     }
 
     //Conduct experiment
-    runTrialTraverse(start);
+    runTrial(start);
 
   }
-  //pclose(gp);
 }
 
 bool BoardMC::runTrial(State* s){
 
   //If State s is red's turn, red receives a grid with spot loc colored blue
   //If s belongs to blue, blue receives a grid with spot loc colored red
-  bool parentIsRed = s->parent->redPlayer;
+  bool parentIsRed = !(s->redPlayer);
+  //cout << (int)s->loc << endl;
   grid[s->loc] = (parentIsRed?'R':'B');
-  moves.erase(moves.find(s->loc));
+  if (s != start) { moves.erase(moves.find(s->loc)); }
 
   //If there is a winner, return who won    
   if (memberOfAP(s->loc)) {
@@ -174,13 +138,13 @@ bool BoardMC::runTrial(State* s){
     (parentIsRed? s->redWins++ : s->blueWins++);
     return parentIsRed;
   }
-  
+
   return (s->children.size()? runTrialTraverse(s):runTrialRandom(s));
 }
 
 float BoardMC::score(State* s){
   //The parent state evaluates its child states
-  bool parentIsRed = s->parent->redPlayer;
+  bool parentIsRed = !(s->redPlayer);
 
   //If the parent is red, the scores of its children are based on red
   //to facilitate maximizing scores
@@ -193,10 +157,10 @@ float BoardMC::score(State* s){
 }
 
 bool BoardMC::runTrialTraverse(State* s){
-
   bool redWon = true;
   float optimalScore = 0.0f;
   State* bestChild = NULL;
+
   for (size_t i = 0; i < s->children.size(); i++){
 
     //Find a "bandit arm" that hasn't been played...
@@ -213,6 +177,8 @@ bool BoardMC::runTrialTraverse(State* s){
   //Recursion
   redWon = runTrial(bestChild);
 
+  //cout << "Ran trial" << endl;
+
   //Revert to previous state
   if (s->depth > 0) {
     grid[s->loc] = '.';
@@ -228,18 +194,18 @@ bool BoardMC::runTrialTraverse(State* s){
 
 bool BoardMC::runTrialRandom(State* s){
   bool redWon = true;
-  bool parentIsRed = s->redPlayer;
+  bool redPlayer = s->redPlayer;
   bool draw = true;
 
   //Randomly color remaining moves
-  random_shuffle(indices.begin(),indices.end());
+  shuffle(indices.begin(),indices.end(), gen);
   int j = 0;
-  for(num i = 0; i < n; i++){
+  for(size_t i = 0; i < indices.size(); i++){
     unordered_set<num>::iterator itr = moves.find(indices[i]);
     if (itr == moves.end()){ continue; }
 
     //Color
-    grid[indices[i]] = (parentIsRed?'R':'B');
+    grid[indices[i]] = (redPlayer?'R':'B');
 
     //Keep track of what we color
     empties[j++] = indices[i];
@@ -247,17 +213,17 @@ bool BoardMC::runTrialRandom(State* s){
     //Check who won every time a number is colored  
     if (memberOfAP(indices[i])) {
       draw = false;
-      redWon = parentIsRed;
+      redWon = redPlayer;
       break;
     }
 
     //Alternate!
-    parentIsRed = !parentIsRed;
+    redPlayer = !redPlayer;
   }
 
   //Clear out what we colored
   grid[s->loc] = '.';
-  for(num i = 0; i < j; i++){
+  for(size_t i = 0; i < j; i++){
     grid[empties[i]] = '.';
   }
 

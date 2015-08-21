@@ -4,6 +4,7 @@
 #include <unordered_set>
 #include <cstdlib>
 #include <cstdio>
+#include <chrono>
 #include "RoundBoard.h"
 
 struct State{
@@ -20,6 +21,8 @@ int bestDepth(int n, int cutoff);
 
 class BoardMC: public RoundBoard{
  private:
+  mt19937 gen;
+
   unordered_set<num> moves;
 
   vector<num> indices,empties;

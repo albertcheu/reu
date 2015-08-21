@@ -7,7 +7,7 @@ RoundBoard::RoundBoard(num n, num k)
   checker.push_back(vector<num>());
 		    
   for(num d = 1; d <= (n-1)/(k-1); d++){
-    //cout << "d" << endl;
+    cout << d << ' ';
     vector<num> c;
     for(num left = n-d; left < n; left -= d) { c.push_back(left); }
     reverse(c.begin(), c.end());
@@ -16,7 +16,7 @@ RoundBoard::RoundBoard(num n, num k)
 
     checker.push_back(c);
   }
-  cout << "Made checker" << endl;
+  cout << endl << "Made checker" << endl;
 }
 
 void RoundBoard::shiftGrid(){

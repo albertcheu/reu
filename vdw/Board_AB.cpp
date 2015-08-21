@@ -246,7 +246,8 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, char alpha, char beta,
   char score = -10;
   num loc = 0;
   char alphaOrig = alpha;
-  if (retrieveSmart(score, loc, alpha, beta)){ return scoreAndLoc(score,loc); }
+  if (retrieveSmart(score, loc, alpha, beta))
+    { return scoreAndLoc(score,loc); }
 
   if (depth >= 2*k-1){
     if (memberOfAP(x)){
@@ -282,7 +283,7 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, char alpha, char beta,
 	//killer1 = i;
 	break;
       }
-    
+
     if (s) {continue;}
     
     int j = n-i-1;
@@ -293,10 +294,11 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, char alpha, char beta,
 	//killer1 = i;
 	break;
       }
-    
+
   }
 
   storeSmart(score, loc, alphaOrig, beta);
+
   if (depth == 0) { cout << recursionCount << endl; }
   return scoreAndLoc(score, loc);
 }
@@ -321,6 +323,7 @@ bool Board_AB::alphabeta_helper(num i, bool maximize, num depth,
   //PVS
   if (firstChild) {
     curScore = -alphabeta(!maximize, -beta, -alpha, depth+1, i).first;
+    
     firstChild = false;
   }
   else {
@@ -328,7 +331,6 @@ bool Board_AB::alphabeta_helper(num i, bool maximize, num depth,
     if (alpha < curScore && curScore < beta)
       { curScore = -alphabeta(!maximize, -beta, -curScore, depth+1, i).first; }
   }
-  
 
   if (curScore > score) {
     loc = i;

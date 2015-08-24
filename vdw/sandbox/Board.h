@@ -12,10 +12,7 @@
 #define B_WIN -1
 
 using namespace std;
-typedef unsigned char num;
-
-//bool memberHelper(vector<char>  & grid, char& w,
-//		  char n, char k, char d, char loc);
+typedef size_t num;
 
 class Board{
  protected:
@@ -25,6 +22,7 @@ class Board{
   //the size of the arithmetic progression and of the board
   num k, n;
 
+  bool symmetric();
   bool memberOfAP(num loc);
 
  public:

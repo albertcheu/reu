@@ -1,4 +1,4 @@
-#pragma once
+//#pragma once
 #include "Board.h"
 #include <unordered_map>
 #include <list>
@@ -35,7 +35,7 @@ const scoreAndLoc draw(DRAW,DRAW);
 class Board_AB: public Board {
 
 protected:
-  size_t tableSize;
+
   //vector<pair<size_t,size_t> > killers;
 
   //two bits dedicated to score
@@ -52,8 +52,6 @@ protected:
   unordered_map<BitstringKey,Chain> table;
 
   size_t recursionCount;
-
-  bool symmetric();
 
   //Given a candidate spot i at some game depth, test the move
   //If it is better than what we have seen, update max/min

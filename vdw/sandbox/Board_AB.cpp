@@ -2,7 +2,6 @@
 
 Board_AB::Board_AB(num n, num k)
   :Board(n,k), gamestate(0), zobrist(0), recursionCount(0)
-  ,tableSize(0)
 {
   assignmentG.clear();
   assignmentZ.clear();
@@ -19,14 +18,6 @@ Board_AB::Board_AB(num n, num k)
     //killers.push_back({n,n});
   }
 
-}
-
-bool Board_AB::symmetric(){
-  num middle = (n-1)/2;
-  for (num i = 0; i < n; i++){
-    if (i <= middle && grid[i] != grid[n-1-i]) { return false; }
-  }
-  return true;
 }
 
 bool Board_AB::play(char c, num loc){
@@ -94,7 +85,6 @@ void Board_AB::store(BitstringKey key, Bitstring gs,
   storedVal |= gs;
 
   if (table.find(key) == table.end()) {
-    tableSize++;
     table[key].push_back(storedVal);
     return;
   }
@@ -112,12 +102,50 @@ void Board_AB::store(BitstringKey key, Bitstring gs,
     }
   }
 
-  if (push) { tableSize++; table[key].push_back(storedVal); }
+  if (push) { table[key].push_back(storedVal); }
   
 }
 
 bool Board_AB::retrieveSmart(char& score, num& loc, char& alpha, char& beta){
   bool ans = false;
+/*
+  BitstringKey minKey = MAXKEY;
+  Bitstring state = 0;
+  bool mirrored = false;
+  num shift = 0;
+  
+  for(num x = 0; x < n; x++){
+    shiftGrid();
+    Bitstring mirroredState = 0;
+    Bitstring mirroredZ = 0;
+    Bitstring s = 0;
+    Bitstring z = 0;
+
+    for(int i = n-1; i > -1; i--){
+      if (grid[i] != '.') {
+	pair<Bitstring,Bitstring>& aZ = assignmentZ[n-i-1];
+	pair<Bitstring,Bitstring>& aG = assignmentG[n-i-1];
+	mirroredZ ^= (grid[i]=='R'?aZ.first:aZ.second);
+	mirroredState |= (grid[i]=='R'?aG.first:aG.second);
+
+	z ^= (grid[i]=='R'?assignmentZ[i].first:assignmentZ[i].second);
+	s ^= (grid[i]=='R'?assignmentG[i].first:assignmentG[i].second);
+      }
+    }
+  
+    BitstringKey key = z % MAXKEY;
+    BitstringKey mirroredKey = mirroredZ % MAXKEY;
+    if (key < minKey || mirroredKey < minKey){
+      shift = x;
+      if(key < mirroredKey) { state = s; minKey = key; }
+      else { state = mirroredState; minKey = mirroredKey; mirrored = true; }
+    }
+  }
+
+  ans = retrieve(minKey,state,score, loc, alpha, beta);
+  if (mirrored) { loc = ((n-loc-1)+shift)%n; }
+  else { loc = (loc+shift)%n; }
+*/  
 
   Bitstring mirroredState = 0;
   Bitstring mirroredZ = 0;
@@ -145,6 +173,44 @@ bool Board_AB::retrieveSmart(char& score, num& loc, char& alpha, char& beta){
 }
 
 void Board_AB::storeSmart(char score, num loc, char alphaOrig, char beta){
+  /*
+  BitstringKey minKey = MAXKEY;
+  Bitstring state = 0;
+  bool mirrored = false;
+  num shift = 0;
+  
+  for(num x = 0; x < n; x++){
+    shiftGrid();
+    Bitstring mirroredState = 0;
+    Bitstring mirroredZ = 0;
+    Bitstring s = 0;
+    Bitstring z = 0;
+
+    for(int i = n-1; i > -1; i--){
+      if (grid[i] != '.') {
+	pair<Bitstring,Bitstring>& aZ = assignmentZ[n-i-1];
+	pair<Bitstring,Bitstring>& aG = assignmentG[n-i-1];
+	mirroredZ ^= (grid[i]=='R'?aZ.first:aZ.second);
+	mirroredState |= (grid[i]=='R'?aG.first:aG.second);
+
+	z ^= (grid[i]=='R'?assignmentZ[i].first:assignmentZ[i].second);
+	s ^= (grid[i]=='R'?assignmentG[i].first:assignmentG[i].second);
+      }
+    }
+  
+    BitstringKey key = z % MAXKEY;
+    BitstringKey mirroredKey = mirroredZ % MAXKEY;
+    if (key < minKey || mirroredKey < minKey){
+      shift = x;
+      if(key < mirroredKey) { state = s; minKey = key; }
+      else { state = mirroredState; minKey = mirroredKey; mirrored = true; }
+    }
+  }
+
+  if (mirrored) { loc = ((n-loc-1)+shift)%n; }
+  else { loc = (loc+shift)%n; }
+  store(minKey, state, score, loc, alphaOrig, beta);
+  */
 
   Bitstring mirroredState = 0;
   Bitstring mirroredZ = 0;
@@ -172,6 +238,8 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, char alpha, char beta,
   char score = -10;
   num loc = 0;
   char alphaOrig = alpha;
+  if (retrieveSmart(score, loc, alpha, beta))
+    { return scoreAndLoc(score,loc); }
 
   if (depth >= 2*k-1){
     if (memberOfAP(x)){
@@ -182,7 +250,6 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, char alpha, char beta,
     if (depth == n) { return draw; }
   }
 
-  if (depth <= n-k+2 && retrieveSmart(score, loc, alpha, beta)){ return scoreAndLoc(score,loc); }
   /*
   num& killer1 = killers[depth].first;
   if (killer1 != n && alphabeta_helper(killer1, maximize, depth, score,
@@ -208,7 +275,7 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, char alpha, char beta,
 	//killer1 = i;
 	break;
       }
-    
+
     if (s) {continue;}
     
     int j = n-i-1;
@@ -219,12 +286,12 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, char alpha, char beta,
 	//killer1 = i;
 	break;
       }
-    
+
   }
 
-  if (depth <= n-k+2) { storeSmart(score, loc, alphaOrig, beta); }
+  storeSmart(score, loc, alphaOrig, beta);
 
-  if (depth == 0) { cout << recursionCount << ' ' << tableSize << endl; }
+  if (depth == 0) { cout << recursionCount << endl; }
   return scoreAndLoc(score, loc);
 }
 
@@ -247,9 +314,8 @@ bool Board_AB::alphabeta_helper(num i, bool maximize, num depth,
 
   //PVS
   if (firstChild) {
-
     curScore = -alphabeta(!maximize, -beta, -alpha, depth+1, i).first;
-
+    
     firstChild = false;
   }
   else {
@@ -257,7 +323,6 @@ bool Board_AB::alphabeta_helper(num i, bool maximize, num depth,
     if (alpha < curScore && curScore < beta)
       { curScore = -alphabeta(!maximize, -beta, -curScore, depth+1, i).first; }
   }
-
 
   if (curScore > score) {
     loc = i;

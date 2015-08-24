@@ -4,31 +4,37 @@
 #include <unordered_set>
 #include <cstdlib>
 #include <cstdio>
+#include <chrono>
+#include <queue>
 #include "Board.h"
 
 struct State{
-  State(int depth, int loc, bool redPlayer, State* parent);
+  State(int depth, int loc, State* parent);
 
-  int depth, loc, numTrials;
-  int redWins, blueWins;
-  bool redPlayer;
+  int depth, loc;
   State* parent;
   vector<State*> children;
+
+  int redWins, blueWins, numTrials;
 };
 
-int bestDepth(int n, int cutoff);
+//int bestDepth(int n, int cutoff);
 
 class BoardMC: public Board{
  private:
+
+  mt19937 gen;
+
   unordered_set<int> moves;
 
   vector<int> indices,empties;
 
   State* start;
 
-  int storeDepth;
+  //int storeDepth;
 
-  int buildTree(State* s);
+  //int buildTree(State* s);
+  int buildTree();
 
   int freeRecursive(State* s);
 
@@ -39,7 +45,7 @@ class BoardMC: public Board{
   float score(State* s);
   
  public:
-  BoardMC(size_t n, size_t k);
+  BoardMC(num n, num k);
   ~BoardMC();
 
   void montecarlo();

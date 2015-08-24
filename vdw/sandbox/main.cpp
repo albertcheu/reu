@@ -1,7 +1,66 @@
 #include "Board_AB.h"
 #include "BoardMC.h"
-#include "GreedyEvaluator.h"
-#include "BoardEval.h"
+void kapUsageLinear(size_t n, size_t k){
+  vector<size_t> possibles;
+  for(size_t i = 0; i < n; i++){ possibles.push_back(0); }
+
+  size_t maxD = (n-1)/(k-1);
+  for(size_t i = 0; i < n; i++){
+    for(size_t d = 1; d <= maxD; d++){
+      if (i + d*(k-1) >= n) { continue; }
+      for (size_t j = 0; j < k; j++){ possibles[i+j*d]++; }
+    }
+  }
+
+  size_t max = 0;
+  for(size_t i = 0; i <= (n%2?n/2:n/2-1); i++)
+    { max = (max>possibles[i]?max:possibles[i]); }
+  cout << max << endl;
+  
+  size_t min = ULONG_MAX;
+  for(size_t i = 0; i <= (n%2?n/2:n/2-1); i++)
+    { min = (min<possibles[i]?min:possibles[i]); }
+  cout << min << endl;
+}
+
+void kapUsageCircular(size_t n, size_t k){
+  vector<size_t> possibles;
+  for(size_t i = 0; i < n; i++){ possibles.push_back(0); }
+
+  vector<size_t> x;
+
+  size_t maxD = (n-1)/(k-1);
+  for(size_t i = 0; i < n; i++){
+    for(size_t d = 1; d <= maxD; d++){
+      size_t end = i+d*(k-1);
+
+      //Never end past the start
+      if (end >= n && end % n >= i) { continue; }
+
+      //Which is smaller?
+      size_t min = (i < end%n ? i : end%n);
+
+      //If we haven't seen the smaller boundary point before,
+      if (x.size() <= min) {
+        x.push_back(d);
+        for (size_t j = 0; j < k; j++){ possibles[(i+j*d) % n]++; }
+      }
+
+      //Otherwise
+      else {
+        //
+        if (((min+d)%n == i || (min+d)%n == end) && x[min] >= d) { continue; }
+        x[min] = d;
+        for (size_t j = 0; j < k; j++){ possibles[(i+j*d) % n]++; }
+      }
+    }
+  }
+
+  size_t max = 0;
+  for(size_t i = 0; i <n; i++){ max = (max>possibles[i]?max:possibles[i]); }
+  cout << max << endl;
+}
+
 
 int toNumber(string s, size_t maxNum){
   int ans = 0;
@@ -79,71 +138,6 @@ void play_game(int n, int k){
   else { cout << "Nobody won!" << endl; }
 }
 
-void kapUsageLinear(size_t n, size_t k){
-  vector<size_t> possibles;
-  for(size_t i = 0; i < n; i++){ possibles.push_back(0); }
-
-  size_t maxD = (n-1)/(k-1);
-  for(size_t i = 0; i < n; i++){
-    for(size_t d = 1; d <= maxD; d++){
-      if (i + d*(k-1) >= n) { continue; }
-      for (size_t j = 0; j < k; j++){ possibles[i+j*d]++; }
-    }
-  }
-
-  size_t max = 0;
-  for(size_t i = 0; i <= (n%2?n/2:n/2-1); i++)
-    {
-      cout << possibles[i] << ' ';
-      max = (max>possibles[i]?max:possibles[i]);
-    }
-  cout << endl;
-  cout << max << endl;
-}
-
-
-void kapUsageCircular(size_t n, size_t k){
-  vector<size_t> possibles;
-  for(size_t i = 0; i < n; i++){ possibles.push_back(0); }
-
-  vector<size_t> x;
-
-  size_t maxD = (n-1)/(k-1);
-  for(size_t i = 0; i < n; i++){
-    for(size_t d = 1; d <= maxD; d++){
-      size_t end = i+d*(k-1);
-
-      //Never end past the start
-      if (end >= n && end % n >= i) { continue; }
-
-      //Which is smaller?
-      size_t min = (i < end%n ? i : end%n);
-
-      //If we haven't seen the smaller boundary point before,
-      if (x.size() <= min) {
-	x.push_back(d);
-	for (size_t j = 0; j < k; j++){ possibles[(i+j*d) % n]++; }
-      }
-
-      //Otherwise
-      else {
-	//
-	if (((min+d)%n == i || (min+d)%n == end) && x[min] >= d) { continue; }
-	x[min] = d;
-	for (size_t j = 0; j < k; j++){ possibles[(i+j*d) % n]++; }
-      }
-    }
-  }
-
-  size_t max = 0;
-  for(size_t i = 0; i <n; i++) {
-    cout << possibles[i] << ' ';
-    max = (max>possibles[i]?max:possibles[i]);
-  }
-  cout << endl;
-  cout << max << endl;
-}
-
 void search_for_G_AB(int n, int k){
   //Iterate thru board sizes
 
@@ -151,13 +145,9 @@ void search_for_G_AB(int n, int k){
     cout << "Testing game(" << n << "," << k << ")..." << endl;
     clock_t t = clock();
 
-    //Board_AB b(n,k);
-    GreedyEvaluator ge(n,k);
-    cout << "Made greedy evaluator" << endl;
-    BoardEval b(n,k,ref(ge));
-    cout << "Made boardEval" << endl;
-    scoreAndLoc sal = b.alphabeta(true,-10,10,0);
-
+    Board_AB b(n,k);
+    num depth = 0;
+    scoreAndLoc sal = b.alphabeta(true,-10,10,depth);
     /*
     //Play alphabeta against itself (red player = player 1)
     bool redPlayer = true;
@@ -222,6 +212,7 @@ int main(int argc, char** argv){
     s = argv[3];
     if (s == "mc") {
       cout << "Running Monte Carlo..." << endl;
+      srand((unsigned)time(NULL));
       BoardMC bmc(n,k);
       bmc.montecarlo();
     }
@@ -229,11 +220,13 @@ int main(int argc, char** argv){
       cout << "Running alpha-beta..." << endl;
       search_for_G_AB(n, k);
     }
-    else if (s == "linear"){ kapUsageLinear(n,k); }
-    else if (s == "circular"){ kapUsageCircular(n,k); }
-    else if (s == "greedy") {
-      GreedyEvaluator ge(n,k);
+    else if (s == "linear") {
+      kapUsageLinear(n, k);
     }
+    else if (s == "circular") {
+      kapUsageCircular(n, k);
+    }
+
   }
 
 }

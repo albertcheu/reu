@@ -1,6 +1,6 @@
 #include "BoardMC.h"
 
-State::State(int depth, int loc, State* parent)
+State::State(num depth, num loc, State* parent)
   :depth(depth), loc(loc), parent(parent),
    redWins(0), blueWins(0), numTrials(0)
 {}
@@ -11,7 +11,7 @@ BoardMC::BoardMC(num n, num k)
 {
   start = new State(0,-1,NULL);
 
-  for(int i = 0; i < n; i++){
+  for(num i = 0; i < n; i++){
     //The board is empty, so all of [1,n] are available moves  
     moves.emplace(i);
     //
@@ -19,15 +19,15 @@ BoardMC::BoardMC(num n, num k)
     empties.push_back(i);
   }
 
-  int ans = buildTree();
+  size_t ans = buildTree();
   cout << ans << endl;
 
 }
 
-int BoardMC::buildTree(){
+size_t BoardMC::buildTree(){
   cout << "Building tree" << endl;
 
-  int capacity = 1000000;
+  size_t capacity = 1000000;
 
   vector<State*> nodes;
   queue<State*> q;
@@ -37,7 +37,7 @@ int BoardMC::buildTree(){
     State* s = q.front();
     q.pop();
     nodes.push_back(s);
-    int d = s->depth;
+    num d = s->depth;
 
     if (nodes.size() == capacity) {
       cout << d << endl;
@@ -61,7 +61,7 @@ int BoardMC::buildTree(){
       break;
     }
 
-    unordered_set<int> claimed;
+    unordered_set<num> claimed;
     State* cur = s;
     while(cur != start){
       grid[cur->loc] = (cur->depth % 2)?'R':'B';
@@ -69,9 +69,9 @@ int BoardMC::buildTree(){
       cur = cur->parent;
     }
 
-    int end = n-1;
+    num end = n-1;
     if (symmetric()) { end = (n%2)?(n/2):(n/2 - 1); }
-    for(int i = 0; i < n; i++){
+    for(num i = 0; i < n; i++){
       grid[i] = '.';
       if (i > end) { continue; }
 
@@ -84,25 +84,21 @@ int BoardMC::buildTree(){
 
     }
   }
-  /*
-  for(size_t i = 1; i < nodes.size(); i++){
-    nodes[i]->parent->children.push_back(nodes[i]);
-  }
-  */
+
   return nodes.size();
 }
 
 BoardMC::~BoardMC(){
-  int ans = freeRecursive(start);
+  size_t ans = freeRecursive(start);
   cout << ans << endl;
   moves.clear();
 }
 
-int BoardMC::freeRecursive(State* s){
-  int ans = 1;
+size_t BoardMC::freeRecursive(State* s){
+  size_t ans = 1;
 
-  int size = s->children.size();
-  for(int i = 0; i < size; i++){
+  size_t size = s->children.size();
+  for(size_t i = 0; i < size; i++){
     ans += freeRecursive(s->children[i]);
   }
   s->children.clear();
@@ -116,7 +112,7 @@ void BoardMC::montecarlo(){
 
   FILE* gp = (FILE*) popen("gnuplot -persist","w");  
   //Title
-  fprintf(gp,"set title \"game(%lu,%lu)\" font \",16\"\n",n,k);
+  fprnumf(gp,"set title \"game(%lu,%lu)\" font \",16\"\n",n,k);
   //labels
   fprintf(gp,"set ylabel \"Percent of games won\"\n");
   fprintf(gp,"set ylabel font \",14\"\n");
@@ -129,13 +125,13 @@ void BoardMC::montecarlo(){
 
   string userInput = "";
   while(true){
-    int total = start->numTrials;
+    num total = start->numTrials;
 
     //Every ten thousand trials, draw
     if (total % 10000 == 0 && total > 0) {
       float avgSuccess, numWins, numTrials;
       double maxSuccess = 0;
-      for (int i = 0; i < size; i++){
+      for (size_t i = 0; i < size; i++){
 	numWins = start->children[i]->redWins;
 	numTrials = start->children[i]->numTrials;
 	avgSuccess = numWins / numTrials;
@@ -216,7 +212,7 @@ bool BoardMC::runTrialTraverse(State* s){
   bool redWon = true;
   float optimalScore = 0.0f;
   State* bestChild = NULL;
-  for (int i = 0; i < s->children.size(); i++){
+  for (size_t i = 0; i < s->children.size(); i++){
 
     //Find a "bandit arm" that hasn't been played...
     if (s->children[i]->numTrials == 0) { bestChild = s->children[i]; break; }
@@ -247,15 +243,15 @@ bool BoardMC::runTrialTraverse(State* s){
 
 bool BoardMC::runTrialRandom(State* s){
   bool redWon = true;
-  bool parentIsRed = s->depth % 2;
+  bool parentIsRed = !(s->depth % 2);
   bool draw = true;
 
   //Randomly color remaining moves
 
   shuffle(indices.begin(),indices.end(),gen);
-  int j = 0;
-  for(int i = 0; i < n; i++){
-    unordered_set<int>::iterator itr = moves.find(indices[i]);
+  num j = 0;
+  for(num i = 0; i < n; i++){
+    unordered_set<num>::iterator itr = moves.find(indices[i]);
     if (itr == moves.end()){ continue; }
 
     //Color
@@ -277,7 +273,7 @@ bool BoardMC::runTrialRandom(State* s){
 
   //Clear out what we colored
   grid[s->loc] = '.';
-  for(int i = 0; i < j; i++){
+  for(num i = 0; i < j; i++){
     grid[empties[i]] = '.';
   }
 

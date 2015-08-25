@@ -9,34 +9,29 @@
 #include "Board.h"
 
 struct State{
-  State(int depth, int loc, State* parent);
+  State(num depth, num loc, State* parent);
 
-  int depth, loc;
+  num depth, loc;
   State* parent;
   vector<State*> children;
 
-  int redWins, blueWins, numTrials;
+  num redWins, blueWins, numTrials;
 };
-
-//int bestDepth(int n, int cutoff);
 
 class BoardMC: public Board{
  private:
 
   mt19937 gen;
 
-  unordered_set<int> moves;
+  unordered_set<num> moves;
 
-  vector<int> indices,empties;
+  vector<num> indices,empties;
 
   State* start;
 
-  //int storeDepth;
+  size_t buildTree();
 
-  //int buildTree(State* s);
-  int buildTree();
-
-  int freeRecursive(State* s);
+  size_t freeRecursive(State* s);
 
   bool runTrial(State* s);
   bool runTrialTraverse(State* s);

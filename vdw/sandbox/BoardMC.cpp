@@ -1,7 +1,7 @@
 #include "BoardMC.h"
-
-State::State(num depth, num loc, State* parent)
-  :depth(depth), loc(loc), parent(parent),
+State::State(num depth, num loc,
+	     const bitset<BITSETSIZE>& gamestate, State* parent)
+  :depth(depth), loc(loc), gamestate(gamestate), parent(parent),
    redWins(0), blueWins(0), numTrials(0)
 {}
 
@@ -9,7 +9,7 @@ BoardMC::BoardMC(num n, num k)
   :Board(n,k),
    gen((unsigned)chrono::system_clock::now().time_since_epoch().count())
 {
-  start = new State(0,-1,NULL);
+  start = new State(0,n,0,NULL);
 
   for(num i = 0; i < n; i++){
     //The board is empty, so all of [1,n] are available moves  
@@ -24,68 +24,72 @@ BoardMC::BoardMC(num n, num k)
 
 }
 
+bool BoardMC::symmetricBitset(const bitset<BITSETSIZE>& b){
+  num left,right; left = 0; right = 2*(n-1);
+  while (left < right) {
+    if (b[left] != b[right] || b[left+1] != b[right+1]) { return false; }
+    left += 2;
+    right -= 2;
+  }
+  return true;
+}
+
 size_t BoardMC::buildTree(){
   cout << "Building tree" << endl;
-
+  
+  size_t ans = 1;
+  size_t counter = 0;
   size_t capacity = 1000000;
+  num stopDepth = n;
 
-  vector<State*> nodes;
-  queue<State*> q;
-  q.push(start);
+  //vector<State*> nodes;
+  queue<State> q;
+  q.push(*start);
 
   while(true){
-    State* s = q.front();
-    q.pop();
-    nodes.push_back(s);
-    num d = s->depth;
 
-    if (nodes.size() == capacity) {
-      cout << d << endl;
+    if (counter < capacity) {
 
-      while(nodes.back()->depth == q.front()->depth) {
-	delete nodes.back();
-	nodes.pop_back();
+      State* s = start;
+
+      if (q.front().depth) {
+	s = new State(q.front().depth, q.front().loc,
+		      q.front().gamestate, q.front().parent);
+	s->parent->children.push_back(s);
+	ans++;
       }
 
-      size_t i = nodes.size()-1;
-      while(nodes[i]->depth == d-1){
-	nodes[i]->children.clear();
-	i--;
-      }
+      q.pop();
 
-      while(!q.empty()){
-	delete q.front();
-	q.pop();
-      }
+      num end = n-1;
+      if (symmetricBitset(s->gamestate)) { end = (n%2)?(n/2):(n/2 - 1); }
+      bitset<BITSETSIZE> newBitset = s->gamestate;
+      for(num i = 0; i <= end; i++){
+	if (s->gamestate[2*i] || s->gamestate[2*i + 1]) { continue; }
+	newBitset.flip(2*i + s->depth%2);
+	State child(s->depth+1,i,newBitset,s);
+	newBitset.flip(2*i + s->depth%2);
 
-      break;
-    }
-
-    unordered_set<num> claimed;
-    State* cur = s;
-    while(cur != start){
-      grid[cur->loc] = (cur->depth % 2)?'R':'B';
-      claimed.emplace(cur->loc);
-      cur = cur->parent;
-    }
-
-    num end = n-1;
-    if (symmetric()) { end = (n%2)?(n/2):(n/2 - 1); }
-    for(num i = 0; i < n; i++){
-      grid[i] = '.';
-      if (i > end) { continue; }
-
-      //Check if i was claimed before
-      if (claimed.find(i) == claimed.end()) {
-	State* child = new State(d+1,i,s);
 	q.push(child);
-	s->children.push_back(child);
+	
+	counter++;
+	if (counter == capacity) { stopDepth = child.depth; break; }
       }
-
     }
+
+    else if (q.front().depth < stopDepth) {
+      State* s = new State(q.front().depth, q.front().loc,
+			   q.front().gamestate, q.front().parent);
+      q.pop();
+      s->parent->children.push_back(s);
+      ans++;
+    }
+    
+    else { break; }
+    
   }
 
-  return nodes.size();
+  return ans;
 }
 
 BoardMC::~BoardMC(){
@@ -112,7 +116,7 @@ void BoardMC::montecarlo(){
 
   FILE* gp = (FILE*) popen("gnuplot -persist","w");  
   //Title
-  fprnumf(gp,"set title \"game(%lu,%lu)\" font \",16\"\n",n,k);
+  fprintf(gp,"set title \"game(%lu,%lu)\" font \",16\"\n",n,k);
   //labels
   fprintf(gp,"set ylabel \"Percent of games won\"\n");
   fprintf(gp,"set ylabel font \",14\"\n");

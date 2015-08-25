@@ -6,14 +6,18 @@
 #include <cstdio>
 #include <chrono>
 #include <queue>
+#include <bitset>
 #include "Board.h"
 
+const int BITSETSIZE = 256;
+
 struct State{
-  State(num depth, num loc, State* parent);
+  State(num depth, num loc, const bitset<BITSETSIZE>& gamestate, State* parent);
 
   num depth, loc;
-  State* parent;
+  bitset<BITSETSIZE> gamestate;
   vector<State*> children;
+  State* parent;
 
   num redWins, blueWins, numTrials;
 };
@@ -30,6 +34,7 @@ class BoardMC: public Board{
   State* start;
 
   size_t buildTree();
+  bool symmetricBitset(const bitset<BITSETSIZE>& b);
 
   size_t freeRecursive(State* s);
 

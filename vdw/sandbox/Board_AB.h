@@ -1,7 +1,5 @@
 //#pragma once
 #include "Board.h"
-#include <unordered_map>
-#include <list>
 
 #define EXACT 0
 #define LOWER 1

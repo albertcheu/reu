@@ -24,6 +24,31 @@ BoardMC::BoardMC(num n, num k)
 
 }
 
+bool retrieve(const bitset<BITSETSIZE>& b, BitsetTable& bt){
+  //hash b
+  bitset<KEYSIZE> key = 0;
+  for(num i = 0; i < KEYSIZE; i++) { key[i] = b[i]; }
+
+  //if hash isn't present return false
+  if (bt.find(key) == bt.end()) { return false; }
+
+  //Else iterate thru chain and compare
+  for (BitsetChain::const_iterator itr = bt[key].begin();
+       itr != bt[key].end(); itr++){
+    if (*itr == b) { return true; }
+  }
+
+  return false;
+}
+
+void store(const bitset<BITSETSIZE>& b, BitsetTable& bt){
+  //hash b
+  bitset<KEYSIZE> key = 0;
+  for(num i = 0; i < KEYSIZE; i++) { key[i] = b[i]; }
+
+  bt[key].push_back(b);
+}
+
 bool BoardMC::symmetricBitset(const bitset<BITSETSIZE>& b){
   num left,right; left = 0; right = 2*(n-1);
   while (left < right) {
@@ -40,9 +65,10 @@ size_t BoardMC::buildTree(){
   size_t ans = 1;
   size_t counter = 0;
   size_t capacity = 1000000;
+  num prevDepth = 0;
   num stopDepth = n;
 
-  //vector<State*> nodes;
+  BitsetTable bt;
   queue<State> q;
   q.push(*start);
 
@@ -61,19 +87,24 @@ size_t BoardMC::buildTree(){
 
       q.pop();
 
+      if (prevDepth < s->depth) { prevDepth = s->depth; bt.clear(); }
+
       num end = n-1;
       if (symmetricBitset(s->gamestate)) { end = (n%2)?(n/2):(n/2 - 1); }
       bitset<BITSETSIZE> newBitset = s->gamestate;
       for(num i = 0; i <= end; i++){
 	if (s->gamestate[2*i] || s->gamestate[2*i + 1]) { continue; }
-	newBitset.flip(2*i + s->depth%2);
-	State child(s->depth+1,i,newBitset,s);
-	newBitset.flip(2*i + s->depth%2);
 
-	q.push(child);
-	
-	counter++;
-	if (counter == capacity) { stopDepth = child.depth; break; }
+	newBitset.flip(2*i + s->depth%2);
+	if (!retrieve(newBitset,bt)) {
+	  State child(s->depth+1,i,newBitset,s); 
+	  q.push(child);
+	  store(newBitset, bt);
+	  counter++;
+	  if (counter == capacity) { stopDepth = child.depth; break; }
+	}
+	newBitset.flip(2*i + s->depth%2);	
+
       }
     }
 
@@ -89,6 +120,7 @@ size_t BoardMC::buildTree(){
     
   }
 
+  cout << stopDepth << endl;
   return ans;
 }
 
@@ -133,7 +165,7 @@ void BoardMC::montecarlo(){
 
     //Every ten thousand trials, draw
     if (total % 10000 == 0 && total > 0) {
-      float avgSuccess, numWins, numTrials;
+      double avgSuccess, numWins, numTrials;
       double maxSuccess = 0;
       for (size_t i = 0; i < size; i++){
 	numWins = start->children[i]->redWins;

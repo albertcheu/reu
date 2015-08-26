@@ -6,6 +6,8 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <unordered_map>
+#include <list>
 
 #define R_WIN 1
 #define DRAW 0

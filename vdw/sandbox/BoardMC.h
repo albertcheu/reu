@@ -10,13 +10,17 @@
 #include "Board.h"
 
 const num BITSETSIZE = 256;
+const num REFLECTION = 255;
 const num KEYSIZE = 64;
 
 typedef list<bitset<BITSETSIZE> > BitsetChain;
 typedef unordered_map<bitset<KEYSIZE>, BitsetChain> BitsetTable;
 
-bool retrieve(const bitset<BITSETSIZE>& b, BitsetTable& bt);
-void store(const bitset<BITSETSIZE>& b, BitsetTable& bt);
+void assignZobrist(vector<bitset<KEYSIZE> >& a, mt19937_64& gen);
+bool retrieve(const vector<bitset<KEYSIZE> >& a,
+	      const bitset<BITSETSIZE>& b, BitsetTable& bt);
+void store(const vector<bitset<KEYSIZE> >& a,
+	   const bitset<BITSETSIZE>& b, BitsetTable& bt);
 
 struct State{
   State(num depth, num loc, const bitset<BITSETSIZE>& gamestate, State* parent);
@@ -32,7 +36,7 @@ struct State{
 class BoardMC: public Board{
  private:
 
-  mt19937 gen;
+  mt19937_64 gen;
 
   unordered_set<num> moves;
 

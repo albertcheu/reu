@@ -24,10 +24,13 @@ BoardMC::BoardMC(num n, num k)
 
 }
 
-bool retrieve(const bitset<BITSETSIZE>& b, BitsetTable& bt){
+bool retrieve(const vector<bitset<KEYSIZE> >& a,
+	      const bitset<BITSETSIZE>& b, BitsetTable& bt){
   //hash b
-  bitset<KEYSIZE> key = 0;
-  for(num i = 0; i < KEYSIZE; i++) { key[i] = b[i]; }
+  bitset<KEYSIZE> key;
+  for(num i = 0; i < BITSETSIZE; i++) {
+    if (b[i]) { key ^= a[i]; }
+  }
 
   //if hash isn't present return false
   if (bt.find(key) == bt.end()) { return false; }
@@ -41,10 +44,13 @@ bool retrieve(const bitset<BITSETSIZE>& b, BitsetTable& bt){
   return false;
 }
 
-void store(const bitset<BITSETSIZE>& b, BitsetTable& bt){
+void store(const vector<bitset<KEYSIZE> >& a,
+	   const bitset<BITSETSIZE>& b, BitsetTable& bt){
   //hash b
-  bitset<KEYSIZE> key = 0;
-  for(num i = 0; i < KEYSIZE; i++) { key[i] = b[i]; }
+  bitset<KEYSIZE> key;
+  for(num i = 0; i < BITSETSIZE; i++) {
+    if (b[i]) { key ^= a[i]; }
+  }
 
   bt[key].push_back(b);
 }
@@ -59,16 +65,33 @@ bool BoardMC::symmetricBitset(const bitset<BITSETSIZE>& b){
   return true;
 }
 
+void assignZobrist(vector<bitset<KEYSIZE> >& a, mt19937_64& gen){
+  for(num i = 0; i < BITSETSIZE; i++){
+    bitset<KEYSIZE> b;
+    num stop = (KEYSIZE / 64);
+    for(num j = 0; j < stop; j++){
+      //bitset<BITSETSIZE> c = gen();
+      //b ^= c;
+      b ^= gen();
+      if (j < stop-1) { b <<= 64; }
+    }
+    a.push_back(b);
+  }
+}
+
 size_t BoardMC::buildTree(){
   cout << "Building tree" << endl;
   
   size_t ans = 1;
   size_t counter = 0;
-  size_t capacity = 1000000;
+  size_t capacity = 5000000;
   num prevDepth = 0;
   num stopDepth = n;
 
   BitsetTable bt;
+  vector<bitset<KEYSIZE> > a;
+  assignZobrist(a,gen);
+
   queue<State> q;
   q.push(*start);
 
@@ -96,10 +119,10 @@ size_t BoardMC::buildTree(){
 	if (s->gamestate[2*i] || s->gamestate[2*i + 1]) { continue; }
 
 	newBitset.flip(2*i + s->depth%2);
-	if (!retrieve(newBitset,bt)) {
+	if (!retrieve(a,newBitset,bt)) {
 	  State child(s->depth+1,i,newBitset,s); 
 	  q.push(child);
-	  store(newBitset, bt);
+	  store(a,newBitset, bt);
 	  counter++;
 	  if (counter == capacity) { stopDepth = child.depth; break; }
 	}

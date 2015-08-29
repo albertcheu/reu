@@ -9,8 +9,7 @@
 #include <bitset>
 #include "Board.h"
 
-const num BITSETSIZE = 256;
-const num REFLECTION = 255;
+const num BITSETSIZE = 64;
 const num KEYSIZE = 64;
 
 typedef list<bitset<BITSETSIZE> > BitsetChain;
@@ -27,10 +26,8 @@ struct State{
 
   num depth, loc;
   bitset<BITSETSIZE> gamestate;
-  vector<State*> children;
-  State* parent;
-
-  size_t redWins, blueWins, numTrials;
+  State* parent, *firstChild, *nextSibling;
+  size_t redWins,numTrials;
 };
 
 class BoardMC: public Board{

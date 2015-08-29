@@ -2,14 +2,18 @@
 State::State(num depth, num loc,
 	     const bitset<BITSETSIZE>& gamestate, State* parent)
   :depth(depth), loc(loc), gamestate(gamestate), parent(parent),
-   redWins(0), blueWins(0), numTrials(0)
+   firstChild(NULL), nextSibling(NULL),
+   redWins(0), numTrials(0)
 {}
 
 BoardMC::BoardMC(num n, num k)
   :Board(n,k),
    gen((unsigned)chrono::system_clock::now().time_since_epoch().count())
 {
-  start = new State(0,n,0,NULL);
+  cout << "One State takes up " << sizeof(State) << " bytes" << endl;
+
+  bitset<BITSETSIZE> g;
+  start = new State(0,n,g,NULL);
 
   for(num i = 0; i < n; i++){
     //The board is empty, so all of [1,n] are available moves  
@@ -70,8 +74,6 @@ void assignZobrist(vector<bitset<KEYSIZE> >& a, mt19937_64& gen){
     bitset<KEYSIZE> b;
     num stop = (KEYSIZE / 64);
     for(num j = 0; j < stop; j++){
-      //bitset<BITSETSIZE> c = gen();
-      //b ^= c;
       b ^= gen();
       if (j < stop-1) { b <<= 64; }
     }
@@ -80,70 +82,66 @@ void assignZobrist(vector<bitset<KEYSIZE> >& a, mt19937_64& gen){
 }
 
 size_t BoardMC::buildTree(){
+  size_t ans = 1;
   cout << "Building tree" << endl;
   
-  size_t ans = 1;
+  queue<State> q;
+  State* justSeen = NULL;
+
   size_t counter = 0;
-  size_t capacity = 5000000;
-  num prevDepth = 0;
-  num stopDepth = n;
+  size_t capacity = 8000000;
+  //size_t capacity = n;
+  num stopDepth = n-1;
 
   BitsetTable bt;
+  num prevDepth = 0;
   vector<bitset<KEYSIZE> > a;
   assignZobrist(a,gen);
 
-  queue<State> q;
-  q.push(*start);
+  while(counter < capacity || q.front().depth < stopDepth){
+    if(q.front().depth == stopDepth){ break; }
 
-  while(true){
-
-    if (counter < capacity) {
-
-      State* s = start;
-
-      if (q.front().depth) {
-	s = new State(q.front().depth, q.front().loc,
-		      q.front().gamestate, q.front().parent);
-	s->parent->children.push_back(s);
-	ans++;
-      }
-
+    State* s = start;
+    
+    if (!q.empty()) {
+      s = new State(q.front().depth, q.front().loc,
+		    q.front().gamestate, q.front().parent);
       q.pop();
 
-      if (prevDepth < s->depth) { prevDepth = s->depth; bt.clear(); }
+      if (s->parent->firstChild == NULL) { s->parent->firstChild = s; }
 
-      num end = n-1;
-      if (symmetricBitset(s->gamestate)) { end = (n%2)?(n/2):(n/2 - 1); }
-      bitset<BITSETSIZE> newBitset = s->gamestate;
-      for(num i = 0; i <= end; i++){
-	if (s->gamestate[2*i] || s->gamestate[2*i + 1]) { continue; }
-
-	newBitset.flip(2*i + s->depth%2);
-	if (!retrieve(a,newBitset,bt)) {
-	  State child(s->depth+1,i,newBitset,s); 
-	  q.push(child);
-	  store(a,newBitset, bt);
-	  counter++;
-	  if (counter == capacity) { stopDepth = child.depth; break; }
-	}
-	newBitset.flip(2*i + s->depth%2);	
-
-      }
-    }
-
-    else if (q.front().depth < stopDepth) {
-      State* s = new State(q.front().depth, q.front().loc,
-			   q.front().gamestate, q.front().parent);
-      q.pop();
-      s->parent->children.push_back(s);
+      //sibling
+      else if (justSeen->parent == s->parent) { justSeen->nextSibling = s; }
       ans++;
     }
-    
-    else { break; }
-    
+
+    justSeen = s;
+
+    if (counter == capacity) { continue; }
+
+    if (prevDepth < s->depth) { prevDepth = s->depth; bt.clear(); }
+
+    num end = n-1;
+    if (symmetricBitset(s->gamestate)) { end = (n%2)?(n/2):(n/2 - 1); }
+    bitset<BITSETSIZE> newBitset = s->gamestate;
+    for(num i = 0; i <= end; i++){
+      if (s->gamestate[2*i] || s->gamestate[2*i + 1]) { continue; }
+
+      newBitset.flip(2*i + s->depth%2);
+      if (!retrieve(a,newBitset,bt)) {
+	State child(s->depth+1,i,newBitset,s); 
+	q.push(child);
+	store(a,newBitset, bt);
+	counter++;
+	if (counter == capacity) { stopDepth = child.depth; break; }
+      }
+      newBitset.flip(2*i + s->depth%2);	
+
+    }
+
   }
 
-  cout << stopDepth << endl;
+  cout << (int)stopDepth << endl;
   return ans;
 }
 
@@ -155,44 +153,44 @@ BoardMC::~BoardMC(){
 
 size_t BoardMC::freeRecursive(State* s){
   size_t ans = 1;
-
-  size_t size = s->children.size();
-  for(size_t i = 0; i < size; i++){
-    ans += freeRecursive(s->children[i]);
+  
+  for(State* child = s->firstChild; child != NULL; child=child->nextSibling){
+    ans += freeRecursive(child);
   }
-  s->children.clear();
 
   free(s);
   return ans;
 }
 
 void BoardMC::montecarlo(){
-  size_t size = start->children.size();
+  num size = (n%2)?(n/2 + 1):(n/2);
 
   FILE* gp = (FILE*) popen("gnuplot -persist","w");  
   //Title
-  fprintf(gp,"set title \"game(%lu,%lu)\" font \",16\"\n",n,k);
+  fprintf(gp,"set title \"game(%d,%d)\" font \",16\"\n",n,k);
   //labels
   fprintf(gp,"set ylabel \"Percent of games won\"\n");
   fprintf(gp,"set ylabel font \",14\"\n");
   fprintf(gp,"set xlabel \"First move\"\n");
   fprintf(gp,"set xlabel font \",14\"\n");
-  fprintf(gp,"set xrange [1:%lu]\n",size);
+  fprintf(gp,"set xrange [1:%d]\n",size);
   fprintf(gp,"unset key\n");
   //Data
   fprintf(gp, "plot '-' u ($0+1):1 w lines\n");
 
   string userInput = "";
   while(true){
-    num total = start->numTrials;
+    size_t total = start->numTrials;
 
     //Every ten thousand trials, draw
     if (total % 10000 == 0 && total > 0) {
       double avgSuccess, numWins, numTrials;
       double maxSuccess = 0;
-      for (size_t i = 0; i < size; i++){
-	numWins = start->children[i]->redWins;
-	numTrials = start->children[i]->numTrials;
+
+      for(State* child = start->firstChild; child != NULL;
+	  child=child->nextSibling){
+	numWins = child->redWins;
+	numTrials = child->numTrials;
 	avgSuccess = numWins / numTrials;
 	if (avgSuccess > maxSuccess) { maxSuccess = avgSuccess; }
 	fprintf(gp, "%f\n", avgSuccess*100);
@@ -200,13 +198,13 @@ void BoardMC::montecarlo(){
       
       fprintf(gp,"E\n");
       if (maxSuccess > 0.5)
-	{ fprintf(gp,"set arrow 1 from 1,50 to %lu,50 nohead\n",size); }
+	{ fprintf(gp,"set arrow 1 from 1,50 to %d,50 nohead\n",size); }
       else { fprintf(gp,"set noarrow\n"); }
       fprintf(gp,"refresh\n");
 
       if ((total+10000) % 1000000 == 0) {
 	//Save image
-	fprintf(gp, "set term png\nset output \"game(%lu,%lu).png\"\n",n,k);
+	fprintf(gp, "set term png\nset output \"game(%d,%d).png\"\n",n,k);
       }
       else { fprintf(gp, "set term wxt\n"); }
 
@@ -245,11 +243,11 @@ bool BoardMC::runTrial(State* s){
     moves.emplace(s->loc);
     grid[s->loc] = '.';
     s->numTrials++;
-    (parentIsRed? s->redWins++ : s->blueWins++);
+    if (parentIsRed) { s->redWins++; }
     return parentIsRed;
   }
   
-  return (s->children.size()? runTrialTraverse(s):runTrialRandom(s));
+  return (s->firstChild ? runTrialTraverse(s):runTrialRandom(s));
 }
 
 float BoardMC::score(State* s){
@@ -258,7 +256,9 @@ float BoardMC::score(State* s){
 
   //If the parent is red, the scores of its children are based on red
   //to facilitate maximizing scores
-  float avgSuccess = (parentIsRed?s->redWins:s->blueWins)/(float)s->numTrials;
+  float avgSuccess = (parentIsRed ?
+		      s->redWins :
+		      s->numTrials - s->redWins) / (float)s->numTrials;
 
   //Standard formula
   float regret = sqrt(2.0f*log(start->numTrials)/(float)s->numTrials);
@@ -271,17 +271,18 @@ bool BoardMC::runTrialTraverse(State* s){
   bool redWon = true;
   float optimalScore = 0.0f;
   State* bestChild = NULL;
-  for (size_t i = 0; i < s->children.size(); i++){
 
+  for(State* child = s->firstChild; child != NULL; child=child->nextSibling){
     //Find a "bandit arm" that hasn't been played...
-    if (s->children[i]->numTrials == 0) { bestChild = s->children[i]; break; }
+    if (child->numTrials == 0) { bestChild = child; break; }
 
     //or best satisfies our objective function
-    float childScore = score(s->children[i]);
+    float childScore = score(child);
     if (childScore > optimalScore) {
       optimalScore = childScore;
-      bestChild = s->children[i];
+      bestChild = child;
     }
+
   }
 
   //Recursion
@@ -295,7 +296,7 @@ bool BoardMC::runTrialTraverse(State* s){
 
   //Increment numTrials
   (s->numTrials)++;
-  (redWon?(s->redWins)++:(s->blueWins)++);
+  if (redWon) { s->redWins++; }
 
   return redWon;   
 }
@@ -341,7 +342,9 @@ bool BoardMC::runTrialRandom(State* s){
 
   //Keep track of results
   s->numTrials++;
-  if (draw || !redWon) { s->blueWins++; return false; }
+
+  if (draw || !redWon) { return false; }
   s->redWins++;
-  return true;  
+  return true;
+  
 }

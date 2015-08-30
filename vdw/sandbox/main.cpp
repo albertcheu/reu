@@ -75,69 +75,6 @@ int toNumber(string s, size_t maxNum){
   return ans;
 }
 
-void play_game(int n, int k){
-  cout << "Welcome to VDW game. You are 'B' and I am 'R'" << endl;
-
-  //Is the computer playing first? 
-  bool computer1 = true;
-
-  string s = "";
-  while(s != "y" && s != "n"){
-    cout << "Do you want to play first? [y/n]: ";
-    cin >> s;
-    if (s == "y") { computer1 = false; }
-  }
-
-  bool player1 = true;
-  Board_AB b(n, k);
-  b.print();
-  size_t depth = (computer1?0:1);
-
-  //While there is no winner (and we can still play)
-  while(b.noWinner() && depth != n){
-    cout << endl << "Player " << (player1?1:2) << " plays on: ";
-    int loc;
-
-    if (player1 == computer1){
-      scoreAndLoc sal = b.alphabeta(true,-10,10,depth);
-      loc = sal.second;
-      cout << loc+1 << endl;
-      b.play('R', loc);
-    }
-    
-    else{
-      //Get user input
-      cin >> s;
-
-      //Fail if not number in range
-      loc = toNumber(s, n);
-      if (loc == -1) {
-	cout << "Please enter a number from 1 to " << n << endl;
-	continue;
-      }
-
-      //Fail if space already occupied (play otherwise)
-      loc--;
-      if (!b.play('B', loc)) {
-	cout << "Space taken" << endl;
-	continue;
-      }
-    }
-    //Show grid
-    b.print();
-
-    //Switch turns
-    player1 = !player1;
-
-    depth++;
-  }
-
-  char winner = b.winner();
-  if (winner == 'R') { cout << "R won!" << endl; }
-  else if (winner == 'B') { cout << "B won!" << endl; }
-  else { cout << "Nobody won!" << endl; }
-}
-
 void search_for_G_AB(int n, int k){
   //Iterate thru board sizes
 
@@ -148,21 +85,8 @@ void search_for_G_AB(int n, int k){
     Board_AB b(n,k);
     num depth = 0;
     scoreAndLoc sal = b.alphabeta(true,-10,10,depth);
-    /*
-    //Play alphabeta against itself (red player = player 1)
-    bool redPlayer = true;
-    size_t depth = 0;
-    int justPlayed = -1;
-    while(b.noWinner() && depth != n){
-      scoreAndLoc sal = b.alphabeta(redPlayer,-10,10, depth++, justPlayed);
-      int loc = sal.second;
-      cout << loc+1 << endl;
-      b.play(redPlayer?'R':'B', loc);
-      redPlayer = (!redPlayer);
-      justPlayed = loc;
-    }
-    b.print();
-    */
+    //scoreAndLoc sal = b.mtd(DRAW);
+
     t = clock() - t;
     cout << "It took me " << ((float)t)/CLOCKS_PER_SEC << " seconds" << endl;
 

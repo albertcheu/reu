@@ -13,13 +13,7 @@ const unsigned int METADATA = 9;
 //32 bit number
 typedef unsigned long int BitstringKey;
 const BitstringKey MAXKEY = ULONG_MAX;
-/*
-struct Entry{
-  int score, loc;
-  int flag;
-  Bitstring state;
-};
-*/
+
 typedef list<Bitstring> Chain;
 
 // the score (win, draw, lose) and the location of play that yields it
@@ -33,9 +27,6 @@ const scoreAndLoc draw(DRAW,DRAW);
 class Board_AB: public Board {
 
 protected:
-
-  //vector<pair<size_t,size_t> > killers;
-
   //two bits dedicated to score
   //log(n) bits dedicated to depth; n <= 32 means it is 5
   //remainder: every two bits corresponds to one position; 
@@ -78,8 +69,8 @@ protected:
 
   bool play(char c, num loc);
 
-  //The meat of the program
   virtual scoreAndLoc alphabeta(bool maximize, char alpha, char beta,
 				num depth, num x=255);
-    
+
+  scoreAndLoc mtd(int f);
 };

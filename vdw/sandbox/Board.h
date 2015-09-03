@@ -14,7 +14,7 @@
 #define B_WIN -1
 
 using namespace std;
-typedef unsigned char num;
+typedef size_t num;
 
 class Board{
  protected:

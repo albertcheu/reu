@@ -7,7 +7,7 @@ State::State(num depth, num loc,
 {}
 
 BoardMC::BoardMC(num n, num k)
-  :Board(n,k),b(0),key(0), numEndgameStates(0),
+  :Board(n,k),b(0),mirror(0),
    gen((unsigned)chrono::system_clock::now().time_since_epoch().count())
 {
   cout << "One State takes up " << sizeof(State) << " bytes" << endl;
@@ -22,41 +22,18 @@ BoardMC::BoardMC(num n, num k)
     indices.push_back(i);
     empties.push_back(i);
   }
-  assignZobrist();
+
   size_t ans = buildTree();
   cout << ans << endl;
 
 }
 
-bool BoardMC::retrieve(bitset<BITSETSIZE>& gamestate){
-  //hash b
-  key = 0;
-  for(num i = 0; i < BITSETSIZE; i++) {
-    if (gamestate[i]) { key ^= a[i]; }
-  }
-
-  //if hash isn't present return false
-  if (bt.find(key) == bt.end()) { return false; }
-
-  //Else iterate thru chain and compare
-  for (BitsetChain::const_iterator itr = bt[key].begin();
-       itr != bt[key].end(); itr++){
-    if (*itr == gamestate) { return true; }
-  }
-
-  return false;
-}
-
 void BoardMC::store(){
-  //hash b
-  key = 0;
-  for(num i = 0; i < BITSETSIZE; i++) {
-    if (b[i]) { key ^= a[i]; }
+  if (bt.find(b) == bt.end() && bt.find(mirror) == bt.end()){
+    bt.emplace(b);
   }
-
-  bt[key].push_back(b);
-  numEndgameStates++;
 }
+
 
 bool BoardMC::symmetricBitset(const bitset<BITSETSIZE>& b){
   num left,right; left = 0; right = 2*(n-1);
@@ -66,18 +43,6 @@ bool BoardMC::symmetricBitset(const bitset<BITSETSIZE>& b){
     right -= 2;
   }
   return true;
-}
-
-void BoardMC::assignZobrist(){
-  for(num i = 0; i < BITSETSIZE; i++){
-    bitset<KEYSIZE> a_i;
-    num stop = (KEYSIZE / 64);
-    for(num j = 0; j < stop; j++){
-      a_i ^= gen();
-      if (j < stop-1) { a_i <<= 64; }
-    }
-    a.push_back(a_i);
-  }
 }
 
 size_t BoardMC::buildTree(){
@@ -118,21 +83,25 @@ size_t BoardMC::buildTree(){
     if (prevDepth < s->depth) { prevDepth = s->depth; bt.clear(); }
 
     num end = n-1;
-    if (symmetricBitset(s->gamestate)) { end = (n%2)?(n/2):(n/2 - 1); }
     b = s->gamestate;
-    for(num i = 0; i <= end; i++){
-      if (s->gamestate[2*i] || s->gamestate[2*i + 1]) { continue; }
+    if (symmetricBitset(b)) { end = (n%2)?(n/2):(n/2 - 1); }
 
+    for(num i = 0; i <= end; i++){
+      if (b[2*i] || b[2*i + 1]) { continue; }
       b.flip(2*i + s->depth%2);
-      if (!retrieve(b)) {
+      mirror.flip(2*(n-i-1) + s->depth%2);
+
+      if (bt.find(b) == bt.end() && bt.find(mirror) == bt.end()){
+	bt.emplace(b);
+
 	State child(s->depth+1,i,b,s); 
 	q.push(child);
-	store();
 	counter++;
 	if (counter == capacity) { stopDepth = child.depth; break; }
       }
-      b.flip(2*i + s->depth%2);	
 
+      b.flip(2*i + s->depth%2);	
+      mirror.flip(2*(n-i-1) + s->depth%2);
     }
 
   }
@@ -181,7 +150,8 @@ void BoardMC::montecarlo(){
 
     //Every ten thousand trials, draw
     if (total % 10000 == 0 && total > 0) {
-      cout << numEndgameStates << endl;
+      cout << bt.size() << endl;
+
       double avgSuccess, numWins, numTrials;
       double maxSuccess = 0;
 
@@ -222,8 +192,9 @@ void BoardMC::montecarlo(){
     }
 
     //Conduct experiment
+    b = mirror = 0;
     runTrialTraverse(start);
-    b = 0;
+    b = mirror = 0;
 
   }
   pclose(gp);
@@ -236,12 +207,13 @@ bool BoardMC::runTrial(State* s){
   bool parentIsRed = s->depth % 2;
   grid[s->loc] = (parentIsRed?'R':'B');
   moves.erase(moves.find(s->loc));
-  num i = (parentIsRed?2*(s->loc):2*(s->loc)+1);
-  b.flip(i);
+  num i = s->loc;
+  b.flip(2*i + s->depth%2);
+  mirror.flip(2*(n-i-1)+ s->depth%2);
 
   //If there is a winner, return who won    
   if (memberOfAP(s->loc)) {
-    if (!retrieve(b)) { store(); }
+    store();
 
     moves.emplace(s->loc);
     grid[s->loc] = '.';
@@ -323,8 +295,8 @@ bool BoardMC::runTrialRandom(State* s){
     //Keep track of what we color
     empties[j++] = indices[i];
 
-    num bitpos = (parentIsRed?2*i:2*i+1);
-    b.flip(bitpos);
+    b.flip(2*i+parentIsRed);
+    mirror.flip(2*(n-i-1)+parentIsRed);
 
     //Check who won every time a number is colored  
     if (memberOfAP(indices[i])) {
@@ -337,7 +309,7 @@ bool BoardMC::runTrialRandom(State* s){
     parentIsRed = !parentIsRed;
   }
 
-  if (!retrieve(b)) { store(); }
+  store();
 
   //Clear out what we colored
   grid[s->loc] = '.';

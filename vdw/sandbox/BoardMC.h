@@ -9,11 +9,10 @@
 #include <bitset>
 #include "Board.h"
 
-const num BITSETSIZE = 256;
+const num BITSETSIZE = 64;
 const num KEYSIZE = 64;
 
-typedef list<bitset<BITSETSIZE> > BitsetChain;
-typedef unordered_map<bitset<KEYSIZE>, BitsetChain> BitsetTable;
+typedef unordered_set<bitset<BITSETSIZE> > BitsetTable;
 
 struct State{
   State(num depth, num loc, const bitset<BITSETSIZE>& gamestate, State* parent);
@@ -27,13 +26,8 @@ struct State{
 class BoardMC: public Board{
  private:
   BitsetTable bt;
-  vector<bitset<KEYSIZE> > a;
-  bitset<BITSETSIZE> b;
-  bitset<KEYSIZE> key;
-  size_t numEndgameStates;
+  bitset<BITSETSIZE> b, mirror;
 
-  void assignZobrist();
-  bool retrieve(bitset<BITSETSIZE>& gamestate);
   void store();
 
   mt19937_64 gen;

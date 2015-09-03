@@ -4,6 +4,7 @@
 #include <climits>
 #include <ctime>
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <string>
 #include <unordered_map>
@@ -14,7 +15,7 @@
 #define B_WIN -1
 
 using namespace std;
-typedef size_t num;
+typedef unsigned char num;
 
 class Board{
  protected:

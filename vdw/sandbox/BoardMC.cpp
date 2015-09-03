@@ -7,7 +7,7 @@ State::State(num depth, num loc,
 {}
 
 BoardMC::BoardMC(num n, num k)
-  :Board(n,k),b(0),mirror(0),
+  :Board(n,k),b(0),mirror(0),numEndstates(0),
    gen((unsigned)chrono::system_clock::now().time_since_epoch().count())
 {
   cout << "One State takes up " << sizeof(State) << " bytes" << endl;
@@ -21,6 +21,8 @@ BoardMC::BoardMC(num n, num k)
     //
     indices.push_back(i);
     empties.push_back(i);
+
+    if (i < n-(2*k)+2) { bts.push_back(BitsetTable()); }
   }
 
   size_t ans = buildTree();
@@ -28,9 +30,11 @@ BoardMC::BoardMC(num n, num k)
 
 }
 
-void BoardMC::store(){
+void BoardMC::store(num depth){
+  BitsetTable& bt = bts[depth-(2*k-1)];
   if (bt.find(b) == bt.end() && bt.find(mirror) == bt.end()){
     bt.emplace(b);
+    numEndstates++;
   }
 }
 
@@ -53,8 +57,8 @@ size_t BoardMC::buildTree(){
   State* justSeen = NULL;
 
   size_t counter = 0;
-  //size_t capacity = 8000000;
-  size_t capacity = n;
+  size_t capacity = 4000000;
+  //size_t capacity = n;
   num stopDepth = n-1;
 
   num prevDepth = 0;
@@ -80,7 +84,8 @@ size_t BoardMC::buildTree(){
 
     if (counter == capacity) { continue; }
 
-    if (prevDepth < s->depth) { prevDepth = s->depth; bt.clear(); }
+    BitsetTable& bt = bts[s->depth];
+    if (prevDepth < s->depth) { prevDepth = s->depth; }
 
     num end = n-1;
     b = s->gamestate;
@@ -128,7 +133,7 @@ size_t BoardMC::freeRecursive(State* s){
 }
 
 void BoardMC::montecarlo(){
-  bt.clear();
+  for(size_t i = 0; i < bts.size(); i++) { bts[i].clear(); }
   num size = (n%2)?(n/2 + 1):(n/2);
 
   FILE* gp = (FILE*) popen("gnuplot -persist","w");  
@@ -150,8 +155,7 @@ void BoardMC::montecarlo(){
 
     //Every ten thousand trials, draw
     if (total % 10000 == 0 && total > 0) {
-      cout << bt.size() << endl;
-
+      cout << numEndstates << endl;
       double avgSuccess, numWins, numTrials;
       double maxSuccess = 0;
 
@@ -198,6 +202,23 @@ void BoardMC::montecarlo(){
 
   }
   pclose(gp);
+  
+  char buf[32];
+  sprintf(buf,"game(%d,%d).leaves",n,k);
+  ofstream ofs(buf);
+  for(size_t i = 0; i < bts.size(); i++){
+    ofs << (2*k-1) + i << endl;
+    for(BitsetTable::iterator itr = bts[i].begin(); itr != bts[i].end(); itr++){
+      ofs << *itr << endl;
+      for(num j = 0; j < n; j++){
+	if ((*itr)[2*j]) { ofs << 'B'; }
+	else if ((*itr)[2*j+1]) { ofs << 'R'; }
+	else { ofs << '.'; }
+      }
+      ofs << endl;
+    }
+  }
+  ofs.close();
 }
 
 bool BoardMC::runTrial(State* s){
@@ -213,7 +234,7 @@ bool BoardMC::runTrial(State* s){
 
   //If there is a winner, return who won    
   if (memberOfAP(s->loc)) {
-    store();
+    store(s->depth);
 
     moves.emplace(s->loc);
     grid[s->loc] = '.';
@@ -278,8 +299,8 @@ bool BoardMC::runTrialTraverse(State* s){
 
 bool BoardMC::runTrialRandom(State* s){
   bool redWon = true;
-  bool parentIsRed = !(s->depth % 2);
   bool draw = true;
+  num depth = s->depth+1;
 
   //Randomly color remaining moves
 
@@ -290,26 +311,25 @@ bool BoardMC::runTrialRandom(State* s){
     if (itr == moves.end()){ continue; }
 
     //Color
-    grid[indices[i]] = (parentIsRed?'R':'B');
+    grid[indices[i]] = (depth%2?'R':'B');
 
     //Keep track of what we color
     empties[j++] = indices[i];
 
-    b.flip(2*i+parentIsRed);
-    mirror.flip(2*(n-i-1)+parentIsRed);
+    b.flip(2*indices[i]+depth%2);
+    mirror.flip(2*(n-indices[i]-1)+depth%2);
 
     //Check who won every time a number is colored  
     if (memberOfAP(indices[i])) {
+      store(depth);
       draw = false;
-      redWon = parentIsRed;
+      redWon = depth%2;
       break;
     }
 
     //Alternate!
-    parentIsRed = !parentIsRed;
+    depth++;
   }
-
-  store();
 
   //Clear out what we colored
   grid[s->loc] = '.';

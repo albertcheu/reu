@@ -2,7 +2,6 @@
 #include <cfloat>
 #include <algorithm>
 #include <unordered_set>
-#include <cstdlib>
 #include <cstdio>
 #include <chrono>
 #include <queue>
@@ -10,7 +9,6 @@
 #include "Board.h"
 
 const num BITSETSIZE = 64;
-const num KEYSIZE = 64;
 
 typedef unordered_set<bitset<BITSETSIZE> > BitsetTable;
 
@@ -25,10 +23,11 @@ struct State{
 
 class BoardMC: public Board{
  private:
-  BitsetTable bt;
+  size_t numEndstates;
+  vector<BitsetTable> bts;
   bitset<BITSETSIZE> b, mirror;
 
-  void store();
+  void store(num depth);
 
   mt19937_64 gen;
 

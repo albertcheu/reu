@@ -4,8 +4,8 @@ Evaluator::Evaluator(num n, num k)
   :Board(n,k)
 {}
 
-bool pairCompare(const std::pair<size_t,num>& firstElem,
-		 const std::pair<size_t,num>& secondElem)
+bool pairCompare(const std::pair<float,num>& firstElem,
+		 const std::pair<float,num>& secondElem)
 { return firstElem.first >= secondElem.first; }
 
 void Evaluator::evaluate(bool maximize, RankingVector& rankedPositions){

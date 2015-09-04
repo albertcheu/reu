@@ -1,5 +1,9 @@
 #include "Board_AB.h"
 #include "BoardMC.h"
+#include "Evaluator.h"
+#include "MCEvaluator.h"
+#include "BoardEval.h"
+
 void kapUsageLinear(size_t n, size_t k){
   vector<size_t> possibles;
   for(size_t i = 0; i < n; i++){ possibles.push_back(0); }
@@ -82,10 +86,11 @@ void search_for_G_AB(int n, int k){
     cout << "Testing game(" << n << "," << k << ")..." << endl;
     clock_t t = clock();
 
-    Board_AB b(n,k);
+    //Board_AB b(n,k);
+    MCEvaluator mce(n,k);
+    BoardEval b(n,k,mce);
     num depth = 0;
     scoreAndLoc sal = b.alphabeta(true,-10,10,depth);
-    //scoreAndLoc sal = b.mtd(DRAW);
 
     t = clock() - t;
     cout << "It took me " << ((float)t)/CLOCKS_PER_SEC << " seconds" << endl;

@@ -22,7 +22,9 @@ BoardMC::BoardMC(num n, num k)
     indices.push_back(i);
     empties.push_back(i);
 
-    if (i < n-(2*k)+2) { bts.push_back(BitsetTable()); }
+    //if (i < n-(2*k)+2) {
+      bts.push_back(BitsetTable());
+      //}
   }
 
   size_t ans = buildTree();
@@ -61,8 +63,6 @@ size_t BoardMC::buildTree(){
   //size_t capacity = n;
   num stopDepth = n-1;
 
-  num prevDepth = 0;
-
   while(counter < capacity || q.front().depth < stopDepth){
     if(q.front().depth == stopDepth){ break; }
 
@@ -85,7 +85,6 @@ size_t BoardMC::buildTree(){
     if (counter == capacity) { continue; }
 
     BitsetTable& bt = bts[s->depth];
-    if (prevDepth < s->depth) { prevDepth = s->depth; }
 
     num end = n-1;
     b = s->gamestate;
@@ -207,15 +206,13 @@ void BoardMC::montecarlo(){
   sprintf(buf,"game(%d,%d).leaves",n,k);
   ofstream ofs(buf);
   for(size_t i = 0; i < bts.size(); i++){
-    ofs << (2*k-1) + i << endl;
+    num depth = (2*k-1) + i;
+    if (bts[i].empty()) { continue; }
+
+    cout << (int)depth << ',' << bts[i].size() << endl;
+    ofs << (int)depth << endl;
     for(BitsetTable::iterator itr = bts[i].begin(); itr != bts[i].end(); itr++){
       ofs << *itr << endl;
-      for(num j = 0; j < n; j++){
-	if ((*itr)[2*j]) { ofs << 'B'; }
-	else if ((*itr)[2*j+1]) { ofs << 'R'; }
-	else { ofs << '.'; }
-      }
-      ofs << endl;
     }
   }
   ofs.close();

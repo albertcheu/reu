@@ -3,12 +3,16 @@
 #include <cstdlib>
 #include <climits>
 #include <ctime>
+
 #include <iostream>
 #include <fstream>
+//#include <sstream>
+
 #include <vector>
 #include <string>
 #include <unordered_map>
 #include <list>
+#include <bitset>
 
 #define R_WIN 1
 #define DRAW 0
@@ -16,6 +20,7 @@
 
 using namespace std;
 typedef unsigned char num;
+const num BITSETSIZE = 64;
 
 class Board{
  protected:

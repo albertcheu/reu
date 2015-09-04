@@ -6,14 +6,14 @@
 #include <algorithm>
 #include <unordered_set>
 
-typedef vector<pair<size_t,num> > RankingVector;
+typedef vector<pair<float,num> > RankingVector;
 
 class Evaluator: public Board{
 
  protected:
 
   Evaluator(num n, num k);
-  virtual size_t actualEvaluate(bool maximize, num i)=0;
+  virtual float actualEvaluate(bool maximize, num i)=0;
 
 
  public:

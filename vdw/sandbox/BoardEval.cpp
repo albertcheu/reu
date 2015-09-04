@@ -12,7 +12,6 @@ bool BoardEval::play(char c, num loc){
 
 scoreAndLoc BoardEval::alphabeta(bool maximize, char alpha, char beta,
 				 num depth, num x){
-  //if (recursionCount % 10000 == 0) { cout << recursionCount << endl; }
   recursionCount++;
 
   char score = -10;
@@ -54,47 +53,3 @@ scoreAndLoc BoardEval::alphabeta(bool maximize, char alpha, char beta,
   return scoreAndLoc(score, loc);
 
 }
-
-/*
-bool BoardEval::alphabeta_helper(size_t i, bool maximize, size_t depth,
-				int& max, int& min, int& loc,
-				int& alpha, int& beta){
-  if (i >= n || grid[i] != '.') { return false; }
-
-  //Play
-  grid[i] = (maximize?'R':'B');
-  int score = 0;
-
-  Bitstring g = (maximize?assignmentG[i].first:assignmentG[i].second);
-  gamestate |= g;  
-
-    score = alphabeta(!maximize, alpha, beta, depth+1, i).first;
-
-  //Alpha beta pruning
-  if (maximize) {
-    if (score > max) {
-      max = score;
-      loc = i;
-    }
-    alpha = (alpha>max?alpha:max);
-  }
-
-  else {
-    if (score < min){
-      min = score;
-      loc = i;
-    }
-    beta = (beta<min?beta:min);
-  }  
-
-  //Undo play
-  grid[i] = '.';
-
-  //zobrist ^= z;
-  gamestate ^= g;
-
-  return alpha >= beta;
-
-}
-
-*/

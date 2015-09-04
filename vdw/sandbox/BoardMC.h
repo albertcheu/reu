@@ -1,3 +1,4 @@
+#pragma once
 #include <cmath>
 #include <cfloat>
 #include <algorithm>
@@ -5,10 +6,7 @@
 #include <cstdio>
 #include <chrono>
 #include <queue>
-#include <bitset>
 #include "Board.h"
-
-const num BITSETSIZE = 64;
 
 typedef unordered_set<bitset<BITSETSIZE> > BitsetTable;
 

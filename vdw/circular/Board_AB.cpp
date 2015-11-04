@@ -1,7 +1,7 @@
 #include "Board_AB.h"
 
-Board_AB::Board_AB(num n, num k)
-  :RoundBoard(n,k), gamestate(0), zobrist(0), recursionCount(0)
+Board_AB::Board_AB(num n, num k, num bound)
+  :RoundBoard(n,k), bound(bound), gamestate(0), zobrist(0), recursionCount(0)
   ,tableSize(0)
 {
   assignmentG.clear();
@@ -118,7 +118,7 @@ void Board_AB::store(BitstringKey key, Bitstring gs,
 
 bool Board_AB::retrieveSmart(char& score, num& loc, char& alpha, char& beta){
   bool ans = false;
-  /*
+
   BitstringKey minKey = MAXKEY;
   Bitstring state = 0;
   bool mirrored = false;
@@ -155,8 +155,8 @@ bool Board_AB::retrieveSmart(char& score, num& loc, char& alpha, char& beta){
   ans = retrieve(minKey,state,score, loc, alpha, beta);
   if (mirrored) { loc = ((n-loc-1)+shift)%n; }
   else { loc = (loc+shift)%n; }
-  */
 
+  /*
   Bitstring mirroredState = 0;
   Bitstring mirroredZ = 0;
 
@@ -178,12 +178,12 @@ bool Board_AB::retrieveSmart(char& score, num& loc, char& alpha, char& beta){
   }
 
   else { ans = retrieve(key,gamestate,score, loc, alpha, beta);}
-
+  */
   return ans;
 }
 
 void Board_AB::storeSmart(char score, num loc, char alphaOrig, char beta){
-  /*
+
   BitstringKey minKey = MAXKEY;
   Bitstring state = 0;
   bool mirrored = false;
@@ -220,8 +220,8 @@ void Board_AB::storeSmart(char score, num loc, char alphaOrig, char beta){
   if (mirrored) { loc = ((n-loc-1)+shift)%n; }
   else { loc = (loc+shift)%n; }
   store(minKey, state, score, loc, alphaOrig, beta);
-  */
 
+  /*
   Bitstring mirroredState = 0;
   Bitstring mirroredZ = 0;
   for(int i = n-1; i > -1; i--){
@@ -238,7 +238,7 @@ void Board_AB::storeSmart(char score, num loc, char alphaOrig, char beta){
   if (mirroredKey < key)
     { store(mirroredKey,mirroredState,score, n-loc-1, alphaOrig, beta);}
   else { store(key,gamestate,score, loc, alphaOrig, beta);}
-
+  */
 }
 
 scoreAndLoc Board_AB::alphabeta(bool maximize, char alpha, char beta,
@@ -306,12 +306,42 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, char alpha, char beta,
   return scoreAndLoc(score, loc);
 }
 
+
+num Board_AB::closestDist(num i){
+  num leftCounter = n;
+  num rightCounter = n;
+  if (i > 0) {
+    num j = i;
+    leftCounter = 0;
+    while(true){
+      if (grid[j] == '.') { leftCounter++; }
+      else { break; }
+      if (j == 0) { leftCounter = n; break; }
+      j--;
+    }
+  }
+
+  if (i < n) {
+    num j = i;
+    rightCounter = 0;
+    while(true){
+      if (grid[j] == '.') { rightCounter++; }
+      else { break; }
+      if (j == n-1) { rightCounter = n; break; }
+      j++;
+    }
+  }
+
+  return ((leftCounter<rightCounter)?leftCounter:rightCounter);
+}
+
 bool Board_AB::alphabeta_helper(num i, bool maximize, num depth,
 				char& score, num& loc,
 				char& alpha, char& beta,
 				bool& firstChild
 				){
   if (i >= n || grid[i] != '.') { return false; }
+  if (depth > 0 && closestDist(i) > bound) { return false; }
 
   grid[i] = (maximize?'R':'B');
 

@@ -1,30 +1,30 @@
 #include "Board_AB.h"
 #include "BoardMC.h"
-#include "Evaluator.h"
-#include "MCEvaluator.h"
-#include "BoardEval.h"
+//#include "Evaluator.h"
+//#include "MCEvaluator.h"
+//#include "BoardEval.h"
 
 void kapUsageLinear(size_t n, size_t k){
   vector<size_t> possibles;
   for(size_t i = 0; i < n; i++){ possibles.push_back(0); }
 
   size_t maxD = (n-1)/(k-1);
+  size_t max = 0;
   for(size_t i = 0; i < n; i++){
     for(size_t d = 1; d <= maxD; d++){
       if (i + d*(k-1) >= n) { continue; }
-      for (size_t j = 0; j < k; j++){ possibles[i+j*d]++; }
+      for (size_t j = 0; j < k; j++){
+	possibles[i+j*d]++;
+	if (possibles[i+j*d] > max) { max = possibles[i+j*d]; }
+      }
     }
   }
 
-  size_t max = 0;
-  for(size_t i = 0; i <= (n%2?n/2:n/2-1); i++)
-    { max = (max>possibles[i]?max:possibles[i]); }
-  cout << max << endl;
-  
-  size_t min = ULONG_MAX;
-  for(size_t i = 0; i <= (n%2?n/2:n/2-1); i++)
-    { min = (min<possibles[i]?min:possibles[i]); }
-  cout << min << endl;
+  cout << max << " at";
+  for(size_t i = 0; i < n; i++){
+    if (possibles[i] == max) { cout << ", " << i; }
+  }
+  cout << endl;
 }
 
 void kapUsageCircular(size_t n, size_t k){
@@ -79,16 +79,14 @@ int toNumber(string s, size_t maxNum){
   return ans;
 }
 
-void search_for_G_AB(int n, int k){
+void search_for_G_AB(int n, int k, int bound){
   //Iterate thru board sizes
 
   while(true){
     cout << "Testing game(" << n << "," << k << ")..." << endl;
     clock_t t = clock();
 
-    //Board_AB b(n,k);
-    MCEvaluator mce(n,k);
-    BoardEval b(n,k,mce);
+    Board_AB b(n,k, bound);
     num depth = 0;
     scoreAndLoc sal = b.alphabeta(true,-10,10,depth);
 
@@ -147,7 +145,14 @@ int main(int argc, char** argv){
     }
     else if (s == "ab") {
       cout << "Running alpha-beta..." << endl;
-      search_for_G_AB(n, k);
+      s = argv[4];
+      int bound = toNumber(s, 10000);
+      if (bound == -1) {
+	cout << "Please enter 0 < bound < 10000" << endl;
+	return 0;
+      }
+
+      search_for_G_AB(n, k, bound);
     }
     else if (s == "linear") {
       kapUsageLinear(n, k);

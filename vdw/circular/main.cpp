@@ -14,7 +14,7 @@ int toNumber(string s, size_t maxNum){
   return ans;
 }
 
-void search_for_G(int n, int k){
+void search_for_G(int n, int k, int bound){
   //Iterate thru board sizes
   while(true){
     cout << "game(" << n << "," << k << ")" << endl;
@@ -25,7 +25,7 @@ void search_for_G(int n, int k){
     if (numThreads > 1) { fillTable(n,k,b,numThreads,ref(table)); }
     */
 
-    Board_AB b(n,k);
+    Board_AB b(n,k,bound);
     //GreedyEvaluator e(n,k);
     //MCEvaluator e(n,k);
     //RandomEvaluator e(n,k);
@@ -100,7 +100,15 @@ int main(int argc, char** argv){
     }
 
     s = argv[3];
-    if (s == "ab"){ search_for_G(n, k); }
+    if (s == "ab"){
+      int bound = toNumber(s, 10000);
+      if (k == -1) {
+	cout << "Please enter 0 < k < 10000" << endl;
+	return 0;
+      }
+      search_for_G(n, k, bound);
+      
+    }
 
     else {
       srand((unsigned)time(NULL));

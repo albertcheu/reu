@@ -59,8 +59,8 @@ size_t BoardMC::buildTree(){
   State* justSeen = NULL;
 
   size_t counter = 0;
-  size_t capacity = 4000000;
-  //size_t capacity = n;
+  //size_t capacity = 4000000;
+  size_t capacity = n;
   num stopDepth = n-1;
 
   while(counter < capacity || q.front().depth < stopDepth){
@@ -143,10 +143,11 @@ void BoardMC::montecarlo(){
   fprintf(gp,"set ylabel font \",14\"\n");
   fprintf(gp,"set xlabel \"First move\"\n");
   fprintf(gp,"set xlabel font \",14\"\n");
-  fprintf(gp,"set xrange [1:%d]\n",size);
+  //fprintf(gp,"set xrange [1:%d]\n",size);
   fprintf(gp,"unset key\n");
   //Data
-  fprintf(gp, "plot '-' u ($0+1):1 w lines\n");
+  //fprintf(gp, "plot '-' u ($0+1):1 w lines\n");
+  fprintf(gp, "plot '-' w lines\n");
 
   string userInput = "";
   while(true){
@@ -154,7 +155,7 @@ void BoardMC::montecarlo(){
 
     //Every ten thousand trials, draw
     if (total % 10000 == 0 && total > 0) {
-      cout << numEndstates << endl;
+      //cout << numEndstates << endl;
       double avgSuccess, numWins, numTrials;
       double maxSuccess = 0;
 
@@ -201,7 +202,7 @@ void BoardMC::montecarlo(){
 
   }
   pclose(gp);
-  
+  /*
   char buf[32];
   sprintf(buf,"game(%d,%d).leaves",n,k);
   ofstream ofs(buf);
@@ -216,6 +217,7 @@ void BoardMC::montecarlo(){
     }
   }
   ofs.close();
+  */
 }
 
 bool BoardMC::runTrial(State* s){

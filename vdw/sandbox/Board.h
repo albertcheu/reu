@@ -19,8 +19,8 @@
 #define B_WIN -1
 
 using namespace std;
-typedef unsigned char num;
-const num BITSETSIZE = 64;
+typedef unsigned int num;
+const num BITSETSIZE = 256;
 
 class Board{
  protected:

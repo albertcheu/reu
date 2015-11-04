@@ -27,6 +27,8 @@ const scoreAndLoc draw(DRAW,DRAW);
 class Board_AB: public Board {
 
 protected:
+  num bound;
+
   //two bits dedicated to score
   //log(n) bits dedicated to depth; n <= 32 means it is 5
   //remainder: every two bits corresponds to one position; 
@@ -64,8 +66,10 @@ protected:
 	     char score, num loc, char alphaOrig, char beta);
   void storeSmart(char score, num loc, char alphaOrig, char beta);
   
+  num closestDist(num i);  
+ 
  public:
-  Board_AB(num n, num k);
+  Board_AB(num n, num k, num bound);
 
   bool play(char c, num loc);
 

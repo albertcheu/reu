@@ -35,7 +35,7 @@ const scoreAndLoc draw(DRAW,DRAW);
 class Board_AB: public RoundBoard {
 
 protected:
-
+  num bound;
   //vector<pair<size_t,size_t> > killers;
 
   //two bits dedicated to score
@@ -78,10 +78,10 @@ protected:
   void storeSmart(char score, num loc, char alphaOrig, char beta);
 
   Bitstring tableSize;
-  
+  num closestDist(num i);  
  public:
 
-  Board_AB(num n, num k);
+  Board_AB(num n, num k, num bound);
 
   bool play(char c, num loc);
 

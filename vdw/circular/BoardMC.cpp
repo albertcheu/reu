@@ -22,7 +22,7 @@ int bestDepth(num n, int cutoff){
 }
 
 BoardMC::BoardMC(num n, num k)
-  :RoundBoard(n,k), storeDepth(bestDepth(n,40000000)),
+  :RoundBoard(n,k), storeDepth(1),
    gen((unsigned)chrono::system_clock::now().time_since_epoch().count())   
 {
   cout << storeDepth << endl ;

@@ -1,7 +1,7 @@
 #include "Board_AB.h"
 
-Board_AB::Board_AB(num n, num k)
-  :Board(n,k), gamestate(0), zobrist(0), recursionCount(0)
+Board_AB::Board_AB(num n, num k, num bound)
+  :Board(n,k), bound(bound), gamestate(0), zobrist(0), recursionCount(0)
 {
   assignmentG.clear();
   assignmentZ.clear();
@@ -239,12 +239,43 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, char alpha, char beta,
   return scoreAndLoc(score, loc);
 }
 
+num Board_AB::closestDist(num i){
+  num leftCounter = n;
+  num rightCounter = n;
+  if (i > 0) {
+    num j = i;
+    leftCounter = 0;
+    while(true){
+      if (grid[j] == '.') { leftCounter++; }
+      else { break; }
+      if (j == 0) { leftCounter = n; break; }
+      j--;
+    }
+  }
+
+  if (i < n) {
+    num j = i;
+    rightCounter = 0;
+    while(true){
+      if (grid[j] == '.') { rightCounter++; }
+      else { break; }
+      if (j == n-1) { rightCounter = n; break; }
+      j++;
+    }
+  }
+
+  return ((leftCounter<rightCounter)?leftCounter:rightCounter);
+}
+
 bool Board_AB::alphabeta_helper(num i, bool maximize, num depth,
 				char& score, num& loc,
 				char& alpha, char& beta,
 				bool& firstChild
 				){
+  //If not in range or occupied
   if (i >= n || grid[i] != '.') { return false; }
+  //If closest color is not within bound
+  if (depth > 0 && closestDist(i) > bound) { return false; }
 
   grid[i] = (maximize?'R':'B');
 

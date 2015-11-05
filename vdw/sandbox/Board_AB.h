@@ -66,8 +66,8 @@ protected:
 	     char score, num loc, char alphaOrig, char beta);
   void storeSmart(char score, num loc, char alphaOrig, char beta);
   
-  num closestDist(num i);  
- 
+  bool withinBound(num i); 
+
  public:
   Board_AB(num n, num k, num bound);
 

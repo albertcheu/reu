@@ -246,6 +246,11 @@ bool BoardMC::runTrial(State* s){
 }
 
 float BoardMC::score(State* s){
+  //TEST: random games
+  mt19937 generator((unsigned)time(NULL));
+  return (float)generator();
+
+  /*
   //The parent state evaluates its child states
   bool parentIsRed = s->depth % 2;
 
@@ -259,6 +264,7 @@ float BoardMC::score(State* s){
   float regret = sqrt(2.0f*log(start->numTrials)/(float)s->numTrials);
 
   return avgSuccess + regret;
+  */
 }
 
 bool BoardMC::runTrialTraverse(State* s){

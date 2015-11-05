@@ -239,32 +239,22 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, char alpha, char beta,
   return scoreAndLoc(score, loc);
 }
 
-num Board_AB::closestDist(num i){
-  num leftCounter = n;
-  num rightCounter = n;
+bool Board_AB::withinBound(num i){
+  num j;
   if (i > 0) {
-    num j = i;
-    leftCounter = 0;
-    while(true){
-      if (grid[j] == '.') { leftCounter++; }
-      else { break; }
-      if (j == 0) { leftCounter = n; break; }
-      j--;
+    for(j = 1; j <= bound; j++){
+      if (grid[i-j] != '.') { return true; }
+      if (i-j == 0) { break; }
     }
   }
 
-  if (i < n) {
-    num j = i;
-    rightCounter = 0;
-    while(true){
-      if (grid[j] == '.') { rightCounter++; }
-      else { break; }
-      if (j == n-1) { rightCounter = n; break; }
-      j++;
+  if (i < n-1) {
+    for(j = 1; j <= bound; j++){
+      if (grid[i+j] != '.') { return true; }
+      if (i+j == n-1) { break; }
     }
   }
-
-  return ((leftCounter<rightCounter)?leftCounter:rightCounter);
+  return false;
 }
 
 bool Board_AB::alphabeta_helper(num i, bool maximize, num depth,
@@ -275,7 +265,7 @@ bool Board_AB::alphabeta_helper(num i, bool maximize, num depth,
   //If not in range or occupied
   if (i >= n || grid[i] != '.') { return false; }
   //If closest color is not within bound
-  if (depth > 0 && closestDist(i) > bound) { return false; }
+  if (depth > 0 && !withinBound(i)) { return false; }
 
   grid[i] = (maximize?'R':'B');
 

@@ -239,18 +239,18 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, char alpha, char beta,
   return scoreAndLoc(score, loc);
 }
 
-bool Board_AB::withinBound(num i){
+bool Board_AB::withinBound(num i, char acceptable1, char acceptable2){
   num j;
   if (i > 0) {
     for(j = 1; j <= bound; j++){
-      if (grid[i-j] != '.') { return true; }
+      if (grid[i-j] == acceptable1 || grid[i-j] == acceptable2) { return true; }
       if (i-j == 0) { break; }
     }
   }
 
   if (i < n-1) {
     for(j = 1; j <= bound; j++){
-      if (grid[i+j] != '.') { return true; }
+      if (grid[i+j] == acceptable1 || grid[i+j] == acceptable2) { return true; }
       if (i+j == n-1) { break; }
     }
   }
@@ -264,10 +264,24 @@ bool Board_AB::alphabeta_helper(num i, bool maximize, num depth,
 				){
   //If not in range or occupied
   if (i >= n || grid[i] != '.') { return false; }
-  //If closest color is not within bound
-  if (depth > 0 && !withinBound(i)) { return false; }
 
-  grid[i] = (maximize?'R':'B');
+  //drawn to either color: "bound"
+  //if (depth > 0 && !withinBound(i,'R','B')) { return false; }
+
+  char piece = (maximize?'R':'B');
+  char enemyPiece = (maximize?'B':'R');
+
+  //avoid your own: board size grows linearly (add k-1 each time?)
+  //actually Blue wins game(19,5)
+  //if (depth > 1 && withinBound(i,piece,piece)) { return false; }
+  //avoid enemy: never win
+  //if (depth > 0 && withinBound(i,enemyPiece,enemyPiece)) { return false; }
+  //drawn to enemy: "eBound"
+  //if (depth > 0 && !withinBound(i,enemyPiece,enemyPiece)) { return false; }
+  //drawn to your own
+  if (depth > 1 && !withinBound(i,piece,piece)) { return false; }
+
+  grid[i] = piece;
 
   Bitstring z = (maximize?assignmentZ[i].first:assignmentZ[i].second);
   zobrist ^= z;

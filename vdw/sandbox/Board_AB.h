@@ -66,7 +66,7 @@ protected:
 	     char score, num loc, char alphaOrig, char beta);
   void storeSmart(char score, num loc, char alphaOrig, char beta);
   
-  bool withinBound(num i); 
+  bool withinBound(num i, char acceptable1, char acceptable2); 
 
  public:
   Board_AB(num n, num k, num bound);

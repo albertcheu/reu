@@ -32,6 +32,7 @@ class Board{
 
   bool symmetric();
   bool memberOfAP(num loc);
+  bool memberOfAP(num loc, num maxD);
 
  public:
   Board(num n, num k);

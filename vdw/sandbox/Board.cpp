@@ -17,9 +17,9 @@ bool Board::symmetric(){
 }
 
 
-bool Board::memberOfAP(num loc){
-
-  for(int d = 1; d <= (n-1)/(k-1); d++){
+bool Board::memberOfAP(num loc){ return memberOfAP(loc, (n-1)/(k-1)); }
+bool Board::memberOfAP(num loc, num maxD){
+  for(int d = 1; d <= maxD; d++){
 
     if (loc+d >= n && loc < d) { return false; }
 

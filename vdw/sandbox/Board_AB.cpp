@@ -186,7 +186,8 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, char alpha, char beta,
     { return scoreAndLoc(score,loc); }
 
   if (depth >= 2*k-1){
-    if (memberOfAP(x)){
+    if (memberOfAP(x,bound)){
+    //if (memberOfAP(x)){
       char sign = (maximize?1:-1);
       char result = sign * ((!maximize)?R_WIN:B_WIN);
       return scoreAndLoc(result, x);
@@ -279,7 +280,7 @@ bool Board_AB::alphabeta_helper(num i, bool maximize, num depth,
   //drawn to enemy: "eBound"
   //if (depth > 0 && !withinBound(i,enemyPiece,enemyPiece)) { return false; }
   //drawn to your own
-  if (depth > 1 && !withinBound(i,piece,piece)) { return false; }
+  //if (depth > 1 && !withinBound(i,piece,piece)) { return false; }
 
   grid[i] = piece;
 

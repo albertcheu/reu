@@ -32,7 +32,7 @@ class Board{
 
   bool symmetric();
   bool memberOfAP(num loc);
-  bool memberOfAP(num loc, num maxD);
+  bool memberOfAP(num loc, num limit, bool dLimit=true);
 
  public:
   Board(num n, num k);

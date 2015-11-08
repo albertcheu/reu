@@ -75,7 +75,7 @@ int toNumber(string s, size_t maxNum){
     ans += place*digit;
     place *= 10;
   }
-  if (ans < 1 || ans > maxNum) { return -1; }
+  if (ans > maxNum) { return -1; }
   return ans;
 }
 
@@ -148,7 +148,7 @@ int main(int argc, char** argv){
       s = argv[4];
       int bound = toNumber(s, 10000);
       if (bound == -1) {
-	cout << "Please enter 0 < bound < 10000" << endl;
+	cout << "Please enter bound < 10000" << endl;
 	return 0;
       }
 

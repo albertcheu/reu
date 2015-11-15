@@ -186,9 +186,6 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, char alpha, char beta,
     { return scoreAndLoc(score,loc); }
 
   if (depth >= 2*k-1){
-    //true = "dBound": limit the separation that a kAP is allowed for a win
-    //false = "extentBound": limit the extent of a winning kAP
-    //if (memberOfAP(x,bound,false)){
     if (memberOfAP(x)){
       char sign = (maximize?1:-1);
       char result = sign * ((!maximize)?R_WIN:B_WIN);
@@ -196,6 +193,7 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, char alpha, char beta,
     }
     if (depth == n) { return draw; }
   }
+  if (depth == bound) { return draw; }
 
   /*
   num& killer1 = killers[depth].first;
@@ -236,7 +234,9 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, char alpha, char beta,
 
   }
 
-  storeSmart(score, loc, alphaOrig, beta);
+  //if (depth < n-2){
+    storeSmart(score, loc, alphaOrig, beta);
+    //}
 
   if (depth == 0) { cout << recursionCount << endl; }
   return scoreAndLoc(score, loc);
@@ -271,16 +271,11 @@ bool Board_AB::alphabeta_helper(num i, bool maximize, num depth,
   char piece = (maximize?'R':'B');
   char enemyPiece = (maximize?'B':'R');
 
-  //drawn to either color: "bound"
-  if (depth > 0 && !withinBound(i,piece,enemyPiece)) { return false; }
-
-  //avoid your own: Blue wins game(19,5), so let's not do this
-  //if (depth > 1 && withinBound(i,piece,piece)) { return false; }
-  //avoid enemy: never win
-  //if (depth > 0 && withinBound(i,enemyPiece,enemyPiece)) { return false; }
-  //drawn to enemy: "eBound"
+  //drawn to either color
+  //if (depth > 0 && !withinBound(i,piece,enemyPiece)) { return false; }
+  //drawn to enemy
   //if (depth > 0 && !withinBound(i,enemyPiece,enemyPiece)) { return false; }
-  //drawn to yourself: "sBound"
+  //drawn to yourself
   //if (depth > 1 && !withinBound(i,piece,piece)) { return false; }
 
   grid[i] = piece;

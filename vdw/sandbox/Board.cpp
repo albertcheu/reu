@@ -18,26 +18,23 @@ bool Board::symmetric(){
 
 
 bool Board::memberOfAP(num loc){ return memberOfAP(loc, (n-1)/(k-1)); }
-bool Board::memberOfAP(num loc, num limit, bool dLimit){
-  int maxD = dLimit?limit:(n-1)/(k-1);
-  for(int d = 1; d <= maxD; d++){
 
+bool Board::memberOfAP(num loc, num limit){
+  for(int d = 1; d <= limit; d++){
     if (loc+d >= n && loc < d) { return false; }
 
     int numLeft, numRight;
     numLeft = numRight = 0;
     
     for(int i = loc+d; i < n; i += d){
-      if (!dLimit && i >= n-limit) { break; }
-      else if (grid[i] == grid[loc]) { numRight++; }
+      if (grid[i] == grid[loc]) { numRight++; }
       else { break; }
     }
     
     if (1+numRight >= k) { return true; }
     
     for(int i = ((int)loc)-d; i > -1; i -= d){
-      if (!dLimit && i < limit) { break; }
-      else if (grid[i] == grid[loc]) { numLeft++; }
+      if (grid[i] == grid[loc]) { numLeft++; }
       else { break; }
     }
     

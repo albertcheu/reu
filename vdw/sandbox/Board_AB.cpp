@@ -34,14 +34,16 @@ bool Board_AB::retrieve(BitstringKey key, Bitstring gs,
 
   if (table.find(key) == table.end()){ return false; }
   for(Chain::iterator itr = table[key].begin(); itr!=table[key].end();itr++){
-    /*
+    
       Bitstring stored = *itr;
     Bitstring storedState = (stored << METADATA);
     storedState >>= METADATA;
     short metadata = (stored >> GAMESTATE);
-    */
+    
+    /*
     Bitstring storedState = itr->state;
     short metadata = itr->metadata;
+    */
     char storedScore = (metadata % 4);
     storedScore--;
     num storedFlag = (metadata % 16);
@@ -83,14 +85,15 @@ void Board_AB::store(BitstringKey key, Bitstring gs,
 
   short storedLoc = loc;
   storedLoc <<= 4;
-  /*
+  
   Bitstring storedVal = (storedLoc | flag | storedScore);
   storedVal <<= GAMESTATE;
   storedVal |= gs;
-  */
+  
+  /*
   short storedMetadata = (storedLoc | flag | storedScore);
   Entry storedVal(gs,storedMetadata);
-
+  */
   if (table.find(key) == table.end()) {
     table[key].push_back(storedVal);
     return;
@@ -98,15 +101,16 @@ void Board_AB::store(BitstringKey key, Bitstring gs,
 
   bool push = true;
   for(Chain::iterator itr = table[key].begin(); itr!=table[key].end();itr++){
-    /*
+    
     Bitstring stored = *itr;
     Bitstring storedState = (stored << METADATA) >> METADATA;
     short metadata = (stored >> GAMESTATE);
-    */
+    
+    /*
     Bitstring storedState = itr->state;
     storedMetadata = itr->metadata;
-
-    num existedFlag = (storedMetadata % 16) >> 2;
+    */
+    num existedFlag = (metadata % 16) >> 2;
     if (storedState == gs) {
       if (existedFlag != EXACT) { *itr = storedVal; }
       push = false;
@@ -205,7 +209,7 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, char alpha, char beta,
     }
     if (depth == n) { return draw; }
   }
-  if (depth == bound) { return draw; }
+  //if (depth == bound) { return draw; }
 
   /*
   num& killer1 = killers[depth].first;
@@ -286,7 +290,7 @@ bool Board_AB::alphabeta_helper(num i, bool maximize, num depth,
   //drawn to either color
   //if (depth > 0 && !withinBound(i,piece,enemyPiece)) { return false; }
   //drawn to enemy
-  //if (depth > 0 && !withinBound(i,enemyPiece,enemyPiece)) { return false; }
+  if (depth > 0 && !withinBound(i,enemyPiece,enemyPiece)) { return false; }
   //drawn to yourself
   //if (depth > 1 && !withinBound(i,piece,piece)) { return false; }
 

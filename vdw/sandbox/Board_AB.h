@@ -14,7 +14,7 @@ const unsigned int METADATA = 9;
 typedef unsigned long int BitstringKey;
 const BitstringKey MAXKEY = ULONG_MAX;
 
-//typedef list<Bitstring> Chain;
+typedef list<Bitstring> Chain;
 class Entry{
  public:
   Bitstring state;
@@ -22,7 +22,7 @@ class Entry{
  Entry(Bitstring state, short metadata)
    :state(state),metadata(metadata){}
 };
-typedef list<Entry> Chain;
+//typedef list<Entry> Chain;
 
 // the score (win, draw, lose) and the location of play that yields it
 typedef pair<char,num> scoreAndLoc;

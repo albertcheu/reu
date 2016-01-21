@@ -59,8 +59,8 @@ size_t BoardMC::buildTree(){
   State* justSeen = NULL;
 
   size_t counter = 0;
-  //size_t capacity = 4000000;
-  size_t capacity = n;
+  size_t capacity = 5000000;
+  //size_t capacity = n;
   num stopDepth = n-1;
 
   while(counter < capacity || q.front().depth < stopDepth){
@@ -133,7 +133,7 @@ size_t BoardMC::freeRecursive(State* s){
 
 void BoardMC::montecarlo(){
   for(size_t i = 0; i < bts.size(); i++) { bts[i].clear(); }
-  num size = (n%2)?(n/2 + 1):(n/2);
+  num size = (n%2)?(n/2):(n/2 - 1);
 
   FILE* gp = (FILE*) popen("gnuplot -persist","w");  
   //Title
@@ -170,7 +170,7 @@ void BoardMC::montecarlo(){
       
       fprintf(gp,"E\n");
       if (maxSuccess > 0.5)
-	{ fprintf(gp,"set arrow 1 from 1,50 to %d,50 nohead\n",size); }
+	{ fprintf(gp,"set arrow 1 from 0,50 to %d,50 nohead\n",size); }
       else { fprintf(gp,"set noarrow\n"); }
       fprintf(gp,"refresh\n");
 
@@ -247,10 +247,9 @@ bool BoardMC::runTrial(State* s){
 
 float BoardMC::score(State* s){
   //TEST: random games
-  mt19937 generator((unsigned)time(NULL));
-  return (float)generator();
-
-  /*
+  //mt19937 generator((unsigned)time(NULL));
+  //return (float)generator();
+  
   //The parent state evaluates its child states
   bool parentIsRed = s->depth % 2;
 
@@ -264,7 +263,7 @@ float BoardMC::score(State* s){
   float regret = sqrt(2.0f*log(start->numTrials)/(float)s->numTrials);
 
   return avgSuccess + regret;
-  */
+  
 }
 
 bool BoardMC::runTrialTraverse(State* s){

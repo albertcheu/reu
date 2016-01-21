@@ -1,0 +1,17 @@
+storing five million states means we can store the entire game tree for n<=15
+And most of the game tree for 16,17
+G(4)=15 is the point at which >50% of the first moves are >50% quality
+That is a fact because we've stored the whole tree
+Call this the "likely-property"
+We're mostly certain n=16,17 also have the likely-property
+
+storing five million states means we can store some of the game tree for 23-27
+25 is the point at which the likely-property returns
+
+can we conclude that we have supporting evidence for "G(5)=25"?
+It seems inappropriate, given that we have certain/very sure data about G(4) likely-property but only have a fraction of the whole picture for k=5
+
+but running same k=4,5 experiments after storing only o(n) states gives similar graphs.
+So for k=4, 5mil vs n/2 did not impact certainly accurate results
+If k=5 games are similar, we have close-to accurate results
+

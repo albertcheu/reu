@@ -209,7 +209,9 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, char alpha, char beta,
     }
     if (depth == n) { return draw; }
   }
-  //if (depth == bound) { return draw; }
+  //if (depth == bound)
+  //{ return draw; }
+    //{ return (maximize?b_win:r_win); }
 
   /*
   num& killer1 = killers[depth].first;
@@ -250,9 +252,9 @@ scoreAndLoc Board_AB::alphabeta(bool maximize, char alpha, char beta,
 
   }
 
-  //if (depth < n-2){
+  if (depth <= n-2){
     storeSmart(score, loc, alphaOrig, beta);
-    //}
+  }
 
   if (depth == 0) { cout << recursionCount << endl; }
   return scoreAndLoc(score, loc);
@@ -288,12 +290,25 @@ bool Board_AB::alphabeta_helper(num i, bool maximize, num depth,
   char enemyPiece = (maximize?'B':'R');
 
   //drawn to either color
-  //if (depth > 0 && !withinBound(i,piece,enemyPiece)) { return false; }
+  /*  
+  if (depth > 0 && !withinBound(i,piece,enemyPiece)
+      ) {
+    //if (score < DRAW) { loc = i, score = DRAW; }
+    return false;
+  }
+  */  
   //drawn to enemy
-  if (depth > 0 && !withinBound(i,enemyPiece,enemyPiece)) { return false; }
+    
+  if (depth > 0 && !withinBound(i,enemyPiece,enemyPiece)) {
+    //if (score < DRAW) { loc = i, score = DRAW; }
+    return false;
+  }
+    
   //drawn to yourself
-  //if (depth > 1 && !withinBound(i,piece,piece)) { return false; }
-
+  /*if (depth > 1 && !withinBound(i,piece,piece)) {
+    if (score < DRAW) { loc = i, score = DRAW; }
+return false; }
+  */
   grid[i] = piece;
 
   Bitstring z = (maximize?assignmentZ[i].first:assignmentZ[i].second);
